@@ -19,7 +19,7 @@
 			)
 		)
 		(property "Value" "Adafruit_ISM330DHCX"
-			(at 0 13.97 0)
+			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -74,8 +74,8 @@
 		)
 		(symbol "Adafruit_ISM330DHCX_0_1"
 			(rectangle
-				(start -10.16 12.7)
-				(end 10.16 -12.7)
+				(start -11.43 11.43)
+				(end 11.43 -11.43)
 				(stroke
 					(width 0)
 					(type default)
@@ -87,7 +87,7 @@
 		)
 		(symbol "Adafruit_ISM330DHCX_1_1"
 			(pin power_in line
-				(at -12.7 10.16 0)
+				(at -1.27 13.97 270)
 				(length 2.54)
 				(name "VIN"
 					(effects
@@ -105,7 +105,7 @@
 				)
 			)
 			(pin power_out line
-				(at 12.7 10.16 180)
+				(at 1.27 13.97 270)
 				(length 2.54)
 				(name "3Vo"
 					(effects
@@ -123,7 +123,7 @@
 				)
 			)
 			(pin power_in line
-				(at -12.7 -10.16 0)
+				(at -1.27 -13.97 90)
 				(length 2.54)
 				(name "GND"
 					(effects
@@ -141,7 +141,7 @@
 				)
 			)
 			(pin input line
-				(at -12.7 7.62 0)
+				(at 13.97 6.35 180)
 				(length 2.54)
 				(name "SCL_SCK"
 					(effects
@@ -159,7 +159,7 @@
 				)
 			)
 			(pin bidirectional line
-				(at -12.7 5.08 0)
+				(at 13.97 1.27 180)
 				(length 2.54)
 				(name "SDA_SDI"
 					(effects
@@ -177,7 +177,7 @@
 				)
 			)
 			(pin output line
-				(at 12.7 7.62 180)
+				(at 13.97 3.81 180)
 				(length 2.54)
 				(name "DO_SDO"
 					(effects
@@ -195,7 +195,7 @@
 				)
 			)
 			(pin input line
-				(at -12.7 2.54 0)
+				(at 13.97 -1.27 180)
 				(length 2.54)
 				(name "CS"
 					(effects
@@ -213,7 +213,7 @@
 				)
 			)
 			(pin output line
-				(at 12.7 5.08 180)
+				(at 13.97 -3.81 180)
 				(length 2.54)
 				(name "INT1"
 					(effects
@@ -231,7 +231,7 @@
 				)
 			)
 			(pin output line
-				(at 12.7 2.54 180)
+				(at 13.97 -6.35 180)
 				(length 2.54)
 				(name "INT2"
 					(effects
@@ -249,7 +249,7 @@
 				)
 			)
 			(pin passive line
-				(at -12.7 -5.08 0)
+				(at -13.97 3.81 0)
 				(length 2.54)
 				(name "SCX"
 					(effects
@@ -267,7 +267,7 @@
 				)
 			)
 			(pin passive line
-				(at -12.7 -2.54 0)
+				(at -13.97 1.27 0)
 				(length 2.54)
 				(name "SDX"
 					(effects
@@ -285,7 +285,7 @@
 				)
 			)
 			(pin passive line
-				(at 12.7 -5.08 180)
+				(at -13.97 -3.81 0)
 				(length 2.54)
 				(name "CS_AUX"
 					(effects
@@ -303,7 +303,7 @@
 				)
 			)
 			(pin passive line
-				(at 12.7 -2.54 180)
+				(at -13.97 -1.27 0)
 				(length 2.54)
 				(name "DO_AUX"
 					(effects
@@ -321,7 +321,7 @@
 				)
 			)
 			(pin power_in line
-				(at 12.7 -10.16 180)
+				(at 1.27 -13.97 90)
 				(length 2.54)
 				(name "GND"
 					(effects

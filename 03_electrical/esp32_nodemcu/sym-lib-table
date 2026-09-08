@@ -6,4 +6,6 @@
 	(lib (name "RadioMaster_RP2_V2") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/RadioMaster_RP2_V2.kicad_sym") (options "") (descr ""))
 	(lib (name "Waveshare_2inch_LCD_ST7789VW") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/Waveshare_2inch_LCD_ST7789VW.kicad_sym") (options "") (descr ""))
 	(lib (name "CAN_Node_3Pin") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/CAN_Node_3Pin.kicad_sym") (options "") (descr ""))
+	(lib (name "BQ76942PFBR") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/BQ76942PFBR.kicad_sym") (options "") (descr ""))
+	(lib (name "LT8609SEV_TRPBF") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/LT8609SEV_TRPBF.kicad_sym") (options "") (descr ""))
 )

@@ -5,4 +5,6 @@
 	(lib (name "Adafruit_CAN_Pal_TJA1051T3") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/Adafruit_CAN_Pal_TJA1051T3.pretty") (options "") (descr ""))
 	(lib (name "RadioMaster_RP2_V2") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/RadioMaster_RP2_V2.pretty") (options "") (descr ""))
 	(lib (name "Waveshare_2inch_LCD_ST7789VW") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/Waveshare_2inch_LCD_ST7789VW.pretty") (options "") (descr ""))
+	(lib (name "BQ76942PFBR") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/BQ76942PFBR.pretty") (options "") (descr ""))
+	(lib (name "LT8609SEV_TRPBF") (type "KiCad") (uri "${KICAD_USER_LIBRARIES_DIR}/LT8609SEV_TRPBF.pretty") (options "") (descr ""))
 )

@@ -3715,42 +3715,6 @@
 						)
 					)
 				)
-				(pin power_out line
-					(at 0 -5.08 0)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_out line
-					(at 0 -7.62 0)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
 				(pin power_in line
 					(at 0 -10.16 0)
 					(length 7.62)
@@ -3798,24 +3762,6 @@
 						)
 					)
 					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_out line
-					(at 0 -17.78 0)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -3913,24 +3859,6 @@
 						)
 					)
 				)
-				(pin power_out line
-					(at 40.64 -17.78 180)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
 				(pin unspecified line
 					(at 40.64 -15.24 180)
 					(length 7.62)
@@ -3960,24 +3888,6 @@
 						)
 					)
 					(number "16"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_out line
-					(at 40.64 -10.16 180)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "17"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4050,6 +3960,98 @@
 						)
 					)
 					(number "21"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "LT8609SEV-TRPBF_1_1"
+				(pin power_in line
+					(at 0 -5.08 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -7.62 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -17.78 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 40.64 -17.78 180)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 40.64 -10.16 180)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "17"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4968,10 +4970,10 @@
 	)
 	(text "CANH\nCANL"
 		(exclude_from_sim no)
-		(at 306.07 100.33 0)
+		(at 304.8 99.568 0)
 		(effects
 			(font
-				(size 1.27 1.27)
+				(size 1.524 1.524)
 			)
 			(justify left)
 		)
@@ -4979,10 +4981,10 @@
 	)
 	(text "CANH\nCANL"
 		(exclude_from_sim no)
-		(at 294.64 119.38 0)
+		(at 294.64 118.618 0)
 		(effects
 			(font
-				(size 1.27 1.27)
+				(size 1.524 1.524)
 			)
 			(justify left)
 		)
@@ -5004,12 +5006,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "00a5ff50-7e9f-4e20-ba47-f250ff72c0dd")
-	)
-	(junction
-		(at 152.4 214.63)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "0cb14132-bcb6-44b2-8ea5-55a10107ae91")
 	)
 	(junction
 		(at 306.07 127)
@@ -5036,6 +5032,12 @@
 		(uuid "2a27aa91-1448-4089-8b08-4bdaf8c57cb3")
 	)
 	(junction
+		(at 152.4 214.63)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "42ad451c-5060-4f2d-be90-aa625f1d27ef")
+	)
+	(junction
 		(at 227.33 229.87)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5060,10 +5062,22 @@
 		(uuid "7e36f5a4-9b6c-4833-8a8c-36ff96ff6ff3")
 	)
 	(junction
+		(at 168.91 212.09)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7ed059a1-dff8-44ff-a644-589d9dbe35e5")
+	)
+	(junction
 		(at 156.21 232.41)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "aa91980f-03b1-46d8-8bfd-6296dbaa2339")
+	)
+	(junction
+		(at 168.91 219.71)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "afb6ef25-5667-4cee-8efc-2a5359138530")
 	)
 	(junction
 		(at 224.79 229.87)
@@ -5090,6 +5104,12 @@
 		(uuid "d1048a17-2de7-4374-bf14-5c52900d62e8")
 	)
 	(junction
+		(at 168.91 229.87)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d347e51d-4ca0-4796-b39c-4672d149138a")
+	)
+	(junction
 		(at 167.64 214.63)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5100,6 +5120,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d9c8de89-4bfd-458e-8c11-a3324604cf7d")
+	)
+	(junction
+		(at 166.37 97.79)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "da00880e-da25-459e-9393-f001075b993f")
 	)
 	(junction
 		(at 303.53 111.76)
@@ -5307,6 +5333,16 @@
 	)
 	(wire
 		(pts
+			(xy 162.56 209.55) (xy 165.1 209.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1386db27-e6ff-41d7-9478-c5f5e56b591b")
+	)
+	(wire
+		(pts
 			(xy 48.26 132.08) (xy 50.8 132.08)
 		)
 		(stroke
@@ -5337,7 +5373,7 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 217.17) (xy 167.64 217.17)
+			(xy 167.64 217.17) (xy 170.18 217.17)
 		)
 		(stroke
 			(width 0)
@@ -5577,6 +5613,16 @@
 	)
 	(wire
 		(pts
+			(xy 168.91 212.09) (xy 170.18 212.09)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3ee042cf-97d9-4e5b-9b54-2c41f1552b6c")
+	)
+	(wire
+		(pts
 			(xy 237.49 82.55) (xy 273.05 82.55)
 		)
 		(stroke
@@ -5604,6 +5650,16 @@
 			(type default)
 		)
 		(uuid "457f8d08-7472-4eb5-a3f4-5f18d7472a94")
+	)
+	(wire
+		(pts
+			(xy 168.91 219.71) (xy 167.64 219.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "47c747f5-282c-4bde-ae79-1418eefaa84f")
 	)
 	(wire
 		(pts
@@ -5837,7 +5893,7 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 219.71) (xy 167.64 219.71)
+			(xy 170.18 219.71) (xy 168.91 219.71)
 		)
 		(stroke
 			(width 0)
@@ -5867,7 +5923,7 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 229.87) (xy 167.64 229.87)
+			(xy 170.18 229.87) (xy 168.91 229.87)
 		)
 		(stroke
 			(width 0)
@@ -6024,6 +6080,16 @@
 			(type default)
 		)
 		(uuid "8fa4a896-30fa-4d9b-9003-667b4b1b13d3")
+	)
+	(wire
+		(pts
+			(xy 165.1 212.09) (xy 168.91 212.09)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "914bf7d5-9136-4334-a629-a53e041401bf")
 	)
 	(wire
 		(pts
@@ -6214,6 +6280,16 @@
 			(type default)
 		)
 		(uuid "a9d89d7b-271a-4a94-97f9-d821159e27ec")
+	)
+	(wire
+		(pts
+			(xy 166.37 104.14) (xy 166.37 97.79)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ad6ae576-63c2-42f1-8c25-21c113160cf1")
 	)
 	(wire
 		(pts
@@ -6424,6 +6500,16 @@
 			(type default)
 		)
 		(uuid "c8d89c27-1ddb-4ae6-9457-a7463ce03965")
+	)
+	(wire
+		(pts
+			(xy 168.91 229.87) (xy 167.64 229.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c9302e84-723c-4613-9de0-dca5951451c4")
 	)
 	(wire
 		(pts
@@ -6707,16 +6793,6 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 212.09) (xy 170.18 212.09)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "eed15be9-c153-4e2c-b6de-461198f4b668")
-	)
-	(wire
-		(pts
 			(xy 271.78 87.63) (xy 273.05 87.63)
 		)
 		(stroke
@@ -6734,16 +6810,6 @@
 			(type default)
 		)
 		(uuid "f1ecb212-1333-443e-8d14-06a202c040f0")
-	)
-	(wire
-		(pts
-			(xy 165.1 209.55) (xy 162.56 209.55)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f1f4281f-a5fb-4a1a-8514-554631fd5b9c")
 	)
 	(wire
 		(pts
@@ -7506,6 +7572,84 @@
 		(uuid "fe0795e9-ac02-4375-b30d-1c6c4333865e")
 	)
 	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 168.91 229.87 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "070a9cec-52b7-44fa-914e-792cc50ecfb2")
+		(property "Reference" "#FLG04"
+			(at 168.91 227.965 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "PWR_FLAG"
+			(at 168.91 224.79 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 168.91 229.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 168.91 229.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Special symbol for telling ERC where power comes from"
+			(at 168.91 229.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e48ce194-5737-48ac-bcc5-7db59faccc01")
+		)
+		(instances
+			(project "esp32_nodemcu"
+				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
+					(reference "#FLG04")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Mechanical:MountingHole")
 		(at 381 50.8 0)
 		(unit 1)
@@ -7593,7 +7737,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "156bc5cb-8db8-4121-b71f-a54785bde15e")
-		(property "Reference" "#PWR031"
+		(property "Reference" "#PWR037"
 			(at 281.94 114.3 0)
 			(hide yes)
 			(show_name no)
@@ -7653,7 +7797,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR031")
+					(reference "#PWR037")
 					(unit 1)
 				)
 			)
@@ -7740,6 +7884,162 @@
 		)
 	)
 	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 168.91 212.09 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "1c358c5e-51d7-4a63-aa26-140deebaa87f")
+		(property "Reference" "#FLG02"
+			(at 168.91 210.185 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "PWR_FLAG"
+			(at 168.91 207.01 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 168.91 212.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 168.91 212.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Special symbol for telling ERC where power comes from"
+			(at 168.91 212.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "6bc6cbe0-ee21-4b0b-b052-f31f8b9d123b")
+		)
+		(instances
+			(project "esp32_nodemcu"
+				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
+					(reference "#FLG02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 166.37 104.14 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "1c6612e8-7bb4-400d-99c4-59c156ba5fa4")
+		(property "Reference" "#FLG05"
+			(at 166.37 106.045 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "PWR_FLAG"
+			(at 166.37 109.22 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 166.37 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 166.37 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Special symbol for telling ERC where power comes from"
+			(at 166.37 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a1ac4ba8-d610-4e9f-96ef-0730f2a74982")
+		)
+		(instances
+			(project "esp32_nodemcu"
+				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
+					(reference "#FLG05")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+5V")
 		(at 271.78 87.63 90)
 		(unit 1)
@@ -7751,7 +8051,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1cb94ff7-6d74-4412-9b9d-73cdcf10fe0d")
-		(property "Reference" "#PWR041"
+		(property "Reference" "#PWR036"
 			(at 275.59 87.63 0)
 			(hide yes)
 			(show_name no)
@@ -7812,7 +8112,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR041")
+					(reference "#PWR036")
 					(unit 1)
 				)
 			)
@@ -7829,7 +8129,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "23b9fccc-9b5c-4e27-b00c-5370c3ace5b9")
-		(property "Reference" "J12"
+		(property "Reference" "J7"
 			(at 58.42 123.19 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7840,7 +8140,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "Conn_01x19_Pin"
+		(property "Value" "ESP32_NodeMCU_2"
 			(at 58.42 125.73 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7944,7 +8244,85 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J12")
+					(reference "J7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 168.91 219.71 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "23e92f94-8446-4b9c-8297-a5b1e4124fc3")
+		(property "Reference" "#FLG03"
+			(at 168.91 217.805 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "PWR_FLAG"
+			(at 168.91 214.63 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 168.91 219.71 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 168.91 219.71 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Special symbol for telling ERC where power comes from"
+			(at 168.91 219.71 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "bf3ea1c4-a99e-4f54-a7dc-e271875b8dc5")
+		)
+		(instances
+			(project "esp32_nodemcu"
+				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
+					(reference "#FLG03")
 					(unit 1)
 				)
 			)
@@ -7962,7 +8340,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "268635a2-a616-425c-a08b-c2cc03d52aab")
-		(property "Reference" "#PWR07"
+		(property "Reference" "#PWR010"
 			(at 39.37 74.93 0)
 			(hide yes)
 			(show_name no)
@@ -8023,7 +8401,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR07")
+					(reference "#PWR010")
 					(unit 1)
 				)
 			)
@@ -8121,7 +8499,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "282a1630-13f2-4a99-b004-630f8727bc45")
-		(property "Reference" "#PWR05"
+		(property "Reference" "#PWR08"
 			(at 39.37 62.23 0)
 			(hide yes)
 			(show_name no)
@@ -8182,7 +8560,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR05")
+					(reference "#PWR08")
 					(unit 1)
 				)
 			)
@@ -8282,7 +8660,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "28db1c28-f82f-4c1a-91c0-6ba0cde80c8a")
-		(property "Reference" "#PWR016"
+		(property "Reference" "#PWR020"
 			(at 157.48 68.58 0)
 			(hide yes)
 			(show_name no)
@@ -8342,7 +8720,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR016")
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -8360,7 +8738,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2c8ff93b-2d2f-4ba1-a58c-6b8cad601b77")
-		(property "Reference" "#PWR014"
+		(property "Reference" "#PWR019"
 			(at 156.21 251.46 0)
 			(hide yes)
 			(show_name no)
@@ -8420,7 +8798,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR014")
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -8438,7 +8816,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2e9bdc55-d6b7-455c-a149-7992ad710fd8")
-		(property "Reference" "#PWR039"
+		(property "Reference" "#PWR015"
 			(at 80.01 144.78 0)
 			(hide yes)
 			(show_name no)
@@ -8499,7 +8877,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR039")
+					(reference "#PWR015")
 					(unit 1)
 				)
 			)
@@ -8517,7 +8895,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2f3f366e-13cb-4b5d-a282-729f43534761")
-		(property "Reference" "#PWR029"
+		(property "Reference" "#PWR034"
 			(at 275.59 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -8578,7 +8956,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR029")
+					(reference "#PWR034")
 					(unit 1)
 				)
 			)
@@ -8597,7 +8975,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2fe1635e-0496-430c-875b-57fda6087eab")
-		(property "Reference" "J10"
+		(property "Reference" "J12"
 			(at 317.5 137.1599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8661,7 +9039,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J10")
+					(reference "J12")
 					(unit 1)
 				)
 			)
@@ -8759,7 +9137,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "347f9814-09ee-4c02-a663-37cb2b5d6af0")
-		(property "Reference" "#PWR022"
+		(property "Reference" "#PWR024"
 			(at 212.09 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -8819,89 +9197,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR022")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Screw_Terminal_01x02")
-		(at 50.8 36.83 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "35c1aa77-6aa4-469f-a9a6-b1fdff363106")
-		(property "Reference" "J1"
-			(at 53.34 36.8299 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "VBAT_INPUT"
-			(at 53.34 39.3699 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Connector_AMASS:AMASS_XT60PW-M_1x02_P7.20mm_Horizontal"
-			(at 50.8 36.83 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 50.8 36.83 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 50.8 36.83 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "8172ce1d-e211-421e-a35b-452e19676d22")
-		)
-		(pin "1"
-			(uuid "96e465e1-2163-4455-b0b7-922d58580a79")
-		)
-		(instances
-			(project "esp32_nodemcu"
-				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J1")
+					(reference "#PWR024")
 					(unit 1)
 				)
 			)
@@ -8995,7 +9291,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "36d56df2-2248-41ce-beee-6a479f07cc9c")
-		(property "Reference" "#PWR012"
+		(property "Reference" "#PWR017"
 			(at 153.67 222.25 0)
 			(hide yes)
 			(show_name no)
@@ -9056,7 +9352,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR012")
+					(reference "#PWR017")
 					(unit 1)
 				)
 			)
@@ -9074,7 +9370,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3d4550be-395f-4992-87e5-7cfa8429b3cf")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR028"
 			(at 209.55 234.95 0)
 			(hide yes)
 			(show_name no)
@@ -9135,7 +9431,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR020")
+					(reference "#PWR028")
 					(unit 1)
 				)
 			)
@@ -9153,7 +9449,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3ea24e68-80c6-4137-a226-b0dc693f6712")
-		(property "Reference" "#PWR038"
+		(property "Reference" "#PWR014"
 			(at 80.01 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -9214,7 +9510,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR038")
+					(reference "#PWR014")
 					(unit 1)
 				)
 			)
@@ -9232,7 +9528,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3f473833-c436-4e43-bec2-d2e0b867320a")
-		(property "Reference" "#PWR035"
+		(property "Reference" "#PWR03"
 			(at 44.45 175.26 0)
 			(hide yes)
 			(show_name no)
@@ -9293,7 +9589,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR035")
+					(reference "#PWR03")
 					(unit 1)
 				)
 			)
@@ -9311,7 +9607,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "47acc65b-2c38-47e1-b0cf-ef591b3cc4b0")
-		(property "Reference" "#PWR036"
+		(property "Reference" "#PWR02"
 			(at 34.29 162.56 0)
 			(hide yes)
 			(show_name no)
@@ -9372,7 +9668,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR036")
+					(reference "#PWR02")
 					(unit 1)
 				)
 			)
@@ -9472,7 +9768,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "50528b3c-9cb3-411e-9cb5-f9839278afb0")
-		(property "Reference" "#PWR037"
+		(property "Reference" "#PWR01"
 			(at 44.45 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -9533,7 +9829,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR037")
+					(reference "#PWR01")
 					(unit 1)
 				)
 			)
@@ -9551,7 +9847,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "506b9bd7-e298-4a0f-a9d0-f35701079a44")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR021"
 			(at 163.83 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -9611,7 +9907,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR017")
+					(reference "#PWR021")
 					(unit 1)
 				)
 			)
@@ -9649,7 +9945,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LT8609SEV_TRPBF:05-08-1516_ADI"
+		(property "Footprint" "05-08-1516_ADI"
 			(at 170.18 209.55 0)
 			(hide yes)
 			(show_name no)
@@ -9768,7 +10064,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "567bb377-b14b-48f0-a54e-ca8347b2ccc1")
-		(property "Reference" "J11"
+		(property "Reference" "J6"
 			(at 55.88 123.19 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9779,7 +10075,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "Conn_01x19_Pin"
+		(property "Value" "ESP32_NodeMCU_1"
 			(at 55.88 125.73 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9883,7 +10179,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J11")
+					(reference "J6")
 					(unit 1)
 				)
 			)
@@ -9901,7 +10197,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "573c27ea-dc2a-46cb-957c-45f5dc8f642f")
-		(property "Reference" "#PWR021"
+		(property "Reference" "#PWR032"
 			(at 233.68 251.46 0)
 			(hide yes)
 			(show_name no)
@@ -9961,7 +10257,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR021")
+					(reference "#PWR032")
 					(unit 1)
 				)
 			)
@@ -10155,7 +10451,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6aeac8b4-4bd5-424a-bea5-d84b6b260e78")
-		(property "Reference" "#PWR040"
+		(property "Reference" "#PWR026"
 			(at 219.71 219.71 0)
 			(hide yes)
 			(show_name no)
@@ -10216,7 +10512,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR040")
+					(reference "#PWR026")
 					(unit 1)
 				)
 			)
@@ -10234,7 +10530,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6bea70b5-af8a-491e-b777-e3ab38dccaee")
-		(property "Reference" "#PWR04"
+		(property "Reference" "#PWR07"
 			(at 49.53 52.07 0)
 			(hide yes)
 			(show_name no)
@@ -10295,7 +10591,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR04")
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)
@@ -10395,7 +10691,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "712afd6b-49a9-4867-8973-f5664b590ac0")
-		(property "Reference" "#PWR023"
+		(property "Reference" "#PWR025"
 			(at 213.36 66.04 0)
 			(hide yes)
 			(show_name no)
@@ -10455,7 +10751,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR023")
+					(reference "#PWR025")
 					(unit 1)
 				)
 			)
@@ -10473,7 +10769,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "73435c4f-3f4f-4898-9825-16d0aa86f5ad")
-		(property "Reference" "#PWR02"
+		(property "Reference" "#PWR05"
 			(at 49.53 39.37 0)
 			(hide yes)
 			(show_name no)
@@ -10534,7 +10830,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR02")
+					(reference "#PWR05")
 					(unit 1)
 				)
 			)
@@ -10708,7 +11004,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "836ffb7d-ca18-482c-91de-399696308173")
-		(property "Reference" "#PWR026"
+		(property "Reference" "#PWR030"
 			(at 220.98 66.04 0)
 			(hide yes)
 			(show_name no)
@@ -10768,7 +11064,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR026")
+					(reference "#PWR030")
 					(unit 1)
 				)
 			)
@@ -10786,7 +11082,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "865d65fc-1e87-4198-9bb1-56d4c3fe81a7")
-		(property "Reference" "#PWR010"
+		(property "Reference" "#PWR013"
 			(at 49.53 90.17 0)
 			(hide yes)
 			(show_name no)
@@ -10847,7 +11143,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR010")
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
@@ -10865,7 +11161,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "86a5ccaf-b44c-4141-a4c2-75a69c42f544")
-		(property "Reference" "#PWR013"
+		(property "Reference" "#PWR018"
 			(at 157.48 232.41 0)
 			(hide yes)
 			(show_name no)
@@ -10926,7 +11222,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR013")
+					(reference "#PWR018")
 					(unit 1)
 				)
 			)
@@ -10944,7 +11240,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9145a6d0-6a4b-47ed-8a65-f4f1b215405a")
-		(property "Reference" "#PWR024"
+		(property "Reference" "#PWR033"
 			(at 246.38 229.87 0)
 			(hide yes)
 			(show_name no)
@@ -11005,7 +11301,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR024")
+					(reference "#PWR033")
 					(unit 1)
 				)
 			)
@@ -11023,7 +11319,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "93396d5a-9b7a-42d8-8c8b-8754cc19f804")
-		(property "Reference" "#PWR011"
+		(property "Reference" "#PWR016"
 			(at 143.51 214.63 0)
 			(hide yes)
 			(show_name no)
@@ -11084,7 +11380,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR011")
+					(reference "#PWR016")
 					(unit 1)
 				)
 			)
@@ -11191,7 +11487,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "99043ddd-a391-4e60-bd13-a697c673eb9e")
-		(property "Reference" "J7"
+		(property "Reference" "J9"
 			(at 317.5 99.0599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11255,7 +11551,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J7")
+					(reference "J9")
 					(unit 1)
 				)
 			)
@@ -11273,7 +11569,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9be9e7b1-5fbf-4d5a-9e21-1bbfe89ef136")
-		(property "Reference" "#PWR025"
+		(property "Reference" "#PWR029"
 			(at 217.17 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -11333,7 +11629,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR025")
+					(reference "#PWR029")
 					(unit 1)
 				)
 			)
@@ -11540,7 +11836,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a6c31c6a-3219-4b4f-b434-2581c16ba12b")
-		(property "Reference" "#PWR09"
+		(property "Reference" "#PWR012"
 			(at 39.37 87.63 0)
 			(hide yes)
 			(show_name no)
@@ -11601,7 +11897,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR09")
+					(reference "#PWR012")
 					(unit 1)
 				)
 			)
@@ -11620,7 +11916,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a97feb5d-6d59-474f-ab21-334f70f94845")
-		(property "Reference" "J8"
+		(property "Reference" "J10"
 			(at 317.5 111.7599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11684,7 +11980,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J8")
+					(reference "J10")
 					(unit 1)
 				)
 			)
@@ -11702,7 +11998,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ac193501-bd75-47d1-8aad-446b737f9a3d")
-		(property "Reference" "#PWR03"
+		(property "Reference" "#PWR06"
 			(at 39.37 49.53 0)
 			(hide yes)
 			(show_name no)
@@ -11763,7 +12059,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR03")
+					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -11781,7 +12077,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b0737a99-dfbd-4cf1-baed-2316fabab915")
-		(property "Reference" "#PWR01"
+		(property "Reference" "#PWR04"
 			(at 39.37 36.83 0)
 			(hide yes)
 			(show_name no)
@@ -11842,7 +12138,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR01")
+					(reference "#PWR04")
 					(unit 1)
 				)
 			)
@@ -11860,7 +12156,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b3bad0a6-4296-4916-b0f6-79706ccb4e98")
-		(property "Reference" "#PWR027"
+		(property "Reference" "#PWR031"
 			(at 222.25 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -11920,7 +12216,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR027")
+					(reference "#PWR031")
 					(unit 1)
 				)
 			)
@@ -11938,7 +12234,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b414acea-72b8-45ad-addb-507b3e20771a")
-		(property "Reference" "#PWR018"
+		(property "Reference" "#PWR023"
 			(at 171.45 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -11998,7 +12294,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR018")
+					(reference "#PWR023")
 					(unit 1)
 				)
 			)
@@ -12098,7 +12394,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b599c44c-f7fc-4d3d-b6ad-c30756be6d38")
-		(property "Reference" "#PWR030"
+		(property "Reference" "#PWR035"
 			(at 265.43 72.39 0)
 			(hide yes)
 			(show_name no)
@@ -12159,7 +12455,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR030")
+					(reference "#PWR035")
 					(unit 1)
 				)
 			)
@@ -12177,7 +12473,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b60c45f2-f509-41a9-b1cb-2366a8944ec1")
-		(property "Reference" "#PWR033"
+		(property "Reference" "#PWR039"
 			(at 281.94 153.67 0)
 			(hide yes)
 			(show_name no)
@@ -12237,7 +12533,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR033")
+					(reference "#PWR039")
 					(unit 1)
 				)
 			)
@@ -12332,7 +12628,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bf1f5b50-2193-4d41-8a50-2ed1c16f6ac7")
-		(property "Reference" "J9"
+		(property "Reference" "J11"
 			(at 317.5 124.4599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12396,7 +12692,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J9")
+					(reference "J11")
 					(unit 1)
 				)
 			)
@@ -12496,7 +12792,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c2539a49-6959-4dfb-ba11-99e6dc071eb1")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR027"
 			(at 219.71 227.33 0)
 			(hide yes)
 			(show_name no)
@@ -12557,7 +12853,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR019")
+					(reference "#PWR027")
 					(unit 1)
 				)
 			)
@@ -12575,7 +12871,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ca9c2fed-0086-4f78-ac8a-27516d0f7855")
-		(property "Reference" "#PWR06"
+		(property "Reference" "#PWR09"
 			(at 49.53 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -12636,7 +12932,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR06")
+					(reference "#PWR09")
 					(unit 1)
 				)
 			)
@@ -12736,7 +13032,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d29d0197-1bd8-44f8-b455-4aa85eae9393")
-		(property "Reference" "#PWR032"
+		(property "Reference" "#PWR038"
 			(at 281.94 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -12796,7 +13092,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR032")
+					(reference "#PWR038")
 					(unit 1)
 				)
 			)
@@ -12974,7 +13270,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d42ccbea-0ecd-4124-aaf3-3d2b168c3fec")
-		(property "Reference" "#PWR034"
+		(property "Reference" "#PWR040"
 			(at 281.94 171.45 0)
 			(hide yes)
 			(show_name no)
@@ -13034,7 +13330,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR034")
+					(reference "#PWR040")
 					(unit 1)
 				)
 			)
@@ -13052,7 +13348,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ebd8ded3-5c16-4a8f-8771-4881c7f0bf29")
-		(property "Reference" "#PWR015"
+		(property "Reference" "#PWR022"
 			(at 161.29 227.33 0)
 			(hide yes)
 			(show_name no)
@@ -13113,7 +13409,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR015")
+					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -13248,7 +13544,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f8643cdb-d25c-41a5-90b5-0747dc97938b")
-		(property "Reference" "J6"
+		(property "Reference" "J8"
 			(at 278.13 63.5 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13328,7 +13624,7 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "J6")
+					(reference "J8")
 					(unit 1)
 				)
 			)
@@ -13346,7 +13642,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fa049cf8-064d-436b-b34f-160440767711")
-		(property "Reference" "#PWR08"
+		(property "Reference" "#PWR011"
 			(at 49.53 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -13407,7 +13703,90 @@
 		(instances
 			(project "esp32_nodemcu"
 				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
-					(reference "#PWR08")
+					(reference "#PWR011")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x02_Pin")
+		(at 50.8 36.83 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "fb4e3092-6e40-40b9-999d-6e575e588dd0")
+		(property "Reference" "J1"
+			(at 52.07 36.8299 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "VBAT_INPUT"
+			(at 52.07 39.3699 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "12GaugePower:12GaugePower"
+			(at 50.8 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 50.8 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x02, script generated"
+			(at 50.8 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "accc4b9c-beb8-4946-8042-0016eb39ff56")
+		)
+		(pin "2"
+			(uuid "60c7e1bf-aa4b-4a57-bb58-5cea575a6285")
+		)
+		(instances
+			(project "esp32_nodemcu"
+				(path "/a553e44b-6c1b-4104-aad1-1839291b3bac"
+					(reference "J1")
 					(unit 1)
 				)
 			)

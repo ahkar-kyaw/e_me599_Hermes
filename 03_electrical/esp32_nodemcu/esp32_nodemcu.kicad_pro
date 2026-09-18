@@ -211,11 +211,11 @@
       ],
       "track_widths": [
         0.0,
-        0.2032,
-        0.254,
-        0.381,
-        0.762,
-        2.032
+        0.25,
+        0.5,
+        1.0,
+        5.0,
+        10.0
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -249,8 +249,16 @@
           "drill": 0.0
         },
         {
-          "diameter": 0.5588,
-          "drill": 0.3048
+          "diameter": 0.6,
+          "drill": 0.3
+        },
+        {
+          "diameter": 0.8,
+          "drill": 0.4
+        },
+        {
+          "diameter": 1.0,
+          "drill": 0.5
         }
       ],
       "zones_allow_external_fillets": false
@@ -670,7 +678,7 @@
         "uuid": "a553e44b-6c1b-4104-aad1-1839291b3bac"
       }
     ],
-    "used_designators": "U1-2,R1-3,L1,H1-4,#PWR1-40,A1-3,C1-4,#FLG1-5,J1-13",
+    "used_designators": "U1-2,R1-3,L1,H1-4,C1-4,A1-3,#PWR1-54,J1-18",
     "variants": []
   },
   "sheets": [

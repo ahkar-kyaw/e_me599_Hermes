@@ -1,0 +1,11 @@
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-F_Cu.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-B_Cu.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-F_Paste.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-B_Paste.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-F_Silkscreen.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-B_Silkscreen.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-F_Mask.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-B_Mask.gbr'.
+Plotted to '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-Edge_Cuts.gbr'.
+Created Gerber job file '/Users/ahkarkyaw/Projects/e_me599_Zephyr/03_electrical/esp32_nodemcu/esp32_nodemcu-job.gbrjob'.
+Info: Done.

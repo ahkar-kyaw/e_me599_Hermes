@@ -1,0 +1,16 @@
+
+\begin{thenomenclature} 
+\nomgroup{N}
+  \item [{$\mathbb{C}$}]\begingroup Complex numbers\nomeqref {0.0}\nompageref{xiii}
+  \item [{$\mathbb{H}$}]\begingroup Quaternions\nomeqref {0.0}\nompageref{xiii}
+  \item [{$\mathbb{R}$}]\begingroup Real numbers\nomeqref {0.0}\nompageref{xiii}
+\nomgroup{O}
+  \item [{$\mu$}]\begingroup Friction index\nomeqref {0.0}\nompageref{xiii}
+  \item [{$T$}]\begingroup \lipsum[1-3]\nomeqref {0.0}\nompageref{xiii}
+  \item [{$V$}]\begingroup Constant volume\nomeqref {0.0}\nompageref{xiii}
+\nomgroup{P}
+  \item [{$c$}]\begingroup Speed of light in a vacuum\nomeqref {0.0}\nompageref{xiii}
+  \item [{$G$}]\begingroup Gravitational constant\nomeqref {0.0}\nompageref{xiii}
+  \item [{$h$}]\begingroup Planck constant\nomeqref {0.0}\nompageref{xiii}
+
+\end{thenomenclature}

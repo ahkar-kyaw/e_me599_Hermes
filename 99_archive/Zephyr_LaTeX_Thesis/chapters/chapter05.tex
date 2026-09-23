@@ -1,0 +1,522 @@
+\chapter{Electrical and Electronic Design}\label{ch:electrical-and-electronic-design}
+
+\section{Electrical Architecture}\label{electrical-architecture}
+
+The electrical system has two energy domains. The high-current domain
+supplies the four actuators from the six-cell lithium-polymer battery.
+The logic domain supplies the controller, IMU, transceiver, receiver,
+and display through regulated rails. Separating these functions in the
+schematic and layout makes it possible to review conductor ratings,
+protection, startup behavior, and noise coupling independently while
+maintaining one intentional system reference.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 5.1: Show VBAT, protected or switched battery
+output, four actuator branches, logic converter input, 5 V rail, 3.3 V
+rail, controller, IMU, CAN transceiver, receiver, display, debug
+connection, and every ground-return path. Use distinct line weights for
+high-current and logic paths\textgreater{}\\
+What the figure should show: Show VBAT, protected or switched battery
+output, four actuator branches, logic converter input, 5 V rail, 3.3 V
+rail, controller, IMU, CAN transceiver, receiver, display, debug
+connection, and every ground-return path. Use distinct line weights for
+high-current and logic paths\\
+Likely source: final KiCad hierarchical schematic\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{5.1}Electrical architecture and voltage domains.}
+\textbf{Figure 5.1. Electrical architecture and voltage domains.}
+\end{center}
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{5.1}Electrical components and implementation status}
+\textbf{Table 5.1. Electrical components and implementation status}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1680}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2480}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2480}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3360}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Function}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Selected or proposed component}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence\slash{}status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Design issue to close}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Main controller & ESP32 NodeMCU prototype & Active firmware platform &
+Exact board revision, regulator capacity, final PCB integration \\
+Future controller & NUCLEO-H723ZG / STM32H723ZG & Scaffolded migration
+target & Migration decision, pin freeze, timing verification \\
+IMU & ST ISM330DHCX & SPI driver and estimator path present & Final
+mounting, axes, supply, interrupts, calibration \\
+CAN physical layer & Adafruit CAN Pal using TJA1051T\slash{}3 & Prototype
+interface & Final footprint or direct transceiver, standby pin,
+protection, termination \\
+Actuators & 4 \ensuremath{\times} CubeMars AK40-10 & Motor communication\slash{}motion partially
+demonstrated & IDs, modes, limits, firmware, harness pinout \\
+Radio receiver & RadioMaster RP2 V2 ExpressLRS & CRSF decoding reported
+& Supply, UART mapping, link-loss behavior \\
+Display & Waveshare 2-inch ST7789 module & UI interface reported & Final
+3.3 V compatibility, connector footprint, update load \\
+5 V conversion & LT8609S design & Schematic reviewed; hardware
+validation unavailable & Enable threshold, layout, thermal and transient
+testing \\
+Battery protection & BQ76942-based 6S design discussed &
+Recommended\slash{}separate BMS work; not confirmed manufactured & Final
+architecture, MOSFETs, shunt, cell connections, configuration \\
+\end{longtable}
+
+\section{Battery, Protection, and Power Distribution}\label{battery-protection-and-power-distribution}
+
+A six-cell lithium-polymer pack has a nominal voltage of approximately
+22.2 V and a fully charged voltage of 25.2 V. Converter and protection
+ratings must use the maximum voltage plus credible transients, not the
+nominal label. The selected actuators are rated for 24 V operation
+\cite{cubemars2026ak4010}, so the design supplies them from the battery domain rather
+than generating a regulated 24 V rail. The exact battery capacity,
+discharge rating, connector, cell condition, and allowable undervoltage
+threshold remain hardware verification items.
+
+The high-current design should include a master disconnect, an emergency
+method that removes actuator energy, branch overcurrent protection,
+reverse-polarity prevention or keyed connectors, and a precharge or
+anti-spark strategy if connector inrush is material. A BQ76942 can
+monitor and protect three to ten series cells \cite{ti2026bq76942}, but using the
+device requires a complete cell-tap network, current shunt, charge and
+discharge protection MOSFETs, thermistors, pack\slash{}load connections,
+configuration, and fault testing. The thesis must distinguish a separate
+BMS board from the main controller board if they are manufactured
+independently.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 5.2: Show the exact 6S battery connector or two
+connector branches, master switch or contactor, emergency stop,
+precharge or anti-spark element, pack fuse, per-motor or per-pair fuses,
+BMS\slash{}protection boundaries, current shunt, actuator connectors, LT8609S
+input, and high-current returns. Label ratings and connector pin
+numbers\textgreater{}\\
+What the figure should show: Show the exact 6S battery connector or two
+connector branches, master switch or contactor, emergency stop,
+precharge or anti-spark element, pack fuse, per-motor or per-pair fuses,
+BMS\slash{}protection boundaries, current shunt, actuator connectors, LT8609S
+input, and high-current returns. Label ratings and connector pin
+numbers\\
+Likely source: final power schematic and wiring harness drawing\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{5.2}Battery and high-current power-distribution schematic.}
+\textbf{Figure 5.2. Battery and high-current power-distribution schematic.}
+\end{center}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{5.2}Electrical power budget}
+\textbf{Table 5.2. Electrical power budget}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1812}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.0872}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1342}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2081}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2081}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1812}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Load}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Quantity}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Voltage}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Rated\slash{}expected current}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Peak\slash{}design current}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+AK40-10 actuator & 4 & VBAT & 2.7 A each manufacturer rated current &
+7.3 A each manufacturer peak current & Manufacturer specification;
+chosen limits unverified \\
+ESP32 controller board & 1 & 5 V input or 3.3 V rail &
+\textless MEASURE\textgreater{} & \textless MEASURE startup\slash{}transmit
+peak\textgreater{} & No final measured data \\
+ISM330DHCX & 1 & 3.3 V & \textless CALCULATE FROM SELECTED
+MODE\textgreater{} & \textless VERIFY\textgreater{} & Use exact
+datasheet operating mode \cite{st2026ism330dhcx} \\
+CAN transceiver & 1 & 3.3 V module input &
+\textless VERIFY\textgreater{} & \textless VERIFY dominant-bus
+load\textgreater{} & Adafruit\slash{}NXP documentation \cite{nxp2026tja1051}, \cite{adafruit2026canpal} \\
+Radio receiver & 1 & 5 V & \textless MEASURE\textgreater{} &
+\textless MEASURE\textgreater{} & Confirm installed RP2 V2 revision
+\cite{radiomaster2026manuals} \\
+ST7789 display module & 1 & 3.3 V & \textless MEASURE at selected
+brightness\textgreater{} & \textless MEASURE\textgreater{} & Confirm
+module revision \cite{waveshare2026lcd} \\
+Logic total & --- & 5 V and 3.3 V & \textless SUM WITH
+MARGIN\textgreater{} & \textless LOAD-STEP TEST\textgreater{} &
+Pending \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\emph{Note.} Manufacturer peak ratings are not simultaneous system
+requirements. Final branch and pack ratings must follow the configured
+motor limits and measured duty cycle.
+
+\section{Voltage Conversion and Logic Rails}\label{voltage-conversion-and-logic-rails}
+
+The reviewed design uses an LT8609S step-down regulator for the 5 V
+logic rail. The device accepts an input range that includes a fully
+charged 6S pack \cite{analog2026lt8609s}. The reviewed schematic used a 2.2 \ensuremath{\mu}H inductor,
+1 M\ensuremath{\Omega} and 182 k\ensuremath{\Omega} feedback resistors, a 10 pF feed-forward capacitor, a 1
+\ensuremath{\mu}F input capacitor, and a 22 \ensuremath{\mu}F output capacitor, producing a nominal
+output near 5.03 V. Those values must be checked against the exact
+switching frequency, inductor current rating, capacitor bias derating,
+minimum load, loop stability guidance, and the
+manufacturer\textquotesingle s recommended layout.
+
+The CAN Pal, ISM330DHCX interface, and display logic were previously
+found connected or labeled inconsistently with their intended 3.3 V
+operation. The final schematic should explicitly identify the supply
+accepted by each installed module rather than assuming that a breakout
+labeled VIN is equivalent to the IC supply. The RadioMaster receiver is
+assigned to the 5 V rail in the current interface plan. Decoupling must
+be placed at each device or connector, and the 3.3 V regulator capacity
+must include display and transceiver transient current if those loads
+share the controller-board regulator.
+
+\section{Controller, Sensor, Receiver, and Display Interfaces}\label{controller-sensor-receiver-and-display-interfaces}
+
+The active ESP32 pin contract inferred from the current firmware and
+schematic review is summarized in Table 5.3. The IMU uses SPI; the
+receiver uses a CRSF UART; the display uses a separate SPI-style
+interface; and the TWAI controller connects through TXD and RXD to the
+external transceiver. The table is a design baseline, not permission to
+fabricate. Every pin must be checked against the exact ESP32 board
+schematic, boot-strapping constraints, input-only pins, voltage domains,
+and the current repository configuration.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{5.3}ESP32 prototype pin assignments}
+\textbf{Table 5.3. ESP32 prototype pin assignments}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1955}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2030}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1203}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1654}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3158}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Subsystem}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Signal}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{ESP32 GPIO}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Direction at MCU}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Electrical note}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ISM330DHCX & SCLK & 18 & Output & 3.3 V SPI clock \\
+ISM330DHCX & SDO\slash{}MISO & 19 & Input & Sensor output to MCU \\
+ISM330DHCX & SDI\slash{}MOSI & 23 & Output & MCU output to sensor \\
+ISM330DHCX & CS & 27 & Output & Active-low chip select \\
+ISM330DHCX & INT1 / INT2 & 34 / 35 & Input & Input-only GPIOs; verify
+pull configuration \\
+ST7789 display & DIN / CLK & 13 / 14 & Output & 3.3 V logic \\
+ST7789 display & CS / DC / RST & 25 / 21 / 22 & Output & Use DC label,
+not ambiguous DS \\
+RadioMaster RP2 V2 & Receiver TX \ensuremath{\rightarrow} MCU RX & 16 & Input & Verify crossed
+UART naming at connector \\
+RadioMaster RP2 V2 & MCU TX \ensuremath{\rightarrow} receiver RX & 17 & Output & CRSF
+control\slash{}telemetry path \\
+CAN transceiver & TXD & 26 & Output & MCU TWAI transmit to
+transceiver \\
+CAN transceiver & RXD & 32 & Input & Transceiver receive to MCU \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\emph{Note.} A September schematic review contained inconsistent TX\slash{}RX
+naming in different descriptions. The final connector drawing must name
+signals by source and destination and be checked against firmware.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 5.3: Insert the finalized controller-interface
+schematic with connector pin numbers, voltage rails, decoupling, pull
+resistors, ESD protection, test points, and net labels matching Table
+5.3. Include board\slash{}module part numbers and footprint
+references\textgreater{}\\
+What the figure should show: Insert the finalized controller-interface
+schematic with connector pin numbers, voltage rails, decoupling, pull
+resistors, ESD protection, test points, and net labels matching Table
+5.3. Include board\slash{}module part numbers and footprint references\\
+Likely source: final KiCad schematic\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{5.3}Controller, sensor, receiver, display, and CAN interface schematic.}
+\textbf{Figure 5.3. Controller, sensor, receiver, display, and CAN interface schematic.}
+\end{center}
+
+\section{CAN Bus}\label{can-bus}
+
+The current firmware uses the ESP32 TWAI peripheral at 1 Mbit\slash{}s. The
+TJA1051T\slash{}3 translates the logic signals to the differential bus
+\cite{espressif2026twai}, \cite{nxp2026tja1051}. The main cable should form one linear trunk from one
+physical end to the other. Each motor node connects with a short stub,
+and CANH\slash{}CANL should be routed as a coupled pair with a nearby reference
+conductor. Exactly two 120 \ensuremath{\Omega} terminations belong at the two physical
+ends of the assembled bus \cite{ti2026tida01238}. Measuring approximately 60 \ensuremath{\Omega} between
+CANH and CANL with all power removed is a useful static check when both
+terminators are installed.
+
+The current schematic review identified J9 through J12 as CAN connectors
+with pin 1 labeled CANH and pin 2 labeled CANL, but the motor harness
+mapping remained ambiguous and must not be inferred from wire color. The
+AK40-10 connector and extension harness should be traced end-to-end and
+compared with the exact actuator manual before power is applied. CAN
+ground or a reference conductor should accompany the differential pair,
+while actuator power uses separate conductors sized for motor current.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 5.4: Draw the physical CAN trunk from the
+controller\slash{}transceiver through all four motor nodes in installed order.
+Show cable lengths, stub lengths, CANH, CANL, reference\slash{}ground, shield
+if used, node IDs, termination resistor locations, and connector pin
+numbers\textgreater{}\\
+What the figure should show: Draw the physical CAN trunk from the
+controller\slash{}transceiver through all four motor nodes in installed order.
+Show cable lengths, stub lengths, CANH, CANL, reference\slash{}ground, shield
+if used, node IDs, termination resistor locations, and connector pin
+numbers\\
+Likely source: final wiring harness drawing and physical
+measurement\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{5.4}Recommended linear CAN topology and termination locations.}
+\textbf{Figure 5.4. Recommended linear CAN topology and termination locations.}
+\end{center}
+
+\section{Printed-Circuit-Board Design}\label{printed-circuit-board-design}
+
+The reviewed repository contained KiCad project, schematic, and PCB
+files under 03\_electrical. Earlier PCB evidence showed a
+controller-header template with no routed segments, vias, or zones;
+later schematic work added the power converter and peripheral
+connectors, but manufacturing and validation were not demonstrated. The
+final thesis should include the schematic revision, PCB revision, layer
+stack, copper weight, design-rule check report, electrical-rule check
+report, fabrication outputs, assembly record, and bring-up results.
+
+Signal routing should preserve an uninterrupted reference plane and keep
+switch-node copper compact. The LT8609S input capacitor, catch-current
+loop, inductor, output capacitors, and feedback divider should follow
+the data-sheet placement guidance \cite{analog2026lt8609s}. CAN transient protection
+should sit close to the external connector, and the transceiver
+decoupling path should be short \cite{nxp2026tja1051}, \cite{ti2026tida01238}. IMU placement should
+minimize vibration and thermal gradients while maintaining a known rigid
+orientation. High-current actuator paths should be routed as broad
+copper areas on both outer layers with dense via stitching and without
+shared narrow necks.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{5.4}Recommended printed-circuit-board routing classes}
+\textbf{Table 5.4. Recommended printed-circuit-board routing classes}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1560}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1773}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2128}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1702}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2837}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Net class}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Track or copper width}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Via pad / drill}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Clearance}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Application and notes}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Signals & 0.25 mm & 0.60 / 0.30 mm & Fabricator default \ensuremath{\geq} approved
+minimum & GPIO, UART, SPI, interrupts, CAN logic; route CANH\slash{}CANL as a
+controlled pair where practical. \\
+3.3 V & 0.50 mm & 0.80 / 0.40 mm & Approved logic clearance & Peripheral
+distribution; use local planes\slash{}pours where helpful. \\
+5 V and LT8609 VIN\slash{}VOUT & 1.00 mm & 1.00 / 0.50 mm & Approved power
+clearance & Short current loops; verify copper temperature and converter
+layout. \\
+Each motor branch VBAT and return & 5.00 mm top + bottom pour & 1.00 /
+0.50 mm; 8 vias per net at transitions & 0.50 mm minimum; 1.00 mm where
+possible & One actuator branch; stitch layers approximately every 5
+mm. \\
+Each two-motor input branch & 10.00 mm top + bottom pour & 1.00 / 0.50
+mm; 16 vias per net at transitions & 0.50 mm minimum; 1.00 mm where
+possible & No shared narrow neck; independent input branch for each
+motor pair. \\
+LT8609 exposed-pad thermal vias & --- & 0.50 / 0.25 mm; five vias & Per
+footprint & Confirm against selected package and assembly process. \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\emph{Note.} These are design values selected for the present layout,
+not universal ampacity guarantees. Verify using the final stackup,
+IPC-2152-based analysis, conductor length, allowed temperature rise,
+enclosure airflow, and load testing \cite{ipc2009ipc2152}. One-ounce copper is
+accepted only with two independent XT60 branches, 10 mm top-and-bottom
+pair pours, 5 mm top-and-bottom motor pours, dense stitching, 14 AWG
+harness conductors, and no common neck. Two-ounce copper remains
+preferable.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 5.5: Insert publication-quality exports of the
+final schematic sheets. At minimum show power entry and protection,
+LT8609S regulator, controller headers, IMU, CAN transceiver and
+termination, four motor connectors, receiver, display, debug interface,
+test points, and net labels\textgreater{}\\
+What the figure should show: Insert publication-quality exports of the
+final schematic sheets. At minimum show power entry and protection,
+LT8609S regulator, controller headers, IMU, CAN transceiver and
+termination, four motor connectors, receiver, display, debug interface,
+test points, and net labels\\
+Likely source: KiCad schematic plot\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{5.5}Final KiCad schematic sheet set.}
+\textbf{Figure 5.5. Final KiCad schematic sheet set.}
+\end{center}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 5.6: Insert top and bottom PCB renders with
+high-current VBAT\slash{}return paths, logic planes, CAN pair, switch node,
+regulator loops, IMU placement, connector orientation, fuses, test
+points, mounting holes, and thermal vias annotated\textgreater{}\\
+What the figure should show: Insert top and bottom PCB renders with
+high-current VBAT\slash{}return paths, logic planes, CAN pair, switch node,
+regulator loops, IMU placement, connector orientation, fuses, test
+points, mounting holes, and thermal vias annotated\\
+Likely source: KiCad PCB editor and 3D viewer\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{5.6}Final printed-circuit-board layout with power and signal routing identified.}
+\textbf{Figure 5.6. Final printed-circuit-board layout with power and signal routing identified.}
+\end{center}
+
+\section{Electrical Safety and Verification}\label{electrical-safety-and-verification}
+
+Initial power-up should use a current-limited bench supply or a fused
+battery interface with the actuators disconnected. Resistance-to-ground,
+rail polarity, and regulator output should be checked before installing
+the controller and modules. Logic rails should then be loaded and
+observed for startup overshoot and ripple. The CAN transceiver should be
+verified with the motors unpowered before actuator power is enabled.
+Each motor branch should be enabled individually while current,
+connector temperature, and frame error counters are monitored.
+
+The final electrical design should protect against reverse polarity,
+overcurrent, undervoltage, CAN transients, regulator overheating, and
+accidental re-arming. The emergency stop must be evaluated as a system
+function: removing only a software command is not equivalent to
+isolating actuator energy. The implemented behavior, recovery procedure,
+and residual powered functions must be documented.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless VERIFY FROM HARDWARE: Record battery manufacturer and part
+number, cell count, capacity, discharge rating, maximum and minimum
+operating voltage, connector and wire gauge, fuse types and ratings,
+master-disconnect hardware, emergency-stop architecture, BMS\slash{}protection
+implementation, converter efficiency and temperatures, rail ripple, peak
+voltage droop, and measured actuator branch current.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}

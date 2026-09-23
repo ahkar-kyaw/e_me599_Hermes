@@ -1,0 +1,407 @@
+\chapter{Kinematic and Dynamic Modeling}\label{ch:kinematic-and-dynamic-modeling}
+
+\section{Coordinate Frames and Generalized Coordinates}\label{coordinate-frames-and-generalized-coordinates}
+
+Let \{I\} denote an inertial frame fixed to the level ground and \{B\} a
+body frame whose origin lies on the common wheel-center line. The body x
+axis is forward, y is along the wheel axis, and z is upward at the
+upright equilibrium. The planar pose is \ensuremath{\eta}=[X,Y,\ensuremath{\psi}]\ensuremath{^{T}}, where \ensuremath{\psi} is yaw.
+The body twist is \ensuremath{\nu}=[v\_x,v\_y,\ensuremath{\dot{\psi}}]\ensuremath{^{T}}. The pitch angle \ensuremath{\theta} describes
+rotation of the body about the common wheel axis, with \ensuremath{\theta}=0 at the
+selected upright reference. The generalized coordinates are
+q=[X,Y,\ensuremath{\psi},\ensuremath{\theta}]\ensuremath{^{T}}.
+
+\begin{equation}
+{}^{I}\mathbf{v}=\mathbf{R}(\psi){}^{B}\mathbf{v},\qquad
+\mathbf{R}(\psi)=\begin{bmatrix}\cos\psi&-\sin\psi\\\sin\psi&\cos\psi\end{bmatrix}
+\label{eq:6-1}
+\end{equation}
+
+Equation (6.1) transforms the body-frame translational velocity to
+inertial coordinates. The sign of \ensuremath{\psi} follows the right-hand rule about
+z\_I. All controller and plot signals should use radians internally and
+state degrees only when presenting results.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 6.1: Draw the inertial and body frames, pose
+X-Y-psi, body velocities vx and vy, pitch theta, center of mass,
+gravity, and common wheel axis. Show the upright reference and positive
+rotations\textgreater{}\\
+What the figure should show: Draw the inertial and body frames, pose
+X-Y-psi, body velocities vx and vy, pitch theta, center of mass,
+gravity, and common wheel axis. Show the upright reference and positive
+rotations\\
+Likely source: MATLAB vector graphic based on final CAD
+coordinates\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{6.1}Inertial and body coordinate frames used by the model.}
+\textbf{Figure 6.1. Inertial and body coordinate frames used by the model.}
+\end{center}
+
+\section{Collinear Mecanum-Wheel Kinematics}\label{collinear-mecanum-wheel-kinematics}
+
+\subsection{Wheel contact velocity}\label{wheel-contact-velocity}
+
+Wheel i is located at p\_i=[x\_i,y\_i]\ensuremath{^{T}} in \{B\}. The planar
+velocity of its center is the body translation plus the yaw
+contribution.
+
+\begin{equation}
+\mathbf{v}_{i}^{B}=\begin{bmatrix}v_x\\v_y\end{bmatrix}+
+\dot{\psi}\begin{bmatrix}-y_i\\x_i\end{bmatrix}
+\label{eq:6-2}
+\end{equation}
+
+For the ideal collinear arrangement x\_i=0. The Mecanum roller
+constraint is represented by a sign s\_i\ensuremath{\in}\{\ensuremath{-}1,+1\} for an ideal
+45-degree roller. The sign is defined operationally: it specifies
+whether positive wheel rotation couples positively or negatively to
+v\_y. This avoids relying on wheel labels such as left-handed or
+right-handed, whose interpretation can change with viewing direction.
+
+\subsection{Inverse kinematics}\label{inverse-kinematics}
+
+With effective wheel radius r and the stated sign convention, the ideal
+inverse kinematics reduce to Equation (6.3). Each row states the wheel
+rate needed for the local longitudinal velocity v\_x\ensuremath{-}y\_i\ensuremath{\dot{\psi}} and the
+lateral component selected by s\_i.
+
+\begin{equation}
+\boldsymbol{\omega}=\frac{1}{r}\mathbf{H}\boldsymbol{\nu},\qquad
+\mathbf{H}=\begin{bmatrix}1&s_1&-y_1\\1&s_2&-y_2\\1&s_3&-y_3\\1&s_4&-y_4\end{bmatrix},\quad
+\boldsymbol{\nu}=\begin{bmatrix}v_x&v_y&\dot{\psi}\end{bmatrix}^{T}
+\label{eq:6-3}
+\end{equation}
+
+The matrix H has dimensions 4\ensuremath{\times}3. The first column corresponds to
+longitudinal velocity, the second to lateral velocity, and the third to
+yaw. The equation is symbolic until r, y\_i, and s\_i are measured. If
+the roller angle differs materially from 45 degrees, the second column
+must be scaled from the actual constraint geometry rather than retaining
+\ensuremath{\pm}1.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 6.2: For each wheel show positive spin, roller
+axis, effective constrained force direction, sign si, axial position yi,
+and the local velocity contribution from positive yaw. Use the installed
+wheel order\textgreater{}\\
+What the figure should show: For each wheel show positive spin, roller
+axis, effective constrained force direction, sign si, axial position yi,
+and the local velocity contribution from positive yaw. Use the installed
+wheel order\\
+Likely source: MATLAB vector diagram checked against the physical
+wheels\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{6.2}Idealized force direction for each collinear Mecanum wheel.}
+\textbf{Figure 6.2. Idealized force direction for each collinear Mecanum wheel.}
+\end{center}
+
+\subsection{Forward kinematics and rank}\label{forward-kinematics-and-rank}
+
+When H has full column rank, the least-squares body twist follows from
+the Moore-Penrose pseudoinverse.
+
+\begin{equation}
+\boldsymbol{\nu}=r\left(\mathbf{H}^{T}\mathbf{H}\right)^{-1}\mathbf{H}^{T}\boldsymbol{\omega}
+=r\mathbf{H}^{\dagger}\boldsymbol{\omega},\qquad \operatorname{rank}(\mathbf{H})=3
+\label{eq:6-4}
+\end{equation}
+
+Full planar mobility requires rank(H)=3. Both roller signs must be
+present; otherwise the longitudinal and lateral columns are dependent.
+In addition, the axial-position column must not be expressible as a
+linear combination of the constant and sign columns. For four wheels, a
+practical condition is that at least one roller-sign group contains
+wheels at distinct y positions while both signs are represented. These
+conditions must be evaluated for the measured order rather than assumed.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{6.1}Mobility-rank conditions for the collinear wheel arrangement}
+\textbf{Table 6.1. Mobility-rank conditions for the collinear wheel arrangement}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.4375}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.1562}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.4062}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Geometry or roller case}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Expected rank}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Consequence}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Both signs present and axial positions provide an independent yaw column
+& 3 & Independent ideal vx, vy, and yaw commands are kinematically
+available. \\
+All wheels have the same roller sign & \ensuremath{\leq}2 & Longitudinal and lateral
+columns are dependent; full planar mobility is lost. \\
+Each sign occurs only at one repeated axial location & \ensuremath{\leq}2 & Yaw column
+can become a combination of longitudinal and lateral columns. \\
+Wheel locations nearly create dependence & 3 but ill-conditioned & Large
+wheel speeds\slash{}torques and noise amplification; evaluate condition
+number. \\
+\end{longtable}
+
+\section{Wheel Torque and Body Wrench}\label{wheel-torque-and-body-wrench}
+
+Power consistency maps wheel torques to the body wrench
+w=[F\_x,F\_y,M\_z]\ensuremath{^{T}}. If wheel-speed losses are neglected, \ensuremath{\tau}\ensuremath{^{T}}\ensuremath{\omega}=w\ensuremath{^{T}}\ensuremath{\nu},
+giving Equation (6.5).
+
+\begin{equation}
+\mathbf{w}=\begin{bmatrix}F_x&F_y&M_z\end{bmatrix}^{T}
+=\frac{1}{r}\mathbf{H}^{T}\boldsymbol{\tau}
+\label{eq:6-5}
+\end{equation}
+
+Because four actuators produce three planar wrench components, one
+internal null-space direction remains when H has rank three. A weighted
+minimum-effort allocation is given by Equation (6.6), where W is
+positive definite and can penalize actuators differently.
+
+\begin{equation}
+\boldsymbol{\tau}^{\star}=r\mathbf{W}^{-1}\mathbf{H}
+\left(\mathbf{H}^{T}\mathbf{W}^{-1}\mathbf{H}\right)^{-1}\mathbf{w}_{d}
+\label{eq:6-6}
+\end{equation}
+
+The allocator must retain torque headroom for pitch stabilization. A
+planar command that uses all available current can prevent recovery from
+a pitch disturbance. A practical implementation therefore prioritizes or
+reserves the longitudinal collective torque needed by the balance loop,
+then allocates lateral and yaw demands subject to individual current,
+speed, voltage, and thermal limits. Null-space torque should normally be
+zero unless it serves a documented objective, because internal wheel
+forces can increase slip and power loss without changing the ideal body
+wrench.
+
+\section{Nonlinear Dynamic Model}\label{nonlinear-dynamic-model}
+
+The general model uses q=[X,Y,\ensuremath{\psi},\ensuremath{\theta}]\ensuremath{^{T}} and four wheel torques. The
+Euler-Lagrange form is shown in Equation (6.7). M(q) is the mass matrix;
+C(q,\ensuremath{\dot{q}}) contains velocity-dependent terms; g(q) is the gravity vector; D
+represents dissipative effects; B(q) maps actuator torques; and d
+contains unmodeled contact, slip, and disturbance forces.
+
+\begin{equation}
+\mathbf{M}(\mathbf{q})\ddot{\mathbf{q}}+
+\mathbf{C}(\mathbf{q},\dot{\mathbf{q}})\dot{\mathbf{q}}+
+\mathbf{g}(\mathbf{q})+\mathbf{D}\dot{\mathbf{q}}
+=\mathbf{B}(\mathbf{q})\boldsymbol{\tau}+\mathbf{d}
+\label{eq:6-7}
+\end{equation}
+
+A complete numerical M matrix requires the final component masses,
+center-of-mass coordinates, and inertia tensors. Until those data exist,
+the model is kept symbolic. The principal assumptions are a rigid body,
+a rigid level ground plane, continuous wheel contact, one dominant
+unstable pitch coordinate, known wheel geometry, and an idealized roller
+constraint. The initial model neglects detailed roller inertia,
+intermittent roller impacts, tire deformation, bearing friction
+nonlinearities, battery voltage sag, sensor noise, and CAN jitter. Each
+omitted effect is either included as a disturbance in sensitivity
+studies or added after hardware data show that it materially affects the
+result.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{6.2}Kinematic and dynamic symbols}
+\textbf{Table 6.2. Kinematic and dynamic symbols}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.1538}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.6615}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.1846}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Symbol}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Definition}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Unit}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+X, Y & Inertial position of body-frame origin & m \\
+\ensuremath{\psi} & Yaw angle & rad \\
+\ensuremath{\theta} & Pitch angle from upright & rad \\
+v\_x, v\_y & Body-frame translation velocities & m\slash{}s \\
+r & Effective loaded wheel radius & m \\
+y\_i & Wheel-i position along common axis & m \\
+s\_i & Wheel-i roller sign & --- \\
+\ensuremath{\omega}\_i & Wheel-i angular speed & rad\slash{}s \\
+\ensuremath{\tau}\_i & Wheel-i output torque applied in positive wheel direction &
+N\ensuremath{\cdot}m \\
+m\_b & Body mass participating in pitch motion & kg \\
+m\_t & Equivalent translated mass & kg \\
+\ensuremath{\ell} & Distance from wheel axis to body COM & m \\
+I\_p & Body pitch inertia about COM & kg\ensuremath{\cdot}m\ensuremath{^{2}} \\
+b\_x, b\_\ensuremath{\theta} & Equivalent longitudinal and pitch damping & N\ensuremath{\cdot}s\slash{}m,
+N\ensuremath{\cdot}m\ensuremath{\cdot}s\slash{}rad \\
+\end{longtable}
+
+\section{Reduced Longitudinal Balance Model}\label{reduced-longitudinal-balance-model}
+
+For initial controller design, longitudinal motion and pitch are
+isolated from lateral and yaw dynamics. The body center of mass is
+located a distance \ensuremath{\ell} from the wheel axis. The equivalent translated mass
+m\_t includes the body and reflected wheel\slash{}rotor contributions used by
+the chosen derivation. The collective wheel torque is \ensuremath{\tau}\_\ensuremath{\Sigma}=\ensuremath{\Sigma}\ensuremath{\tau}\_i for the
+wheel combination that produces positive forward motion. With positive \ensuremath{\theta}
+defined as forward lean and positive wheel torque producing forward
+ground force, one consistent reduced model is Equation (6.8).
+
+\begin{equation}
+\begin{bmatrix}m_t&m_b\ell\cos\theta\\m_b\ell\cos\theta&I_p+m_b\ell^2\end{bmatrix}
+\begin{bmatrix}\ddot{x}\\\ddot{\theta}\end{bmatrix}+
+\begin{bmatrix}-m_b\ell\sin\theta\,\dot{\theta}^{2}\\-m_bg\ell\sin\theta\end{bmatrix}+
+\begin{bmatrix}b_x\dot{x}\\b_\theta\dot{\theta}\end{bmatrix}
+=\begin{bmatrix}1\slash{}r\\-1\end{bmatrix}\tau_{\Sigma}
+\label{eq:6-8}
+\end{equation}
+
+The input vector contains the forward force \ensuremath{\tau}\_\ensuremath{\Sigma}/r and the opposing
+reaction torque \ensuremath{-}\ensuremath{\tau}\_\ensuremath{\Sigma} on the body. The equation assumes that the four
+wheel torques contributing to forward balance have already been
+transformed into a consistent sign convention. If the actuator reports
+motor-side rather than output torque, gear ratio and efficiency must be
+applied explicitly. The model should be checked by energy and
+dimensional consistency before numerical use.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 6.3: Draw the reduced body and wheel system with
+body mass mb, COM distance l, pitch inertia Ip, wheel radius r, gravity,
+ground force, collective actuator torque, body reaction torque, x
+displacement, and positive theta\textgreater{}\\
+What the figure should show: Draw the reduced body and wheel system with
+body mass mb, COM distance l, pitch inertia Ip, wheel radius r, gravity,
+ground force, collective actuator torque, body reaction torque, x
+displacement, and positive theta\\
+Likely source: author-created free-body diagram verified against the
+sign convention\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{6.3}Reduced inverted-pendulum free-body representation.}
+\textbf{Figure 6.3. Reduced inverted-pendulum free-body representation.}
+\end{center}
+
+\section{Linearization and State-Space Form}\label{linearization-and-state-space-form}
+
+Near \ensuremath{\theta}=0, sin\ensuremath{\theta}\ensuremath{\approx}\ensuremath{\theta} and cos\ensuremath{\theta}\ensuremath{\approx}1. Let E be the 2\ensuremath{\times}2 mass matrix evaluated at
+the upright equilibrium, K contain the linear gravitational term, and D
+contain the selected viscous damping. Defining x=[x,\ensuremath{\theta},\ensuremath{\dot{x}},\ensuremath{\dot{\theta}}]\ensuremath{^{T}} gives
+the continuous-time model in Equation (6.9).
+
+\begin{equation}
+\dot{\mathbf{x}}=\mathbf{A}\mathbf{x}+\mathbf{B}u,\qquad
+\mathbf{x}=\begin{bmatrix}x&\theta&\dot{x}&\dot{\theta}\end{bmatrix}^{T},\qquad
+\mathbf{A}=\begin{bmatrix}\mathbf{0}&\mathbf{I}\\
+\mathbf{E}^{-1}\mathbf{K}&-\mathbf{E}^{-1}\mathbf{D}\end{bmatrix}
+\label{eq:6-9}
+\end{equation}
+
+The exact A and B entries should be generated symbolically from the
+adopted parameter definitions to avoid transcription errors. The model
+is discretized at the measured controller interval, preferably using a
+zero-order hold. Controllability must be checked with the final
+numerical parameters using Equation (6.10); observability must likewise
+be checked for the selected measured outputs.
+
+\begin{equation}
+\mathcal{C}=\begin{bmatrix}\mathbf{B}&\mathbf{A}\mathbf{B}&\mathbf{A}^{2}\mathbf{B}&\mathbf{A}^{3}\mathbf{B}\end{bmatrix},
+\qquad \operatorname{rank}(\mathcal{C})=4\;\text{required}
+\label{eq:6-10}
+\end{equation}
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{6.3}Model parameters and identification method}
+\textbf{Table 6.3. Model parameters and identification method}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.2388}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3806}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3806}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Parameter}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Source for final value}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Uncertainty or validation method}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+m\_b and m\_t & Physical component weights and final CAD grouping &
+Scale accuracy; compare CAD and assembled mass \\
+\ensuremath{\ell} and COM offsets & CAD mass properties and physical balance\slash{}suspension
+test & Repeat after wiring or battery changes \\
+I\_p and I\_z & CAD plus pendulum\slash{}system-identification test & Report
+method and confidence interval \\
+r & Loaded rollout test & Repeat on test surface and at representative
+load \\
+y\_i and s\_i & Dimensioned CAD and wheel-direction inspection &
+Cross-check against single-wheel command test \\
+Actuator delay\slash{}time constant & Command\slash{}feedback step test & Fit model;
+report sample rate and confidence \\
+Torque\slash{}current limits & Installed actuator configuration and measured
+current & Distinguish manufacturer rating from selected limit \\
+b\_x and b\_\ensuremath{\theta} & Coast-down or fitted response & Treat as uncertain in
+sensitivity analysis \\
+Friction\slash{}slip parameters & Dedicated velocity\slash{}force experiments &
+Surface-dependent; do not overfit one trial \\
+\end{longtable}
+
+\section{Model Limitations}\label{model-limitations}
+
+The ideal model predicts achievable velocity and generalized wrench, not
+exact ground forces at every roller. Mecanum wheels experience discrete
+changes in the contacting roller, varying normal loads, and slip
+\cite{bayar2020contact}--\cite{barcenas2025robust}. The body may also roll or flex even when the
+principal unstable motion is pitch. The actuator\textquotesingle s
+internal current and velocity loops, CAN command update, gearbox
+backlash, and encoder location modify the commanded-to-wheel response.
+These effects should be added only at a level supported by measurement.
+
+The purpose of the reduced model is to make controller assumptions
+visible and testable. Agreement should be evaluated over multiple
+initial conditions and command directions. If one parameter set cannot
+explain both small-signal balance and larger motion trials, the
+residuals should guide model refinement rather than being hidden by
+retuning the controller.

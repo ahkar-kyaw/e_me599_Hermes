@@ -1,0 +1,93 @@
+\chapter{System Parameters}\label{ch:system-parameters}
+
+Table A.1 is the single source of truth for numerical parameters used in
+the final model, controller, simulation, and results. Each value should
+carry a method, uncertainty, configuration, and source. A datasheet
+value must not silently replace an as-installed or experimentally
+identified value.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{A.1}Master system-parameter record}
+\textbf{Table A.1. Master system-parameter record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1164}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2123}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1849}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1027}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2123}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1712}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Category}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Parameter\slash{}symbol}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Value}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{SI unit}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Method\slash{}source}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Uncertainty\slash{}status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Geometry & Effective wheel radius, r & \textless INSERT\textgreater{} &
+m & Loaded rollout; compare CAD & \textless INSERT\textgreater{} \\
+Geometry & Wheel coordinates, (x\_i,y\_i) & \textless INSERT 4
+ROWS\textgreater{} & m & As-built survey & Required \\
+Geometry & Roller signs, s\_i & \textless INSERT 4 SIGNS\textgreater{} &
+--- & Visual and motion sign test & Required \\
+Geometry & Roller angle & \textless VERIFY\textgreater{} & rad & Wheel
+drawing\slash{}measurement & Required \\
+Mass & Complete robot mass & \textless INSERT\textgreater{} & kg &
+Calibrated scale & Required \\
+Mass & Body mass above axis, m\_b & \textless INSERT\textgreater{} & kg
+& Component\slash{}CAD breakdown & Required \\
+Mass & COM vector from balance axis & \textless INSERT\textgreater{} & m
+& CAD plus physical check & Required \\
+Inertia & Pitch\slash{}yaw inertias & \textless INSERT\textgreater{} & kg\ensuremath{\cdot}m\ensuremath{^{2}} &
+CAD or system identification & Required \\
+Actuator & Model and quantity & AK40-10; four selected & --- &
+Repository\slash{}product record \cite{zephyr_repo}, \cite{cubemars2026ak4010} & Verify installed labels \\
+Actuator & Gear ratio & 10:1 nominal & --- & Manufacturer \cite{cubemars2026ak4010} &
+Verify revision \\
+Actuator & Rated\slash{}peak output torque & 1.3 / 4.1 nominal & N\ensuremath{\cdot}m &
+Manufacturer \cite{cubemars2026ak4010} & Rating; not project limit \\
+Actuator & Rated\slash{}no-load output speed & 370 / 435 nominal & rpm &
+Manufacturer \cite{cubemars2026ak4010} & Rating; verify voltage \\
+Actuator & Command mode and scaling & \textless INSERT\textgreater{} &
+mode-specific & Installed firmware\slash{}config & Required \\
+Actuator & Four node IDs and directions & Motor 1 observed as 69; others
+\textless INSERT\textgreater{} & --- & Firmware\slash{}hardware survey &
+Incomplete \\
+Electrical & Battery chemistry\slash{}cell count & LiPo, 6S reported & --- &
+Label and configuration & Verify pack \\
+Electrical & Battery nominal\slash{}max voltage & \textless INSERT
+VERIFIED\textgreater{} & V & Exact pack datasheet\slash{}label & Required \\
+Electrical & Capacity\slash{}discharge rating & \textless INSERT\textgreater{}
+& A\ensuremath{\cdot}h / C & Exact pack label & Required \\
+Sensor & IMU & ISM330DHCX & --- & Driver\slash{}configuration \cite{zephyr_repo}, \cite{st2026ism330dhcx}
+& Confirmed in code; verify board \\
+Sensor & Accel\slash{}gyro ranges & \ensuremath{\pm}4 g / \ensuremath{\pm}500 deg\slash{}s observed & m\slash{}s\ensuremath{^{2}} / rad\slash{}s &
+Firmware plus datasheet & Verify final build \\
+Sensor & Output data rate & 208 observed & Hz & Firmware plus datasheet
+& Verify final build \\
+Comms & CAN bitrate & 1,000,000 observed & bit\slash{}s & ESP32 configuration &
+Verify all nodes \\
+Control & Estimator\slash{}controller period & \textless INSERT
+MEASURED\textgreater{} & s & Firmware timestamps & Required \\
+Control & Feedback age limit & \textless INSERT\textgreater{} & s &
+Safety configuration & Required \\
+Control & Gain matrices\slash{}limits & \textless INSERT\textgreater{} &
+various & Released parameter file & Not finalized \\
+Losses & b\_x, b\_theta\slash{}traction terms & \textless INSERT\textgreater{}
+& SI & System identification & Required for prediction \\
+\end{longtable}
+\end{landscape}
+\clearpage

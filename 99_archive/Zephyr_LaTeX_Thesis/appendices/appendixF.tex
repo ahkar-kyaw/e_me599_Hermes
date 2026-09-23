@@ -1,0 +1,45 @@
+\chapter{Extended Modeling Derivations}\label{ch:extended-modeling-derivations}
+
+\section{Rank of the Collinear Kinematic Matrix}\label{f.1-rank-of-the-collinear-kinematic-matrix}
+
+For the adopted idealized row h\_i=[1, s\_i, \ensuremath{-}y\_i], the first
+column is constant, the second represents roller handedness, and the
+third represents yaw leverage. Rank three requires these three column
+vectors to be linearly independent. If every s\_i is identical, the
+first two columns are dependent and longitudinal and lateral components
+cannot be separated. If y is an affine function of s, the third column
+lies in the span of the first two. Thus a sufficient and readily checked
+condition is that the roller signs include both handednesses and that
+the axial coordinates do not collapse into only the affine pattern
+y\_i=a+b s\_i. The singular values quantify how close the actual
+geometry is to loss of rank.
+
+\section{Virtual Work and Wrench Mapping}\label{f.2-virtual-work-and-wrench-mapping}
+
+Equation (6.5) follows from conservation of instantaneous power. With
+ideal gearing and no roller loss, wheel power is \ensuremath{\tau}\ensuremath{^{T}}\ensuremath{\omega} and body power is
+w\ensuremath{^{T}}\ensuremath{\nu}. Substituting \ensuremath{\omega}=(1\slash{}r)H\ensuremath{\nu} and requiring equality for arbitrary \ensuremath{\nu} gives
+w=(1\slash{}r)H\ensuremath{^{T}}\ensuremath{\tau}. In a real robot, gear efficiency, current control, roller
+deformation, and slip modify this relation; experimental identification
+should therefore compare commanded and measured effort.
+
+\section{Reduced Linearization}\label{f.3-reduced-linearization}
+
+At \ensuremath{\theta}=0 and zero velocity, sin \ensuremath{\theta}\ensuremath{\approx}\ensuremath{\theta} and cos \ensuremath{\theta}\ensuremath{\approx}1. Let E be the constant
+two-by-two mass matrix from Equation (6.8), D=diag(b\_x,b\_\ensuremath{\theta}), and K
+contain the gravitational term in the pitch row. Then [\ensuremath{\ddot{x}},
+\ensuremath{\ddot{\theta}}]\ensuremath{^{T}}=E\ensuremath{^{-}}\ensuremath{^{1}}(K[x,\ensuremath{\theta}]\ensuremath{^{T}}\ensuremath{-}D[\ensuremath{\dot{x}},\ensuremath{\dot{\theta}}]\ensuremath{^{T}}+B\_u u). Stacking position and
+velocity yields Equation (6.9). Signs must be regenerated from the final
+definition of positive pitch and positive aggregate wheel torque;
+memorized cart-pole matrices are not acceptable substitutes.
+
+\section{Allocation under Bounds}\label{f.4-allocation-under-bounds}
+
+Equation (6.6) is the minimum weighted-norm solution when the desired
+wrench is feasible and no bounds are active. The physical allocation is
+a constrained quadratic program that minimizes wrench error and actuator
+effort subject to torque, current, speed, voltage, thermal, and slew
+bounds. Priority or weighting should preserve the balance-axis command
+when full planar tracking would consume the available stabilization
+authority. The allocation residual and active constraints must be
+logged.

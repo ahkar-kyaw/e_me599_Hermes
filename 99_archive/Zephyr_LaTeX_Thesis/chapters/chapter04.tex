@@ -1,0 +1,323 @@
+\chapter{Mechanical Design}\label{ch:mechanical-design}
+
+\section{Mechanical Concept}\label{mechanical-concept}
+
+Zephyr is organized about a common horizontal wheel axis. Four
+independently driven Mecanum wheels are distributed along this line, and
+the body mass is carried above the line so that gravity produces an
+unstable pitch moment. In the nominal upright configuration,
+longitudinal motion is perpendicular to the common wheel axis, lateral
+motion is parallel to that axis, yaw is rotation about the vertical
+axis, and pitch is rotation about the common wheel axis. This definition
+must be reconciled with the final CAD coordinate system and IMU mounting
+axes before signs are frozen.
+
+A rectangular four-corner Mecanum chassis obtains yaw authority from
+longitudinal and lateral offsets. In the collinear design, all
+wheel-center longitudinal coordinates are nominally zero. Yaw authority
+must therefore come from the differences in longitudinal force applied
+at distinct axial positions. Lateral force depends on the roller
+handedness. The physical order of left- and right-handed wheels is
+consequently a functional design variable rather than a cosmetic
+assembly detail.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 4.1: Insert a high-resolution photograph of the
+current mechanical prototype on a plain background. Label wheel numbers,
+actuator bodies, structural frame, battery location, electronics
+enclosure, IMU location, cable paths, and balance axis. Identify which
+components are temporary\textgreater{}\\
+What the figure should show: Insert a high-resolution photograph of the
+current mechanical prototype on a plain background. Label wheel numbers,
+actuator bodies, structural frame, battery location, electronics
+enclosure, IMU location, cable paths, and balance axis. Identify which
+components are temporary\\
+Likely source: physical prototype photograph\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{4.1}Current Zephyr mechanical prototype with major components identified.}
+\textbf{Figure 4.1. Current Zephyr mechanical prototype with major components identified.}
+\end{center}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 4.2: Insert an exploded CAD view with a
+bill-of-material callout for frame plates, printed parts, actuator
+mounts, wheel hubs, bearings or supports, fasteners, battery retention,
+electronics mounts, covers, and cable restraints\textgreater{}\\
+What the figure should show: Insert an exploded CAD view with a
+bill-of-material callout for frame plates, printed parts, actuator
+mounts, wheel hubs, bearings or supports, fasteners, battery retention,
+electronics mounts, covers, and cable restraints\\
+Likely source: final SolidWorks assembly and drawing package\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{4.2}Exploded CAD view of the chassis, actuator mounts, wheels, and electronics structure.}
+\textbf{Figure 4.2. Exploded CAD view of the chassis, actuator mounts, wheels, and electronics structure.}
+\end{center}
+
+\section{Coordinate Frames and Wheel Arrangement}\label{coordinate-frames-and-wheel-arrangement}
+
+The body frame \{B\} is placed on the common wheel-center line at a
+defined axial origin. The x\_B axis points in the nominal forward
+direction, y\_B follows the common wheel axis, and z\_B points upward
+when the robot is upright. Wheel i is located at p\_i=[0, y\_i, 0]\ensuremath{^{T}}
+for the ideal collinear model. A roller sign s\_i is assigned from the
+direction in which positive wheel rotation couples to positive lateral
+velocity. The sign must be determined by inspection and verified by
+lifting the platform and commanding one wheel at a time.
+
+The balance angle \ensuremath{\theta} is zero when the designated body reference plane is
+vertical. Positive pitch, yaw, wheel rotation, motor current, and torque
+directions must be documented on the same drawing. The IMU mounting
+rotation is then a fixed transform from the sensor frame to \{B\};
+software should apply this transform before the estimator. Using one
+signed convention throughout CAD, wiring, firmware, simulation, and
+plots prevents the common error of compensating for a reversed motor in
+multiple layers.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 4.3: Provide a dimensioned coordinate-frame
+drawing with the origin, x\_B-y\_B-z\_B directions, inertial frame,
+positive pitch and yaw, wheel centers y1 through y4, effective wheel
+radius, roller angle and sign, center-of-mass coordinates, and ground
+plane\textgreater{}\\
+What the figure should show: Provide a dimensioned coordinate-frame
+drawing with the origin, x\_B-y\_B-z\_B directions, inertial frame,
+positive pitch and yaw, wheel centers y1 through y4, effective wheel
+radius, roller angle and sign, center-of-mass coordinates, and ground
+plane\\
+Likely source: CAD drawing supplemented by MATLAB vector graphics\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{4.3}Body coordinate frame, collinear wheel locations, roller signs, and balancing axis.}
+\textbf{Figure 4.3. Body coordinate frame, collinear wheel locations, roller signs, and balancing axis.}
+\end{center}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless AUTHOR INPUT REQUIRED: Explain why the collinear four-wheel
+arrangement was selected instead of a conventional two-wheel balancing
+platform or a statically stable four-corner Mecanum platform. Address
+expected lateral authority, packaging, redundancy, research value, and
+accepted mechanical complexity.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\section{Wheels and Actuators}\label{wheels-and-actuators}
+
+The selected wheels are the goBILDA GripForce Mecanum Wheel Set, whose
+manufacturer lists a 104 mm diameter, 40A-durometer silicone rollers, 11
+bearing-supported rollers per wheel, and a mass of 236 g per wheel
+\cite{gobilda2026gripforce}. The 52 mm nominal radius inferred from the catalog diameter is
+suitable for preliminary calculations, but the effective rolling radius
+under robot load should be measured because roller deformation and floor
+compliance change the kinematic scale.
+
+Each wheel is driven by a CubeMars AK40-10 actuator. The compact
+integrated package reduces the number of separate motor-controller and
+encoder mounts. It also imposes a 10:1 planetary gearbox and a single
+internal encoder in the documented variant \cite{cubemars2026ak4010}. The manufacturer
+lists 18 arcmin of backlash. At the wheel rim, the corresponding lost
+motion depends on the actual output backlash and wheel radius; this
+value should be measured rather than inferred from the catalog alone.
+Backlash is particularly important near the zero-speed reversals
+generated by a balance controller.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 4.4: Show a section or exploded detail from
+actuator housing to wheel: actuator mounting face, output interface, hub
+or adapter, fasteners, wheel, any shaft support or bearing, axial
+retention, locating features, and torque reaction into the frame.
+Include critical dimensions and materials\textgreater{}\\
+What the figure should show: Show a section or exploded detail from
+actuator housing to wheel: actuator mounting face, output interface, hub
+or adapter, fasteners, wheel, any shaft support or bearing, axial
+retention, locating features, and torque reaction into the frame.
+Include critical dimensions and materials\\
+Likely source: manufacturing drawing and actuator\slash{}wheel CAD\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{4.4}Actuator-to-wheel structural interface and load path.}
+\textbf{Figure 4.4. Actuator-to-wheel structural interface and load path.}
+\end{center}
+
+\section{Chassis, Structural Interfaces, and Mass Distribution}\label{chassis-structural-interfaces-and-mass-distribution}
+
+The chassis must carry the battery and electronics rigidly relative to
+the IMU while transmitting wheel reaction torque among four actuator
+mounts. Pitch-control bandwidth can excite compliance if the body twists
+about the common axis or if the IMU mount flexes. The structural design
+should therefore use closed load paths, short actuator-mount spans,
+positive locating features, and fasteners sized for repeated reversals.
+Removable electronics and battery modules improve serviceability, but
+their interfaces must not introduce motion into the IMU reference.
+
+Center-of-mass placement creates a deliberate tradeoff. A higher center
+of mass increases the gravitational moment for a given pitch angle and
+generally slows the open-loop falling motion, but it also increases the
+torque and energy required for recovery. A lower center of mass reduces
+gravitational leverage but can demand faster sensing and actuation. The
+final controller model requires the assembled mass, center-of-mass
+height and offsets, pitch inertia, and wheel\slash{}actuator inertias. CAD mass
+properties should be checked by physical weighing and a center-of-mass
+or pendulum test because fasteners, wiring, printed infill, and
+batteries are often modeled inaccurately.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{4.1}Mechanical parameters required for analysis and validation}
+\textbf{Table 4.1. Mechanical parameters required for analysis and validation}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2266}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1094}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3359}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2031}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Parameter}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Symbol}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Unit}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Required method}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Current value\slash{}status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Assembled robot mass & m & kg & Calibrated scale with final battery and
+wiring & \textless MEASURE\textgreater{} \\
+Body mass above wheel axis & m\_b & kg & CAD grouping and component
+weighing & \textless MEASURE\textgreater{} \\
+Effective wheel radius & r & m & Loaded rollout distance over multiple
+revolutions & Catalog radius 0.052 m; effective value unverified \\
+Wheel axial locations & y1...y4 & m & CAD and physical measurement from
+the defined origin & \textless MEASURE\textgreater{} \\
+Center-of-mass height & \ensuremath{\ell} & m & CAD mass properties plus physical
+confirmation & \textless MEASURE\textgreater{} \\
+COM x and y offsets & x\_c, y\_c & m & Balance\slash{}knife-edge or suspension
+method & \textless MEASURE\textgreater{} \\
+Pitch moment of inertia & I\_p & kg\ensuremath{\cdot}m\ensuremath{^{2}} & CAD plus bifilar\slash{}trifilar or
+system-identification test & \textless MEASURE\textgreater{} \\
+Yaw moment of inertia & I\_z & kg\ensuremath{\cdot}m\ensuremath{^{2}} & CAD plus torsional test or system
+identification & \textless MEASURE\textgreater{} \\
+Wheel\slash{}rotor equivalent inertia & J\_eq & kg\ensuremath{\cdot}m\ensuremath{^{2}} & Manufacturer data and
+reflected-inertia calculation & \textless VERIFY\textgreater{} \\
+Roller angle and signs & \ensuremath{\beta}, s\_i & deg, --- & Physical inspection and
+single-wheel direction test & \textless VERIFY FROM
+HARDWARE\textgreater{} \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\section{Manufacturability, Assembly, and Serviceability}\label{manufacturability-assembly-and-serviceability}
+
+The final drawing package should control actuator location, wheel
+spacing, perpendicularity between the wheel axis and body reference, and
+the orientation of each Mecanum wheel. Assembly should use an
+unambiguous wheel-number label and roller-direction mark that remains
+visible after installation. Threaded joints subject to reversing torque
+should use appropriate locking features and documented tightening
+practices. The battery should be mechanically retained independently of
+its electrical connector, and cables should include strain relief and
+clearance from rotating rollers.
+
+Service access should allow the battery, controller, CAN transceiver,
+receiver, display, and IMU to be removed without disturbing the entire
+drivetrain. Connectors should be keyed or labeled so that a CAN plug
+cannot be inserted into a power header. Test points for logic rails,
+CANH, CANL, and ground should remain accessible when the robot is
+restrained. A removable physical stand or tether attachment is
+recommended for initial controller tests.
+
+\section{Mechanical Status and Remaining Evidence}\label{mechanical-status-and-remaining-evidence}
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{4.2}Mechanical component and interface status}
+\textbf{Table 4.2. Mechanical component and interface status}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3200}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2800}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Item}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence available}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Apparent status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Information required}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Four-wheel collinear concept & Project description and author statements
+& Selected & Dimensioned drawing and roller order \\
+AK40-10 actuators & Repository firmware and manufacturer documentation &
+Motors reported moving & Installed revision, mount drawing, output
+interface \\
+104 mm Mecanum wheels & Selected part and manufacturer specification &
+Selected\slash{}procured & Installed handedness and loaded radius \\
+Frame\slash{}chassis & Author reports mechanical build approximately 80 percent
+complete & Partially manufactured & CAD, materials, dimensions, mass
+properties, photos \\
+Bearings\slash{}shafts\slash{}couplings & No sufficient repository evidence available
+& Unconfirmed & Part numbers, fits, retention, calculations \\
+Cable management and covers & No sufficient final evidence available &
+Pending or unconfirmed & Photos and assembly procedure \\
+Structural analysis & No confirmed FEA or hand calculations & Pending &
+Load cases, material properties, stresses, deflections, safety
+factors \\
+\end{longtable}

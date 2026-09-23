@@ -1,0 +1,457 @@
+\chapter{Prototype Integration and Experimental Methods}\label{ch:prototype-integration-and-experimental-methods}
+
+This chapter separates completed subsystem bring-up from the
+experimental work still required to validate an integrated, freely
+balancing robot. Repository evidence and project records support
+operation of the four actuators, IMU acquisition and estimation, CRSF
+receiver decoding, display output, CAN\slash{}TWAI communication, and
+supervisor infrastructure. They do not yet support a claim of
+closed-loop balancing or omnidirectional motion. Consequently, Sections
+10.1 and 10.2 document the present integration baseline, while the
+remaining sections specify proposed procedures in future tense.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 10.1: Photograph the assembled robot on a
+neutral background. Label the four collinear Mecanum wheels, actuator
+modules, frame, battery, controller, IMU, CAN harness, receiver,
+display, center-of-mass region, balancing axis, and body axes. Include a
+metric scale and image date\textgreater{}\\
+What the figure should show: Photograph the assembled robot on a neutral
+background. Label the four collinear Mecanum wheels, actuator modules,
+frame, battery, controller, IMU, CAN harness, receiver, display,
+center-of-mass region, balancing axis, and body axes. Include a metric
+scale and image date\\
+Likely source: dated photograph of the final physical prototype\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{10.1}Integrated prototype prepared for controlled bench testing.}
+\textbf{Figure 10.1. Integrated prototype prepared for controlled bench testing.}
+\end{center}
+
+\section{Integration Baseline}\label{integration-baseline}
+
+The confirmed development platform uses an ESP32-class controller and
+FreeRTOS-based firmware. The four selected AK40-10 actuators can be
+commanded during bring-up, and the firmware contains four actuator
+slots; however, the inspected configuration explicitly identified only
+one active node address. The ISM330DHCX driver reads a contiguous sample
+containing accelerometer and gyroscope data, applies a mounting
+transform, calibrates gyro bias, and supplies a complementary attitude
+estimator. Receiver and display paths have also been exercised. These
+achievements establish interface readiness but not timing determinism,
+calibrated dynamics, or closed-loop stability.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{10.1}Integration and experimental test matrix}
+\textbf{Table 10.1. Integration and experimental test matrix}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.0846}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2692}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2077}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2615}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1769}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{ID}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Test}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Present status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Acceptance evidence}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Disposition}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+I-01 & Mechanical assembly and wheel-order survey & Partially documented
+& Dimensioned drawing, photographs, torque record & Complete before
+modeling freeze \\
+I-02 & Power-off continuity and insulation & No record located & Signed
+inspection sheet & Pending \\
+I-03 & Current-limited regulator bring-up & No final-PCB record located
+& Rail voltage\slash{}ripple plots & Pending \\
+I-04 & CAN physical layer and four-node enumeration & Single-node
+evidence; four slots in code & Oscilloscope trace and node table &
+Pending \\
+I-05 & IMU identity, axes, bias, and time stamps & Driver\slash{}estimator
+implemented & Calibration record and sign tests & Repeat on final
+mount \\
+I-06 & Receiver failsafe and display & Subsystem operation reported &
+Recorded timeout and UI test & Document \\
+I-07 & Restrained balance loop & Not confirmed & Synchronized
+closed-loop log & Pending \\
+I-08 & Free balance and disturbance rejection & Not confirmed & Repeated
+trials and metrics & Pending \\
+I-09 & Longitudinal\slash{}lateral\slash{}yaw motion & Not confirmed & Reference and
+measured trajectories & Pending \\
+I-10 & Power, thermal, endurance, and fault tests & Not confirmed &
+Logged voltage\slash{}current\slash{}temperature\slash{}errors & Pending \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\emph{Note.} A completed subsystem test does not satisfy a vehicle-level
+requirement unless its final hardware, configuration, and interfaces are
+represented.
+
+\section{Configuration Control and Pre-Test Record}\label{configuration-control-and-pre-test-record}
+
+Every trial should be associated with a configuration record containing
+the repository commit, firmware build flags, parameter-file checksum,
+controller board revision, PCB revision, actuator firmware and operating
+mode, wheel order and handedness, battery identification and state of
+charge, payload, tire condition, and raw-data filename. Configuration
+control is necessary because a sign change, node reassignment, filter
+coefficient, or current limit can materially change the outcome.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless VERIFY FROM HARDWARE: Confirm the installed motor model and
+quantity; firmware version; actuator command mode; four CAN node IDs;
+CAN bitrate; current, voltage, speed, temperature, and ERPM limits;
+encoder zero convention; wheel-direction signs; radio failsafe values;
+controller build identifier; and final PCB revision before
+testing.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{10.2}Test instrumentation and measurement channels}
+\textbf{Table 10.2. Test instrumentation and measurement channels}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1825}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2482}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1606}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1168}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2920}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Quantity}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Instrument\slash{}channel}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Range\slash{}resolution}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Rate}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Calibration\slash{}traceability}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Pitch and pitch rate & Onboard IMU plus independent reference &
+\textless INSERT\textgreater{} & \textless INSERT Hz\textgreater{} &
+Six-position accelerometer and stationary gyro tests \\
+Wheel position\slash{}speed & Four actuator feedback channels &
+\textless INSERT\textgreater{} & \textless INSERT Hz\textgreater{} &
+Direction and counts\slash{}revolution verification \\
+Motor current & Controller feedback plus external sensor &
+\textless INSERT A\textgreater{} & \textless INSERT Hz\textgreater{} &
+Compare at two or more known loads \\
+Battery voltage & Onboard ADC\slash{}BMS plus DMM & \textless INSERT
+V\textgreater{} & \textless INSERT Hz\textgreater{} & Two-point
+comparison \\
+Body pose & Motion capture, camera, or surveyed floor markers &
+\textless INSERT\textgreater{} & \textless INSERT Hz\textgreater{} &
+Scale and coordinate-frame calibration \\
+Temperatures & Actuator\slash{}controller\slash{}battery sensors & \textless INSERT
+\ensuremath{^{\circ}}C\textgreater{} & \textless INSERT Hz\textgreater{} & Ambient and
+reference comparison \\
+Loop timing\slash{}CAN & Firmware time stamps and bus analyzer &
+\textless INSERT \ensuremath{\mu}s\textgreater{} & Per event & Common time base or
+measured offset \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 10.2: Show a bench power supply or protected
+battery connection, current limit, fuses, emergency disconnect,
+controller, CAN analyzer\slash{}oscilloscope, four actuators, termination
+points, and measurement references. Label expected voltage domains and
+the safe operator position\textgreater{}\\
+What the figure should show: Show a bench power supply or protected
+battery connection, current limit, fuses, emergency disconnect,
+controller, CAN analyzer\slash{}oscilloscope, four actuators, termination
+points, and measurement references. Label expected voltage domains and
+the safe operator position\\
+Likely source: laboratory photograph and annotated electrical
+diagram\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{10.2}Current-limited electrical bring-up and CAN validation setup.}
+\textbf{Figure 10.2. Current-limited electrical bring-up and CAN validation setup.}
+\end{center}
+
+\section{Power-On and Communication Validation}\label{power-on-and-communication-validation}
+
+With the wheels unloaded and propulsion disabled, the proposed procedure
+begins with resistance and polarity checks. Logic rails are energized
+from a current-limited source before actuator power is connected. Rail
+voltage, ripple, regulator temperature, and idle current are recorded.
+CANH and CANL resistance is measured with power removed; approximately
+60 \ensuremath{\Omega} is expected only when two 120 \ensuremath{\Omega} end terminations are present in
+parallel \cite{ti2026tida01238}. With power applied, recessive and dominant levels,
+edge integrity, error counters, and traffic load are observed. Each
+motor is then enabled individually at a low command while its physical
+direction and feedback sign are recorded.
+
+Abort criteria include reversed polarity, unexpected current, regulator
+dropout, repeated CAN error-passive or bus-off transitions, actuator
+faults, uncontrolled motion, excessive temperature, stale feedback, or
+disagreement between commanded and observed direction. The emergency
+disconnect must be reachable without crossing the
+robot\textquotesingle s fall envelope.
+
+\section{Sensor Calibration and Coordinate-Frame Verification}\label{sensor-calibration-and-coordinate-frame-verification}
+
+The final IMU installation will be calibrated after the mounting
+hardware is fixed. Accelerometer offset and scale are estimated using
+six static orientations; gyroscope bias and noise are estimated from a
+stationary record after thermal stabilization. The body-to-sensor
+rotation is then verified by applying positive roll, pitch, and yaw
+rotations one at a time. A forward chassis tilt must produce the pitch
+sign assumed by the controller, and a positive wheel command must
+produce the modeled body-force sign. Independent observation is required
+because an internally consistent but inverted sensor-and-actuator
+convention can pass software unit tests while destabilizing the physical
+robot.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{10.3}Calibration record}
+\textbf{Table 10.3. Calibration record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2231}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1692}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2231}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1846}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Item}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Method}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Raw record}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Result}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Date\slash{}configuration}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Accelerometer bias\slash{}scale & Six static orientations & \textless INSERT
+FILE\textgreater{} & \textless INSERT vector\slash{}matrix\textgreater{} &
+\textless INSERT\textgreater{} \\
+Gyro bias\slash{}noise & Stationary thermal record & \textless INSERT
+FILE\textgreater{} & \textless INSERT rad\slash{}s and noise\textgreater{} &
+\textless INSERT\textgreater{} \\
+IMU mounting rotation & Single-axis sign tests & \textless INSERT
+FILE\textgreater{} & \textless INSERT transform\textgreater{} &
+\textless INSERT\textgreater{} \\
+Wheel direction and feedback & Lifted low-speed command &
+\textless INSERT FILE\textgreater{} & \textless INSERT four
+signs\textgreater{} & \textless INSERT\textgreater{} \\
+Effective radius & Loaded rollout & \textless INSERT FILE\textgreater{}
+& \textless INSERT m \ensuremath{\pm} uncertainty\textgreater{} &
+\textless INSERT\textgreater{} \\
+Current and voltage channels & Reference instrument comparison &
+\textless INSERT FILE\textgreater{} & \textless INSERT
+calibration\textgreater{} & \textless INSERT\textgreater{} \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\section{Restrained Controller Commissioning}\label{restrained-controller-commissioning}
+
+Initial balance trials will use a low-friction restraint or pivot that
+prevents a fall from damaging equipment without carrying normal balance
+torque. The system will start in DISARMED, verify fresh IMU and actuator
+feedback, confirm a valid receiver state, and require an explicit
+neutral arming command. The first closed-loop test will use conservative
+torque and slew limits with integral action disabled. Feedback polarity
+will be checked using a small manual displacement while the wheels are
+clear of the ground, followed by low-authority ground contact.
+Controller bandwidth will be increased only after delay, noise,
+saturation, and structural compliance have been measured.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 10.3: Depict the restraint geometry, allowed
+pitch motion, load-free directions, emergency stop, operator position,
+protected fall envelope, and any tether forces. The restraint must not
+create an unmodeled restoring moment over the tuning
+range\textgreater{}\\
+What the figure should show: Depict the restraint geometry, allowed
+pitch motion, load-free directions, emergency stop, operator position,
+protected fall envelope, and any tether forces. The restraint must not
+create an unmodeled restoring moment over the tuning range\\
+Likely source: CAD drawing and laboratory photograph of the
+commissioning fixture\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{10.3}Mechanical restraint used for initial balance-controller tuning.}
+\textbf{Figure 10.3. Mechanical restraint used for initial balance-controller tuning.}
+\end{center}
+
+\section{Free-Balance and Disturbance-Rejection Tests}\label{free-balance-and-disturbance-rejection-tests}
+
+After restrained stability is demonstrated, free-balance trials will be
+performed within a clear padded area. A test begins from a documented
+pitch angle and neutral planar command. At least five successful repeats
+and all unsuccessful attempts will be retained. Pitch settling time,
+percent overshoot where meaningful, steady-state bias, RMS error over a
+stated interval, peak command, saturation duration, and feedback age are
+computed using fixed definitions. Disturbance rejection will use a
+repeatable impulse mechanism or a controlled initial displacement; an
+undocumented hand push is acceptable only as a qualitative demonstration
+and not as the principal quantitative result.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT DATA: Measured pitch-angle response during recovery
+from an approximately [ANGLE]-degree initial displacement. Required
+signals: pitch angle (deg), pitch rate (deg\slash{}s), four motor commands and
+feedback values, saturation flags, operating state, IMU age,
+CAN-feedback age, battery voltage (V), and time (s). Provide at least
+five trials and raw machine-readable files.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\section{Longitudinal, Lateral, and Yaw Tests}\label{longitudinal-lateral-and-yaw-tests}
+
+Planar tests will be introduced sequentially while the balance loop
+remains active. Step and trapezoidal references will be used for
+longitudinal velocity, lateral velocity, and yaw rate, followed by
+combined commands. Reference magnitudes will be bounded by measured
+torque, speed, traction, and balance reserves. External pose measurement
+is preferred because wheel integration cannot distinguish true lateral
+motion from roller slip. Each trial will report reference and measured
+motion, pitch response, all wheel commands, current, saturation, and the
+allocation residual.
+
+The collinear geometry warrants an additional identifiability check:
+pure lateral and pure yaw commands must generate measurably distinct
+wheel-speed patterns and body responses. If H is poorly conditioned or
+the assembled roller pattern is rank deficient, the affected degree of
+freedom will be reported as constrained rather than hidden through
+controller tuning.
+
+\section{Power, Thermal, Endurance, and Fault Tests}\label{power-thermal-endurance-and-fault-tests}
+
+A staged endurance test will log battery voltage, branch current,
+regulator voltage and temperature, actuator temperatures, CAN errors,
+loop overruns, and fault state while the robot executes a repeatable
+bounded maneuver. Test duration and ambient conditions must be stated.
+Separate injected-fault tests will remove receiver updates, delay motor
+feedback, disconnect one actuator while safe, exceed the permitted tilt,
+and approach undervoltage thresholds. The expected response is a
+deterministic transition to a documented safe state, not merely
+cessation of logging. Battery testing will follow the battery
+manufacturer\textquotesingle s handling and discharge limits.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 10.4: Show the shared time base among firmware
+logs, CAN analyzer, external pose or video, current\slash{}voltage
+instrumentation, and thermal sensors. Identify trigger events, measured
+synchronization error, sample rates, and file naming\textgreater{}\\
+What the figure should show: Show the shared time base among firmware
+logs, CAN analyzer, external pose or video, current\slash{}voltage
+instrumentation, and thermal sensors. Identify trigger events, measured
+synchronization error, sample rates, and file naming\\
+Likely source: data-acquisition schematic and photograph\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{10.4}Synchronized data-acquisition and reference-measurement arrangement.}
+\textbf{Figure 10.4. Synchronized data-acquisition and reference-measurement arrangement.}
+\end{center}
+
+\section{Repeatability, Uncertainty, and Data Reduction}\label{repeatability-uncertainty-and-data-reduction}
+
+Raw data will remain immutable and will be processed by
+version-controlled scripts. Time stamps will be converted to seconds on
+a common origin, duplicate or missing samples will be reported, and
+filtering will be applied only once with documented order, cutoff, and
+phase characteristics. Uncertainty will combine sensor calibration, time
+alignment, repeatability, and reference-system resolution where
+applicable. Means, standard deviations, confidence intervals, and trial
+counts will accompany aggregate metrics. Failed trials are part of the
+evidence and will not be discarded without a stated exclusion rule.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT PROCEDURE: Provide the final laboratory risk
+assessment, approved battery-charging and storage procedure,
+emergency-stop design, test-area layout, required personal protective
+equipment, maximum authorized command\slash{}current\slash{}tilt limits, abort
+criteria, and names of trained observers.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}

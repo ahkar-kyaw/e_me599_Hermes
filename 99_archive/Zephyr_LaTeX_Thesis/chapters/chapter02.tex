@@ -1,0 +1,282 @@
+\chapter{Background and Literature Review}\label{ch:background-and-literature-review}
+
+\section{Dynamically Balanced Mobile Robots}\label{dynamically-balanced-mobile-robots}
+
+\subsection{Wheeled inverted-pendulum dynamics}\label{wheeled-inverted-pendulum-dynamics}
+
+A self-balancing wheeled robot is commonly modeled as an inverted
+pendulum whose pivot is accelerated by the driven wheels. The upright
+configuration is open-loop unstable: a small pitch displacement produces
+a gravitational moment that increases the displacement unless wheel
+acceleration moves the contact region beneath the center of mass.
+Grasser et al. demonstrated this coupling in JOE, a two-wheel mobile
+inverted pendulum whose mechanical, power-electronic, and control
+subsystems were designed together \cite{grasser2002joe}. Pathak, Franch, and Agrawal
+subsequently used partial feedback linearization to separate velocity
+and position objectives from the internal balance dynamics \cite{pathak2005wip}.
+These systems establish the central lesson for Zephyr: translation and
+pitch cannot be designed as independent subsystems when the same wheel
+torques support both.
+
+The full equations are nonlinear because the body center of mass moves
+on an arc about the wheel axis and because motor reaction torque acts on
+the body. Linear control is nevertheless useful near the upright
+equilibrium. A linearized state-space model permits controllability
+analysis, pole placement, and linear-quadratic regulation. LQR selects a
+state-feedback gain by minimizing a quadratic measure of state deviation
+and control effort \cite{anderson1990optimal}, while nonlinear analysis is still required
+to understand the finite region in which the linear approximation is
+credible \cite{khalil2002nonlinear}. Recent comparative work continues to use LQR as a
+transparent baseline for inverted-pendulum stabilization \cite{chacko2023trajectory}. For
+Zephyr, a linear controller is therefore appropriate as an initial
+implementation if the nonlinear plant, actuator saturation, and fall
+thresholds remain part of the validation.
+
+\subsection{Underactuation, nonminimum-phase behavior, and practical limits}\label{underactuation-nonminimum-phase-behavior-and-practical-limits}
+
+A wheel torque both accelerates the base and applies an equal and
+opposite reaction torque to the body. The balance coordinate is not
+independently actuated, which makes the robot underactuated. A commanded
+translation generally requires a transient body lean, and an aggressive
+position loop can conflict with the inner balance loop. This behavior
+motivates a cascade in which pitch stabilization has the highest
+bandwidth, forward velocity or position is slower, and yaw and lateral
+objectives are allocated without consuming the torque reserve required
+for balance. The final bandwidth separation must be based on measured
+delay and actuator dynamics rather than a generic ratio.
+
+Practical limits define the recoverable set. Finite motor current,
+wheel-ground friction, gearbox backlash, battery voltage, sensor range,
+and computation delay limit the pitch angle and angular rate from which
+the robot can recover. A controller that is stable in an unconstrained
+model may fail after a command saturates. Accordingly, the Zephyr model
+includes torque and rate limits, and the proposed tests record both
+pitch response and motor effort. No recovery envelope is claimed until
+the physical robot is tested under controlled conditions.
+
+\section{Omnidirectional and Mecanum-Wheel Mobility}\label{omnidirectional-and-mecanum-wheel-mobility}
+
+\subsection{Mecanum-wheel principle}\label{mecanum-wheel-principle}
+
+Ilon\textquotesingle s wheel patent describes a load-bearing wheel with
+peripheral rollers arranged obliquely to the wheel plane \cite{ilon1975mecanum}.
+Rotation of the main wheel creates a contact velocity that can be
+decomposed into a constrained component and a roller-supported
+component. Combining wheels of opposite handedness enables a platform to
+synthesize motion directions that a conventional fixed wheel cannot. Pin
+and Killough placed this concept within the broader family of holonomic
+and omnidirectional platforms \cite{pin1994omnidirectional}, while Ferrière, Raucent, and
+Campion examined the geometry and design of omnidirectional wheels
+\cite{ferriere1996omnimobile}. Gfrerrer later provided a geometric treatment of the Mecanum
+wheel itself \cite{gfrerrer2008geometry}.
+
+The ideal kinematic model treats each roller as imposing a linear
+velocity constraint. This abstraction is valuable for deriving a
+Jacobian and checking controllability, but it does not fully represent
+discrete roller contact, varying normal load, deformation, or slip.
+Bayar and Ozturk showed that roller contact forces affect Mecanum-wheel
+behavior \cite{bayar2020contact}. More recent experimental modeling work likewise
+reports the need to consider contact and slip when high accuracy is
+required \cite{bhargava2026review}, \cite{barcenas2025robust}. Zephyr is especially sensitive to these
+effects because the wheel forces must stabilize pitch as well as produce
+planar motion.
+
+\subsection{Mobility classification and geometry rank}\label{mobility-classification-and-geometry-rank}
+
+Campion, Bastin, and D\textquotesingle Andréa-Novel classified
+wheeled-mobile-robot models according to their kinematic constraints and
+mobility \cite{campion1996structural}. Muir and Neuman also showed how wheel constraints can
+be assembled into a systematic kinematic model \cite{muir1987kinematic}. These
+approaches emphasize that mobility follows from the constraint matrix,
+not from a wheel label. A four-wheel Mecanum platform is not
+automatically holonomic if the roller signs or locations make the rows
+of its Jacobian dependent.
+
+Indiveri derived kinematic and control relationships for Swedish-wheel
+omnidirectional robots \cite{indiveri2009swedish}. Conventional four-corner formulas use
+two geometric lever arms and a prescribed X or O roller arrangement.
+They cannot be copied directly to Zephyr because all wheel centers lie
+on one line. For a collinear arrangement, yaw arises from longitudinal
+force differences across the axial wheel locations, while lateral force
+arises from the roller signs. Full planar mobility requires both roller
+handednesses and a distribution of wheel locations that keeps the
+longitudinal, lateral, and yaw columns independent. Chapter 6 expresses
+this requirement as a rank condition that can be evaluated after
+measurement.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 2.1: Create a synthesis diagram showing how
+inverted-pendulum dynamics, Mecanum-wheel constraints, IMU state
+estimation, actuator\slash{}CAN limits, real-time scheduling, and safety
+supervision interact in Zephyr\textgreater{}\\
+What the figure should show: Create a synthesis diagram showing how
+inverted-pendulum dynamics, Mecanum-wheel constraints, IMU state
+estimation, actuator\slash{}CAN limits, real-time scheduling, and safety
+supervision interact in Zephyr\\
+Likely source: author-created vector diagram based on references \cite{grasser2002joe}
+through \cite{liu1973scheduling} and the repository architecture\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{2.1}Relationship among balancing, omnidirectional mobility, state estimation, and embedded implementation.}
+\textbf{Figure 2.1. Relationship among balancing, omnidirectional mobility, state estimation, and embedded implementation.}
+\end{center}
+
+\section{Control and State Estimation}\label{control-and-state-estimation}
+
+\subsection{PID, state feedback, and LQR}\label{pid-state-feedback-and-lqr}
+
+PID control remains attractive because it is easy to implement and tune
+from measured responses. A pitch-angle loop can command wheel torque
+from angle, rate, and integral error, while an outer velocity loop
+shifts the pitch reference. The method becomes harder to reason about
+when translation, pitch, yaw, lateral motion, actuator saturation, and
+allocation interact. Anti-windup is essential whenever the command is
+limited.
+
+State feedback provides a direct way to use pitch, pitch rate,
+translational velocity, and position in one control law. LQR supplies a
+repeatable gain-selection framework once the linear model and weighting
+matrices are documented \cite{astrom2008feedback}, \cite{anderson1990optimal}. It does not remove the need
+for engineering judgment: state scaling changes the meaning of the
+weights, unmodeled delay can erode phase margin, and actuator limits
+invalidate the unconstrained optimum. The Zephyr simulation draft uses
+LQR as a proposed design method, but no gain is described as implemented
+until it appears in firmware and is verified on hardware.
+
+\subsection{Inertial sensing and complementary filtering}\label{inertial-sensing-and-complementary-filtering}
+
+An accelerometer provides a gravity-referenced attitude estimate when
+translational acceleration is small, whereas a gyroscope measures
+angular rate with high short-term fidelity but accumulates bias when
+integrated. A complementary filter combines the low-frequency
+accelerometer reference with the high-frequency integrated gyroscope
+signal. Mahony, Hamel, and Pflimlin placed complementary attitude
+estimation on a rigorous nonlinear foundation \cite{mahony2008filters}. The current
+Zephyr code path includes an IMU driver, mounting transform, gyro
+calibration, an attitude estimator, and an IMU state snapshot. The
+physical mounting transform and sign convention must be verified by
+controlled rotations before any controller is armed.
+
+\section{Embedded Actuation and Communication}\label{embedded-actuation-and-communication}
+
+\subsection{Integrated actuators and local motor control}\label{integrated-actuators-and-local-motor-control}
+
+Zephyr uses four CubeMars AK40-10 actuators. The manufacturer describes
+the unit as a brushless motor, 10:1 planetary gearbox, internal driver,
+and magnetic encoder integrated into one module \cite{cubemars2026ak4010}. Published
+ratings include 24 V nominal voltage, 1.3 N\ensuremath{\cdot}m rated torque, 4.1 N\ensuremath{\cdot}m peak
+torque, 370 r\slash{}min rated speed, 435 r\slash{}min no-load speed, 2.7 A rated
+current, and 7.3 A peak current. These are component ratings, not
+selected operating limits. The installed firmware version, operating
+mode, current ceiling, speed limits, and protection settings require
+hardware confirmation.
+
+An integrated actuator moves the inner current and
+field-oriented-control loops out of the central MCU, reducing the
+required update rate of the supervisory controller. It also hides some
+motor dynamics and introduces protocol, firmware, and mode-dependent
+behavior. For initial simulation, the actuator can be represented as a
+saturated command path with a measured delay or first-order response. A
+higher-order electrical motor model is justified only if current-loop
+data and parameters are available. Gearbox backlash is relevant because
+balance commands reverse near zero speed, where the wheel may not
+immediately follow the internal motor encoder.
+
+\subsection{CAN networks and real-time scheduling}\label{can-networks-and-real-time-scheduling}
+
+CAN provides prioritized, frame-based communication and automatic error
+detection. The ESP32 exposes a Classical CAN-compatible controller named
+TWAI, but it still requires an external physical-layer transceiver
+\cite{espressif2026esp32}, \cite{espressif2026twai}. The current prototype uses an Adafruit CAN Pal based
+on the TJA1051T\slash{}3 transceiver \cite{nxp2026tja1051}, \cite{adafruit2026canpal}. A linear bus with
+short stubs and one 120 \ensuremath{\Omega} termination at each physical end is the
+baseline topology; TI\textquotesingle s selectable-termination reference
+design explains why the distal terminations are required \cite{ti2026tida01238}. Bus
+bitrate alone does not establish real-time performance. Frame
+identifiers, payloads, feedback periods, arbitration, timeouts, and
+error counters must be logged under load.
+
+Real-time software must complete sensing, estimation, control, and
+command transmission before their deadlines. Liu and Layland established
+foundational schedulability results for periodic fixed-priority tasks
+\cite{liu1973scheduling}. Zephyr uses FreeRTOS concepts, but its final schedule should
+be verified by measurement because driver blocking, serial bursts,
+display updates, logging, and CAN retries can create execution-time
+variability \cite{freertos2026scheduling}. The safety architecture should treat stale data
+and missed deadlines as faults rather than allowing the last command to
+persist indefinitely.
+
+\section{Research Gap and Design Implications}\label{research-gap-and-design-implications}
+
+The literature separately provides mature methods for wheeled inverted
+pendulums and for statically stable omnidirectional platforms. The
+Zephyr concept places those methods in direct interaction. Its four
+wheels add actuation redundancy, but the collinear geometry removes the
+conventional rectangular footprint and changes the yaw moment arm. Its
+Mecanum rollers provide lateral authority, but roller slip perturbs both
+odometry and the force available for stabilization. Its integrated motor
+controllers reduce central computation, but CAN delay and gearbox
+compliance become part of the balance loop.
+
+The practical gap addressed by this thesis is therefore a traceable
+system design and validation method for a collinear four-wheel Mecanum
+balancing robot. The work does not claim that no related arrangement
+exists. Instead, it asks whether the actual geometry has full planar
+rank, whether the built platform can stabilize under its measured
+limits, and how closely a reduced model predicts that behavior. This
+framing leads directly to the requirements and evidence matrix in
+Chapter 3.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{2.1}Comparison of relevant mobile-robot architectures and methods}
+\textbf{Table 2.1. Comparison of relevant mobile-robot architectures and methods}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2583}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{System or method}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Established contribution}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Limitation relative to Zephyr}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Design implication}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Two-wheel inverted pendulum \cite{grasser2002joe}, \cite{pathak2005wip} & Coupled translation and
+pitch dynamics; balance and position control & No direct lateral-motion
+allocation & Preserve a high-bandwidth balance objective while adding
+redundant wheel allocation. \\
+Four-corner Mecanum platform \cite{pin1994omnidirectional}, \cite{gfrerrer2008geometry}--\cite{barcenas2025robust} & Planar
+holonomic kinematics and omnidirectional motion & Assumes a statically
+stable rectangular wheel geometry & Derive the Jacobian from measured
+collinear wheel locations and roller signs. \\
+Complementary attitude estimation \cite{mahony2008filters} & Combines gyro short-term
+response with gravity reference & Acceleration and mounting errors can
+bias pitch & Calibrate bias and axes; validate under commanded
+acceleration. \\
+LQR\slash{}state feedback \cite{astrom2008feedback}, \cite{anderson1990optimal}, \cite{chacko2023trajectory} & Systematic multistate
+feedback near an equilibrium & Depends on model, state scaling, and
+unsaturated operation & Document weights, discretization, limits, and
+robustness tests. \\
+CAN-based integrated actuators \cite{espressif2026twai}, \cite{cubemars2026ak4010}, \cite{nxp2026tja1051} & Local FOC
+and compact wiring & Network delay, mode settings, encoder location, and
+backlash & Measure timing and verify every installed actuator
+parameter. \\
+\end{longtable}

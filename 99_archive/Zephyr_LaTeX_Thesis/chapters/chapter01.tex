@@ -1,0 +1,256 @@
+\chapter{Introduction}\label{ch:introduction}
+
+\section{Motivation}\label{motivation}
+
+Mobile robots usually obtain static stability from a support polygon
+formed by three or more ground contacts. A dynamically balanced robot
+accepts a narrower support region and maintains the body near an
+unstable upright equilibrium by continuously commanding its wheels. This
+arrangement can reduce the platform width and enable rapid changes in
+the direction of travel, but it also makes stabilization a prerequisite
+for every other task. Sensor bias, computation delay, actuator
+saturation, gearbox compliance, wheel slip, and power interruption can
+therefore affect both mobility and safety. The wheeled inverted pendulum
+is a standard model for studying this class of system because it exposes
+the coupling between translation and body pitch while remaining
+tractable for control design \cite{grasser2002joe}, \cite{pathak2005wip}.
+
+A conventional two-wheel balancing robot can move longitudinally and
+turn about a vertical axis, but it cannot command lateral translation
+without first changing heading. Mecanum wheels introduce passive rollers
+whose axes are inclined relative to the wheel plane. With suitable
+roller orientations and independent wheel actuation, the roller
+constraints redirect wheel forces so that a mobile base can produce
+longitudinal, lateral, and yaw motion \cite{pin1994omnidirectional,ilon1975mecanum,gfrerrer2008geometry,indiveri2009swedish,ferriere1996omnimobile,muir1987kinematic}. Most four-wheel
+Mecanum platforms place the wheels at the corners of a rectangular
+chassis and rely on a broad, statically stable footprint. Zephyr instead
+places four Mecanum wheels on one common wheel-axis line and uses active
+pitch stabilization. The concept therefore combines the control problem
+of a wheeled inverted pendulum with the kinematic allocation problem of
+a redundant omnidirectional drive.
+
+The collinear arrangement is not treated in this thesis as a rectangular
+Mecanum base with a vanishing wheelbase. The wheel-center positions,
+roller signs, and balance coordinate are defined explicitly, and the
+mobility of the actual arrangement is determined from the rank of its
+geometry matrix. This treatment is necessary because lateral and yaw
+authority depend on the measured axial locations and roller handedness.
+An incorrect sign convention could produce an apparently plausible model
+that commands the wrong combination of wheels.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 1.1: Create an annotated orthographic or
+isometric view of Zephyr showing all four wheel centers on the common
+axis, wheel numbers 1 through 4, left- and right-handed rollers, body
+x-y-z axes, positive pitch and yaw directions, center of mass, and the
+plane of ground contact\textgreater{}\\
+What the figure should show: Create an annotated orthographic or
+isometric view of Zephyr showing all four wheel centers on the common
+axis, wheel numbers 1 through 4, left- and right-handed rollers, body
+x-y-z axes, positive pitch and yaw directions, center of mass, and the
+plane of ground contact\\
+Likely source: final SolidWorks assembly or a labeled photograph of the
+prototype\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{1.1}Zephyr robot concept and principal degrees of freedom.}
+\textbf{Figure 1.1. Zephyr robot concept and principal degrees of freedom.}
+\end{center}
+
+\section{Engineering Problem}\label{engineering-problem}
+
+The engineering problem is to determine whether a compact robot with
+four collinear Mecanum wheels can be designed and implemented so that it
+(1) maintains an upright body, (2) produces controllable motion in the
+horizontal plane, and (3) remains electrically and computationally safe
+when communication, sensing, or power faults occur. Solving this problem
+requires more than selecting a balance gain. The mechanical structure
+defines the center-of-mass height and pitch inertia; the roller
+arrangement defines the attainable planar wrench; the actuators
+introduce torque, speed, backlash, and communication limits; the IMU and
+estimator define the observable balance state; and the embedded schedule
+determines how much delay and jitter enter the feedback loop.
+
+The project repository identifies Zephyr as a collinear Mecanum-drive
+self-balancing robot \cite{zephyr_repo}. The current evidence shows an ESP32-based
+bring-up platform, an ISM330DHCX IMU interface, CRSF radio reception, an
+ST7789 display interface, CubeMars actuator communication over a 1
+Mbit\slash{}s CAN bus, feedback and fault monitoring, and a safety-gated
+motor-command path. The four-actuator data structures exist, but the
+inspected snapshot enabled only a partial actuator configuration and did
+not contain a completed balance-control algorithm, verified wheel-torque
+allocation, or hardware performance data. A NUCLEO-H723ZG\slash{}STM32H723ZG
+implementation exists as a scaffold or migration target rather than the
+demonstrated primary platform. The KiCad design is also a developing
+design rather than a manufactured and validated controller board.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless VERIFY FROM REPOSITORY: Reinspect the current main branch and
+all additional branches after exporting the repository as a ZIP. Confirm
+the commit hash used for the final thesis, the exact contents of
+03\_electrical, 04\_firmware, 05\_simulation, and 99\_archive, and
+whether any balance-controller, wheel-allocation, CAD, test-data, or
+PCB-routing files were added after commit 97e5a0a.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\section{Research Questions and Objectives}\label{research-questions-and-objectives}
+
+The thesis is organized around questions that can be answered by design
+evidence, analysis, and repeatable testing. The questions avoid a claim
+of novelty based solely on using Mecanum wheels; they focus on the
+consequences of combining collinear geometry with dynamic stabilization.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{1.1}Research questions, objectives, and verification evidence}
+\textbf{Table 1.1. Research questions, objectives, and verification evidence}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Research question}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Engineering objective}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Required verification evidence}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+RQ1. What planar motions are kinematically achievable with the measured
+collinear wheel geometry and roller pattern? & Derive the geometry
+matrix, determine its rank, and establish wheel-speed and
+wrench-allocation mappings. & Measured wheel coordinates and roller
+signs; analytical rank test; numerical inverse\slash{}forward kinematic
+tests. \\
+RQ2. Can the completed robot maintain upright balance within defined
+limits while stationary and while receiving motion commands? & Implement
+a discrete balance controller with verified state estimation,
+saturation, and fault handling. & Pitch, pitch-rate, command, current,
+and timing logs from repeated balance and motion tests. \\
+RQ3. How do actuator limits, roller slip, delay, and mass-property
+uncertainty affect performance? & Develop symbolic and numerical models
+and perform sensitivity analysis before hardware tuning. & Parameter
+record, simulation cases, model-to-hardware comparison, and uncertainty
+bounds. \\
+RQ4. Does the embedded and electrical architecture support safe,
+maintainable experimentation? & Separate portable logic from hardware
+code, enforce command ownership, and verify power and CAN integrity. &
+Code-path review, task-timing measurements, power checks, CAN error
+statistics, and fault-injection results. \\
+\end{longtable}
+
+\emph{Note.} Quantitative acceptance thresholds remain proposed until
+the author and advisor approve final performance requirements.
+
+The primary objective is to produce an integrated research platform and
+a defensible method for evaluating it. Supporting objectives are to
+document the mechanical and electrical interfaces, derive a model that
+respects the nonstandard wheel arrangement, implement a modular
+real-time firmware architecture, establish a safe integration procedure,
+and quantify balance and planar-motion performance. The thesis does not
+assume that all objectives have already been achieved. Each result is
+assigned a status and is linked to evidence or an explicit placeholder.
+
+\section{Scope, Constraints, and Contributions}\label{scope-constraints-and-contributions}
+
+The scope includes mechanical arrangement, embedded electronics,
+actuator communication, state estimation, kinematics, reduced dynamics,
+control design, simulation, integration, and laboratory validation.
+Autonomous navigation, perception, mapping, and application-specific
+payloads are outside the present scope. The model treats contact with a
+level rigid surface and initially represents each Mecanum wheel by an
+idealized roller constraint. Detailed roller compliance and
+contact-force variation are reserved for model refinement because
+published work shows that individual roller contact and slip can create
+motion errors that an ideal kinematic model does not capture
+\cite{bayar2020contact}--\cite{barcenas2025robust}.
+
+Several constraints materially shape the design. The four actuators are
+integrated CubeMars AK40-10 units with internal field-oriented control,
+a 10:1 gearbox, a single internal encoder, and CAN communication
+\cite{cubemars2026ak4010}. Their backlash and internal control mode affect low-speed
+reversals. The power source is a six-cell lithium-polymer battery, for
+which the fully charged voltage must be used when rating converters and
+protection components. The current prototype uses an ESP32, while the
+STM32H723ZG remains a planned higher-performance target. The final wheel
+order, roller pattern, center of mass, inertias, controller gains,
+current limits, and sampling rates have not yet been documented with
+sufficient evidence for a final thesis and are therefore represented by
+explicit verification items.
+
+The supported contribution at this stage is an integrated design
+framework rather than a completed performance claim. The framework
+combines: a geometry-parameterized Jacobian for four collinear Mecanum
+wheels; a reduced nonlinear and linear balance model; a proposed
+allocation and control structure; a modular firmware architecture with
+safety-owned actuator permission; an electrical design review tied to
+the active firmware pin contract; and a test matrix that converts
+remaining work into measurable thesis evidence. The originality of the
+physical arrangement may be discussed only after a broader prior-art
+search and advisor review.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 1.2: Show the iterative workflow linking
+requirements, CAD and mass properties, schematic and PCB design,
+symbolic modeling, controller simulation, firmware bring-up,
+current-limited bench tests, restrained balancing, free balancing, and
+model-to-hardware comparison\textgreater{}\\
+What the figure should show: Show the iterative workflow linking
+requirements, CAD and mass properties, schematic and PCB design,
+symbolic modeling, controller simulation, firmware bring-up,
+current-limited bench tests, restrained balancing, free balancing, and
+model-to-hardware comparison\\
+Likely source: author-created vector diagram based on the documented
+thesis process\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{1.2}Research and development workflow used for the Zephyr project.}
+\textbf{Figure 1.2. Research and development workflow used for the Zephyr project.}
+\end{center}
+
+\section{Thesis Organization}\label{thesis-organization}
+
+Chapter 2 reviews wheeled inverted pendulums, omnidirectional mobility,
+Mecanum-wheel modeling, state estimation, control, and embedded
+implementation. Chapter 3 converts the research questions into system
+requirements and interfaces. Chapters 4 and 5 document the mechanical
+and electrical designs. Chapter 6 derives the kinematic and dynamic
+models, and Chapter 7 defines the control and estimation strategy.
+Chapter 8 describes the firmware architecture and its demonstrated
+status. Chapter 9 specifies the simulation and analysis workflow.
+Chapter 10 presents completed and proposed integration procedures, while
+Chapter 11 provides ready-to-fill results tables and a cautious
+discussion of the evidence available at this draft stage. Chapter 12
+summarizes supported conclusions and remaining work. The appendices
+preserve parameter, wiring, configuration, test, evidence, and
+compliance records needed to complete the final thesis.

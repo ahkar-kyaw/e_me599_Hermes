@@ -1,0 +1,440 @@
+\chapter{Results and Discussion}\label{ch:results-and-discussion}
+
+At the date of this first draft, the repository substantiates subsystem
+development but does not contain a complete, traceable data package
+demonstrating upright balance, disturbance rejection, or
+three-degree-of-freedom planar motion. The chapter therefore reports the
+defensible qualitative results and provides a fixed structure for
+quantitative results. Bracketed result fields must be populated from raw
+data before submission. Statements that depend on those fields are
+explicitly conditional.
+
+\section{Confirmed Development Results}\label{confirmed-development-results}
+
+The project has established a nonconventional mechanical concept: four
+Mecanum wheels share a common transverse line rather than occupying the
+corners of a rectangle. Four integrated CubeMars actuators and 104 mm
+nominal Mecanum wheels were selected. An ESP32 firmware implementation
+partitions portable interfaces and device drivers from board-specific
+tasks, acquires the ISM330DHCX, performs mounting and gyro calibration
+steps, produces a complementary pitch estimate, receives CRSF commands,
+updates a local display, communicates with actuators through TWAI\slash{}CAN,
+monitors feedback and faults, and gates commands through supervisor
+logic \cite{zephyr_repo}. These are integration milestones; none independently
+proves closed-loop vehicle performance.
+
+The electrical repository includes a KiCad project and a developing
+power\slash{}control design. Component selection and schematic work are more
+mature than physical PCB validation. The present evidence does not
+establish a fabricated and tested custom board, final protection design,
+conducted or radiated compatibility, or continuous-current capability.
+Similarly, the mathematical development establishes a symbolic framework
+and a rank test, but numerical predictions remain conditional on
+measured geometry and mass properties.
+
+\section{Balancing Performance}\label{balancing-performance}
+
+The primary balance result will be evaluated over a predefined interval
+beginning after arming or disturbance release. Let
+e\_\ensuremath{\theta}[k]=\ensuremath{\theta}\_ref[k]\ensuremath{-}\ensuremath{\theta}[k]. The RMS error is the square root of
+the mean of e\_\ensuremath{\theta}\ensuremath{^{2}} over N valid samples. Settling time is the earliest
+time after which the absolute pitch error remains within a stated band
+for the remainder of the evaluation interval. Overshoot is reported only
+when the response and reference make that quantity well defined.
+Saturation time, fall-state transitions, and excluded samples are
+reported alongside error metrics.
+
+\begin{equation}
+\theta_{\mathrm{RMS}}=\sqrt{\frac{1}{N}\sum_{k=1}^{N}
+\left(\theta_k-\theta_{ref,k}\right)^2}
+\label{eq:11-1}
+\end{equation}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{11.1}Balancing and motion-performance results}
+\textbf{Table 11.1. Balancing and motion-performance results}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2460}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1349}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1984}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2063}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1032}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Metric}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Simulation}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Hardware mean \ensuremath{\pm} SD}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Trials}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Acceptance criterion}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+RMS pitch error (deg) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Peak pitch excursion (deg) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Settling time (s) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Steady-state pitch bias (deg) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Maximum recoverable initial angle (deg) & \textless INSERT\textgreater{}
+& \textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Longitudinal velocity RMSE (m\slash{}s) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Lateral velocity RMSE (m\slash{}s) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Yaw-rate RMSE (rad\slash{}s) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+\textless AUTHOR CONFIRM\textgreater{} & Pending \\
+Peak current per branch (A) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+Hardware limit & Pending \\
+Worst control-cycle execution (\ensuremath{\mu}s) & \textless INSERT\textgreater{} &
+\textless INSERT\textgreater{} & \textless INSERT N\textgreater{} &
+Below period & Pending \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 11.1: Plot time (s) horizontally. Use aligned
+panels for pitch reference and measured pitch (deg), pitch rate (deg\slash{}s),
+collective balance command and individual actuator commands (documented
+units), saturation\slash{}fault flags, and operating state. Show all trials
+faintly and the mean with uncertainty; identify the metric interval and
+controller configuration\textgreater{}\\
+What the figure should show: Plot time (s) horizontally. Use aligned
+panels for pitch reference and measured pitch (deg), pitch rate (deg\slash{}s),
+collective balance command and individual actuator commands (documented
+units), saturation\slash{}fault flags, and operating state. Show all trials
+faintly and the mean with uncertainty; identify the metric interval and
+controller configuration\\
+Likely source: synchronized raw balance-test logs processed by a
+version-controlled script\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{11.1}Measured pitch response during upright balancing.}
+\textbf{Figure 11.1. Measured pitch response during upright balancing.}
+\end{center}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT RESULT: RMS pitch error, maximum pitch excursion,
+settling time, overshoot, steady-state error, saturation duration, and
+number of successful\slash{}attempted trials from the completed balancing
+experiment. State the calculation interval and
+uncertainty.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\section{Disturbance Rejection}\label{disturbance-rejection}
+
+Disturbance trials will be grouped by applied impulse or initial angle
+rather than pooled indiscriminately. The discussion will distinguish
+recovery without saturation, recovery with saturation, transition to
+FALLEN, and mechanical restraint contact. A stronger conclusion---that
+the robot rejects disturbances up to a specified magnitude---will be
+made only after the disturbance input is measured or repeatably defined.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 11.2: Plot time from disturbance (s) versus
+pitch angle (deg), pitch rate (deg\slash{}s), applied or proxy disturbance,
+four actuator commands, battery voltage (V), and operating state.
+Compare at least five repetitions at each disturbance level and mark
+recovery\slash{}fall classification\textgreater{}\\
+What the figure should show: Plot time from disturbance (s) versus pitch
+angle (deg), pitch rate (deg\slash{}s), applied or proxy disturbance, four
+actuator commands, battery voltage (V), and operating state. Compare at
+least five repetitions at each disturbance level and mark recovery\slash{}fall
+classification\\
+Likely source: instrumented pendulum\slash{}impulse test or controlled
+initial-displacement logs\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{11.2}Measured recovery from repeatable pitch disturbances.}
+\textbf{Figure 11.2. Measured recovery from repeatable pitch disturbances.}
+\end{center}
+
+\section{Planar Motion and Mobility}\label{planar-motion-and-mobility}
+
+Longitudinal, lateral, and yaw tests will first be interpreted
+independently. Reference-to-measurement delay, steady-state gain, RMS
+error, cross-axis response, pitch deviation, and actuator effort will be
+reported. Pure lateral response is especially important: wheel rotation
+alone is insufficient evidence because roller deformation and slip can
+generate large odometric motion without equivalent chassis translation.
+External pose data are therefore required for a quantitative
+lateral-mobility claim.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 11.3: Create panels for longitudinal velocity
+v\_x (m\slash{}s), lateral velocity v\_y (m\slash{}s), yaw rate (rad\slash{}s), x-y
+trajectory (m), pitch (deg), four wheel speeds (rad\slash{}s), and allocation
+residual. Compare reference, external measurement, wheel-based estimate,
+and simulation at a common sample interval\textgreater{}\\
+What the figure should show: Create panels for longitudinal velocity
+v\_x (m\slash{}s), lateral velocity v\_y (m\slash{}s), yaw rate (rad\slash{}s), x-y
+trajectory (m), pitch (deg), four wheel speeds (rad\slash{}s), and allocation
+residual. Compare reference, external measurement, wheel-based estimate,
+and simulation at a common sample interval\\
+Likely source: motion-capture\slash{}camera data synchronized with firmware and
+simulation logs\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{11.3}Measured longitudinal, lateral, and yaw responses.}
+\textbf{Figure 11.3. Measured longitudinal, lateral, and yaw responses.}
+\end{center}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT RESULT: For separate and combined commands, report
+longitudinal-velocity RMSE, lateral-velocity RMSE, yaw-rate RMSE,
+cross-axis coupling, trajectory endpoint error, maximum pitch deviation,
+allocation residual, and saturation fraction.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\section{Electrical, Thermal, Communication, and Timing Results}\label{electrical-thermal-communication-and-timing-results}
+
+Vehicle performance depends on electrical and computational margins.
+Voltage sag can reduce actuator authority, temperature can trigger
+derating, stale CAN feedback can invalidate the state used by the
+controller, and scheduling jitter can reduce phase margin. The final
+analysis will place these signals on the same time axis as pitch and
+commands. Datasheet limits will be identified separately from
+project-configured limits and measured values.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 11.4: Plot time (s) versus battery and
+regulated-rail voltage (V), total and per-branch current (A), cumulative
+energy (Wh), actuator\slash{}controller\slash{}battery temperature (\ensuremath{^{\circ}}C), and commanded
+operating state. Include ambient temperature and limit lines from the
+verified configuration\textgreater{}\\
+What the figure should show: Plot time (s) versus battery and
+regulated-rail voltage (V), total and per-branch current (A), cumulative
+energy (Wh), actuator\slash{}controller\slash{}battery temperature (\ensuremath{^{\circ}}C), and commanded
+operating state. Include ambient temperature and limit lines from the
+verified configuration\\
+Likely source: power analyzer, firmware telemetry, and calibrated
+temperature logs\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{11.4}Motor current, battery voltage, and actuator temperature during testing.}
+\textbf{Figure 11.4. Motor current, battery voltage, and actuator temperature during testing.}
+\end{center}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 11.5: Plot histograms and time histories of
+control-cycle period and execution time (\ensuremath{\mu}s), IMU sample age (\ensuremath{\mu}s),
+motor-feedback age (\ensuremath{\mu}s), CAN utilization (\%), error frames,
+retries\slash{}timeouts, and task overruns. Report median, 95th, 99th, and
+worst-case values\textgreater{}\\
+What the figure should show: Plot histograms and time histories of
+control-cycle period and execution time (\ensuremath{\mu}s), IMU sample age (\ensuremath{\mu}s),
+motor-feedback age (\ensuremath{\mu}s), CAN utilization (\%), error frames,
+retries\slash{}timeouts, and task overruns. Report median, 95th, 99th, and
+worst-case values\\
+Likely source: instrumented firmware time stamps and CAN analyzer
+capture\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{11.5}Measured control-loop timing and CAN communication performance.}
+\textbf{Figure 11.5. Measured control-loop timing and CAN communication performance.}
+\end{center}
+
+\section{Requirement Verification}\label{requirement-verification}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{11.2}Requirement-verification results}
+\textbf{Table 11.2. Requirement-verification results}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2016}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2419}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1694}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2661}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1210}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Requirement}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence required}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Observed result}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Pass criterion}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Verdict}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+R-F01 controlled upright balance & Free-balance logs &
+\textless INSERT\textgreater{} & Approved pitch\slash{}settling limits &
+Pending \\
+R-F02 commanded planar motion & External pose and commands &
+\textless INSERT\textgreater{} & Approved tracking limits & Pending \\
+R-C01 rank-adequate allocation & Measured H and singular values &
+\textless INSERT\textgreater{} & rank(H)=3 with acceptable conditioning
+& Pending \\
+R-E01 protected power distribution & Schematic\slash{}layout\slash{}bench test &
+\textless INSERT\textgreater{} & No limit violation or fault &
+Pending \\
+R-S01 safe loss-of-link response & Injected timeout test &
+\textless INSERT\textgreater{} & Deterministic safe transition &
+Pending \\
+R-S02 stale-feedback response & Injected delay\slash{}dropout &
+\textless INSERT\textgreater{} & Commands inhibited within limit &
+Pending \\
+R-P01 timing & Timestamp distribution & \textless INSERT\textgreater{} &
+Worst case below approved deadline & Pending \\
+R-M01 serviceability & Inspection\slash{}replacement demonstration &
+\textless INSERT\textgreater{} & Approved procedure\slash{}time & Pending \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\section{Failure Cases and Limitations}\label{failure-cases-and-limitations}
+
+The expected failure modes include incorrect IMU or wheel signs,
+estimator drift or vibration sensitivity, actuator saturation, feedback
+latency, CAN node misconfiguration, voltage sag, tire\slash{}roller slip,
+compliance, insufficient yaw leverage, a rank-deficient roller
+arrangement, and a center of mass outside the modeled range. A result is
+not removed merely because it is unfavorable; the associated
+configuration and evidence are retained so the limitation can guide
+redesign.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{11.3}Failure and anomaly log}
+\textbf{Table 11.3. Failure and anomaly log}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1176}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1471}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1912}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1471}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1985}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1985}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Event\slash{}time}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Configuration}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Observed symptom}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Root cause}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Corrective action\slash{}retest}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textless INSERT\textgreater{} & \textless COMMIT\slash{}BUILD\textgreater{} &
+\textless INSERT\textgreater{} & \textless LOG\slash{}PHOTO\textgreater{} &
+\textless CONFIRMED OR HYPOTHESIS\textgreater{} &
+\textless INSERT\textgreater{} \\
+\textless INSERT\textgreater{} & \textless COMMIT\slash{}BUILD\textgreater{} &
+\textless INSERT\textgreater{} & \textless LOG\slash{}PHOTO\textgreater{} &
+\textless CONFIRMED OR HYPOTHESIS\textgreater{} &
+\textless INSERT\textgreater{} \\
+\textless INSERT\textgreater{} & \textless COMMIT\slash{}BUILD\textgreater{} &
+\textless INSERT\textgreater{} & \textless LOG\slash{}PHOTO\textgreater{} &
+\textless CONFIRMED OR HYPOTHESIS\textgreater{} &
+\textless INSERT\textgreater{} \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+The present evidence supports the conclusion that Zephyr is a
+substantially developed mechatronic prototype with operational
+subsystems and a coherent path to validation. It does not yet support
+the stronger conclusions that the robot balances autonomously, achieves
+holonomic motion, meets quantitative requirements, or is electrically
+and thermally qualified. Those conclusions remain pending the tests and
+result fields in this chapter.

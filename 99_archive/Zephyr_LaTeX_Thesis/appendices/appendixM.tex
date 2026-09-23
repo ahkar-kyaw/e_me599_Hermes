@@ -1,0 +1,74 @@
+\chapter{Repository Map}\label{ch:repository-map}
+
+Access record for this draft: the public repository landing page,
+README, root directory names, main-branch status, and earlier inspected
+project files at commit 97e5a0a were available as evidence. At the
+current drafting session, GitHub reported 54 commits on the visible main
+branch and exposed the root locations listed below. Complete recursive
+traversal of all current files, branches, and history could not be
+completed through the connected interface, and direct terminal cloning
+returned an access error. Therefore, current paths not individually
+reopened are treated as provisional, and no inaccessible file is
+represented as inspected.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{M.1}Repository map and access record}
+\textbf{Table M.1. Repository map and access record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2848}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2185}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2053}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2914}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Path\slash{}location}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Observed purpose}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Access\slash{}evidence state}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Needed for final review}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+README.md & Project description and high-level status & Root item
+accessible & Pin content to final commit \\
+03\_electrical/ & KiCad project, schematic, PCB, libraries and
+controller sheet & Root\slash{}folder identity accessible; detailed earlier
+inspection available & Upload complete current folder including
+fabrication outputs \\
+\path{04_firmware/common}/ & Portable interfaces, drivers, control data types
+& Detailed earlier path\slash{}code inspection available & Upload current tree
+and build\slash{}test output \\
+\path{04_firmware/platforms/esp32}/ & Active ESP32
+implementation\slash{}configuration & Detailed earlier inspection available &
+Upload current source, sdkconfig, PlatformIO\slash{}ESP-IDF manifests \\
+\path{04_firmware/platforms/stm32}/ & Future\slash{}partial STM32 target & Earlier
+scaffold evidence & Upload current target and generated configuration \\
+05\_simulation/ & Simulation material & Visible at current root;
+contents not recursively accessed & Upload entire folder, dependencies,
+raw outputs, README \\
+\path{99_archive/documentation_actuator_CubeMars_AK40-10_KV170}/ &
+Archived actuator documentation & Visible at current root & Upload exact
+archived documents and identify authoritative revision \\
+Mechanical CAD\slash{}location & Frame, mounts, assemblies, drawings & No
+confirmed current path in accessible root & Upload native CAD, neutral
+exports, drawings, mass-properties report \\
+Experimental data\slash{}location & Raw synchronized validation logs & No
+confirmed package located & Upload immutable raw data, processing
+scripts, manifests \\
+Git history\slash{}branches\slash{}tags & Design evolution and release trace & Landing
+page reports 54 commits; full traversal incomplete & Provide git bundle
+or `git log -\/-all -\/-decorate -\/-stat` plus branch\slash{}tag archive \\
+\end{longtable}
+
+Minimum upload requested for a branch-complete evidence audit: a ZIP
+containing 03\_electrical, 04\_firmware, 05\_simulation, 99\_archive,
+every mechanical\slash{}CAD directory, every test-data directory, the README
+and license, submodules or lockfiles, and a text export of all
+branch\slash{}tag history. A `git bundle -\/-all` is preferable when permitted
+because it preserves commits, branches, and tags. Sensitive credentials,
+private keys, and unrelated personal data must be removed before upload.

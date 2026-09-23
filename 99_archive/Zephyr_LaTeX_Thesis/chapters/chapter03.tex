@@ -1,0 +1,271 @@
+\chapter{System Requirements and Architecture}\label{ch:system-requirements-and-architecture}
+
+\section{Requirements Development}\label{requirements-development}
+
+Requirements translate the research questions into observable evidence.
+The repository does not contain an approved numerical specification for
+pitch error, speed, runtime, or thermal margin. Numerical thresholds in
+Table 3.1 are therefore identified as author- or advisor-controlled
+values rather than silently selected targets. A requirement becomes
+verified only when its method, instrumentation, operating condition, and
+result are recorded.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{3.1}System requirements and verification matrix}
+\textbf{Table 3.1. System requirements and verification matrix}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.0846}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2615}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2538}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2077}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1923}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{ID}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Requirement}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Acceptance criterion}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Verification method}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Current status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+FR-01 & The robot shall command four independently addressable
+actuators. & All four installed node IDs respond and report valid state.
+& CAN enumeration and command\slash{}feedback test. & Partial: four slots
+exist; only the verified active IDs may be claimed. \\
+FR-02 & The system shall estimate body pitch and pitch rate. & Correct
+sign and scale through the required angle\slash{}rate range; freshness
+monitored. & Static orientations, controlled rotations, and timestamp
+audit. & Partial: acquisition and estimator infrastructure exist; final
+calibration pending. \\
+FR-03 & The completed controller shall maintain upright balance. &
+\textless AUTHOR INPUT REQUIRED: RMS pitch, peak excursion, settling
+time, and test duration limits\textgreater. & Restrained then
+free-standing repeat trials. & Not demonstrated in available
+evidence. \\
+FR-04 & The wheel arrangement shall provide commanded x, y, and yaw
+motion while upright. & Measured geometry matrix rank equals 3 and
+commanded signs match measured motion. & Analytical rank test,
+wheel-direction test, velocity trials. & Pending geometry and balance
+validation. \\
+PR-01 & The real-time loop shall meet its deadline. & \textless AUTHOR
+INPUT REQUIRED: period, maximum execution time, and jitter
+limit\textgreater. & Timestamp or logic-analyzer measurement under
+worst-case load. & Not measured. \\
+PR-02 & CAN communication shall remain within the allowed age and error
+limits. & \textless AUTHOR INPUT REQUIRED: feedback age, timeout,
+bus-off, and frame-loss limits\textgreater. & Bus logging and fault
+injection. & Basic motor communication demonstrated; statistics
+absent. \\
+ER-01 & Every device shall operate within its rated voltage range. &
+Measured rail min\slash{}max within component limits during startup, idle, and
+peak load. & DMM and oscilloscope measurements at load. & Design review
+in progress; final PCB unverified. \\
+ER-02 & Power conductors and protection shall support the selected
+actuator limits. & Temperature rise and voltage drop remain below
+approved limits; faults clear safely. & Current-limited test, load test,
+thermal imaging, fuse test. & PCB and protection implementation
+pending. \\
+SR-01 & Loss of valid command, IMU state, or actuator feedback shall
+remove torque permission. & Command becomes zero\slash{}disabled within
+\textless AUTHOR INPUT REQUIRED: timeout\textgreater. & Unplug,
+stale-data, and injected-fault tests. & Safety-gated architecture
+reported; final validation pending. \\
+MR-01 & Firmware shall separate portable logic from platform-specific
+I\slash{}O. & Common modules compile independently and platform code owns
+hardware access. & Repository structure and build review. & Implemented
+in current architecture at a structural level. \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\emph{Note.} FR = functional, PR = performance, ER = electrical, SR =
+safety, and MR = maintainability requirement.
+
+\section{System Architecture}\label{system-architecture}
+
+The system is divided into mechanical, power, sensing, computation,
+communication, user-interface, and safety subsystems. The mechanical
+structure carries the battery, electronics, and body mass above the
+common wheel axis. Four independent actuators connect the controller to
+the ground through the Mecanum wheels. The IMU measures body motion; the
+radio receiver provides operator commands; the display provides local
+status; and CAN exchanges commands and feedback with the actuators.
+
+Power enters from the six-cell battery. The actuator branches use the
+battery domain directly, subject to fusing, switching, and protection
+that must be confirmed in the final schematic. A buck converter produces
+the logic rail, and local regulation or the controller-board regulator
+produces 3.3 V where required. Logic ground and power return share a
+controlled reference at the system level, but high-current motor return
+paths must not force switching current through sensitive sensor or
+transceiver return paths.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 3.1: Draw a system block diagram containing the
+6S battery, master disconnect and emergency stop, branch fuses, optional
+BMS\slash{}protection board, actuator power branches, logic buck converter,
+ESP32 prototype and STM32 target, ISM330DHCX IMU, CAN transceiver, four
+AK40-10 actuators, RadioMaster receiver, ST7789 display, and
+debug\slash{}logging interface\textgreater{}\\
+What the figure should show: Draw a system block diagram containing the
+6S battery, master disconnect and emergency stop, branch fuses, optional
+BMS\slash{}protection board, actuator power branches, logic buck converter,
+ESP32 prototype and STM32 target, ISM330DHCX IMU, CAN transceiver, four
+AK40-10 actuators, RadioMaster receiver, ST7789 display, and
+debug\slash{}logging interface\\
+Likely source: KiCad schematic, firmware architecture, and final
+hardware inventory\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{3.1}System-level architecture of the Zephyr robot.}
+\textbf{Figure 3.1. System-level architecture of the Zephyr robot.}
+\end{center}
+
+Information flows in the opposite direction from control authority.
+Drivers convert peripheral data into timestamped measurements.
+Estimation converts calibrated IMU data into pitch and rate. A
+supervisor decides whether the current operating mode permits torque.
+The controller produces a desired body wrench or wheel command. An
+allocation stage maps the body command to four actuators. The motor task
+transmits only commands that have passed safety checks. Feedback and
+faults return through CAN and update the supervisor. This ownership
+prevents the radio, UI, or a bring-up test from bypassing the safety
+decision in production operation.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 3.2: Use separate arrow styles for battery
+power, regulated power, raw sensor data, estimated state, operator
+command, safety permission, controller output, CAN command, CAN
+feedback, faults, and telemetry\textgreater{}\\
+What the figure should show: Use separate arrow styles for battery
+power, regulated power, raw sensor data, estimated state, operator
+command, safety permission, controller output, CAN command, CAN
+feedback, faults, and telemetry\\
+Likely source: firmware module diagram and electrical interface
+diagram\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{3.2}Power, sensing, command, and feedback paths among major subsystems.}
+\textbf{Figure 3.2. Power, sensing, command, and feedback paths among major subsystems.}
+\end{center}
+
+\section{Subsystem Interfaces}\label{subsystem-interfaces}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{3.2}Major subsystem interfaces}
+\textbf{Table 3.2. Major subsystem interfaces}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1615}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1615}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1615}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2077}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3077}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Producer}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Consumer}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Interface}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Information or power}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Required verification}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+6S battery\slash{}protection & Four actuator branches & VBAT and power return &
+High-current energy & Polarity, fuse rating, conductor loss, peak droop,
+disconnect behavior. \\
+Logic converter & Controller and peripherals & 5 V and 3.3 V rails &
+Regulated power & Startup, ripple, load transient, thermal rise,
+undervoltage. \\
+ISM330DHCX & MCU & SPI plus interrupt lines & Acceleration, angular
+rate, data-ready & WHO\_AM\_I, rate, range, axes, timestamp, missed
+samples. \\
+RadioMaster RP2 V2 & MCU & CRSF UART & Operator channels and link state
+& Baud rate, TX\slash{}RX crossing, failsafe, frame timeout. \\
+MCU & ST7789 display & SPI and control GPIO & Status and diagnostics &
+Voltage, pin mapping, refresh load, no control-loop blocking. \\
+MCU\slash{}TWAI & TJA1051T\slash{}3 & TXD\slash{}RXD & CAN logic & 3.3 V compatibility,
+standby state, error behavior. \\
+CAN transceiver & AK40-10 network & CANH\slash{}CANL and reference & Commands,
+feedback, faults & Linear topology, two terminations, bitrate, IDs,
+timeouts. \\
+Estimator & Supervisor\slash{}control & Timestamped snapshot & Pitch, rates,
+validity and age & Atomic access, freshness, calibration status. \\
+Supervisor\slash{}safety & Motor command path & Mode and torque permission &
+Authorization and zero-torque request & Priority, deterministic fault
+response, no bypass. \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\section{Design Tradeoffs}\label{design-tradeoffs}
+
+Four actuators provide redundancy and independent force allocation, but
+they increase current demand, CAN traffic, wiring, configuration effort,
+and the number of possible sign errors. Mecanum wheels provide lateral
+authority, but their rollers introduce compliance, vibration, changing
+contact conditions, and slip. Integrated actuators reduce the burden on
+the central MCU, but their internal loop settings and motor-side encoder
+cannot be treated as an ideal wheel-torque source. A custom PCB can
+improve wiring and grounding, but it creates manufacturing risk if the
+schematic is released before the firmware pin contract and power-tree
+design are frozen.
+
+The ESP32 is suitable for rapid bring-up because the current firmware
+and peripheral interfaces are already developed on that platform. The
+STM32H723ZG offers greater deterministic-control capability and FDCAN
+resources \cite{st2026stm32h723}, but migration creates a second implementation that
+must reproduce the same common logic and safety behavior. The selected
+strategy is to stabilize architecture and interfaces in portable
+modules, complete hardware evidence on one platform, and migrate only
+when the control and timing requirements justify the change.
+
+\section{Architecture Status}\label{architecture-status}
+
+The repository evidence supports a modular architecture and several
+functioning device paths, but not a completed system. The mechanical
+assembly is reported to be approximately 80 percent complete and the
+motors have been moved from the prototype firmware. The electrical
+design has progressed from point-to-point wiring toward a custom board,
+but the reviewed PCB state was unrouted or pre-fabrication. The firmware
+contains sensing, communication, UI, supervisor, and safety
+infrastructure, but the final balance law and wheel allocation remain
+absent or unverified. The simulation work provides a symbolic and
+numerical starting point, not experimentally validated results. These
+status distinctions govern the wording of the remaining chapters.

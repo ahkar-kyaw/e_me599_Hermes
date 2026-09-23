@@ -1,0 +1,131 @@
+\chapter{Project Evidence and Completeness Review}\label{ch:project-evidence-and-completeness-review}
+
+The inventory below is the evidence boundary used for this first draft.
+`Confirmed' means directly supported by accessible repository content or
+an official project record; it does not imply system-level validation.
+Confidence reflects the quality and specificity of the evidence, not
+confidence that a subsystem meets an unstated performance target.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{B.1}Project evidence and completeness inventory}
+\textbf{Table B.1. Project evidence and completeness inventory}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1460}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1971}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2847}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2628}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1095}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Subsystem}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Apparent status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Supporting repository paths\slash{}evidence}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Missing information}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Confidence}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Concept\slash{}architecture & Implemented in prototype; integration continuing
+& README.md; 04\_firmware; project records & Final as-built block
+diagram and configuration & High \\
+Mechanical frame & Substantially constructed; exact geometry unavailable
+& README imagery\slash{}project records; no verified CAD path in accessible
+root & CAD, dimensions, materials, joints, masses & Medium \\
+Four-wheel collinear layout & Project-defining configuration & README.md
+description and project title & Wheel order, y\_i, roller signs,
+photographs & High concept / low geometry \\
+Wheels & Selected; installation to verify & Project record; manufacturer
+data \cite{gobilda2026gripforce} & Installed handedness, effective radius, wear &
+Medium-high \\
+Actuators & Four selected; motion achieved during bring-up &
+04\_firmware configuration; manufacturer \cite{cubemars2026ak4010} & Four IDs, modes,
+directions, limits, firmware & Medium-high \\
+Battery\slash{}power & 6S LiPo concept; board design developing &
+\path{03_electrical/Zephyr.kicad_sch}; project records & Exact pack, fusing,
+BMS\slash{}protection, test results & Medium \\
+Custom PCB & Schematic\slash{}layout work in progress; fabrication unconfirmed
+& \path{03_electrical/Zephyr.kicad_pro}, .kicad\_sch, .kicad\_pcb & Final
+review, routing, fabrication, bring-up & High status \\
+Controller & ESP32 active; STM32H723 target\slash{}scaffold &
+\path{04_firmware/platforms/esp32}; \path{platforms/stm32}; archive & Exact board
+revision and migration decision & High \\
+IMU\slash{}estimation & Driver, transform, calibration, complementary estimator
+implemented & \path{common/include/drivers/drv_ism330dhcx.h};
+\path{common/src/drivers/drv_ism330dhcx.c}; control types & Final mounting
+matrix, calibration logs, estimator validation & High code / medium
+hardware \\
+CAN interface & ESP32 TWAI communication and feedback\slash{}fault monitoring
+reported & \path{platforms/esp32}; \path{config/config_actuator.h}; Adafruit CAN Pal
+\cite{adafruit2026canpal} & Four-node capture, termination, harness map, error statistics
+& Medium-high \\
+Receiver\slash{}display & CRSF and ST7789 operation reported & \path{platforms/esp32}
+configuration\slash{}modules & Final pin\slash{}harness verification and failsafe test
+& Medium-high \\
+Safety\slash{}supervisor & Infrastructure present; vehicle-level validation
+absent & 04\_firmware \path{common/platform} supervisor paths &
+State-transition tests, E-stop, hard power isolation & Medium \\
+Balance controller & Architecture\slash{}types present; closed-loop
+implementation not confirmed &
+\path{common/include/control/ctrl_balance_types.h} & Control law, gains,
+discrete timing, hardware evidence & High status \\
+Wheel allocation & Derived in thesis; operational code not confirmed &
+No verified current allocation module & Measured H, constrained
+allocator, unit tests & High status \\
+Simulation & 05\_simulation now visible at root; contents not
+traversable; earlier MATLAB artifact not accepted as repository result &
+05\_simulation; prior project artifact record & Complete scripts,
+parameters, raw outputs, README & Low-current \\
+Experimental validation & No traceable integrated data package located &
+No verified results\slash{}log directory & Raw logs, procedures,
+configurations, plots, trial counts & High status \\
+Version history & Main root reports 54 commits; full history\slash{}branches
+inaccessible in this session & GitHub repository landing page & git
+bundle or ZIP plus git log -\/-all & Medium \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{B.2}Proposed thesis titles}
+\textbf{Table B.2. Proposed thesis titles}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.4857}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3714}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Designation}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Title}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Rationale}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Proposed & Design and Development of a Self-Balancing Mobile Robot with
+a Collinear Four-Wheel Mecanum Drive & Accurately names
+design\slash{}development, balance function, and nonstandard collinear
+drive. \\
+Alternative 1 & Design, Modeling, and Embedded Control of Zephyr: A
+Collinear Four-Wheel Mecanum Balancing Robot & Emphasizes modeling and
+embedded implementation. \\
+Alternative 2 & Mechatronic Development of a Dynamically Balanced
+Omnidirectional Robot with Four Collinear Mecanum Wheels & Highlights
+system integration and intended mobility without claiming validated
+holonomy. \\
+Alternative 3 & Architecture and Validation Framework for a Collinear
+Mecanum-Wheel Inverted-Pendulum Robot & Best if final experimental
+results remain limited; emphasizes defensible completed contribution. \\
+\end{longtable}

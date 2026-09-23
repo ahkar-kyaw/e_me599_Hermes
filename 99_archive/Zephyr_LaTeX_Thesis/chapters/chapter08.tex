@@ -1,0 +1,405 @@
+\chapter{Embedded Firmware and Software}\label{ch:embedded-firmware-and-software}
+
+\section{Repository Organization}\label{repository-organization}
+
+The repository separates portable common logic from platform-specific
+implementations under 04\_firmware \cite{zephyr_repo}. The later architecture
+includes common/, \path{platforms/esp32}/, and \path{platforms/stm32/}. The common
+layer contains interfaces, device-independent drivers, estimation and
+control types, and application state; the platform layer owns MCU
+peripherals, RTOS tasks, pin configuration, and build files. This
+structure supports the stated goal of bringing up the robot on an ESP32
+while preserving a path to the STM32H723ZG.
+
+Earlier STM32 development material also contains CubeMX-generated Core,
+Drivers, and Middlewares trees, CMake and linker support, and a
+zephyr.ioc configuration. Those files represent a historical or
+scaffolded platform and should not be described as the active robot
+firmware unless the final repository establishes that status. The final
+thesis should name the exact target and commit used for every
+experiment.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 8.1: Create a directory tree for the final
+tested commit. Distinguish portable common code, ESP32 BSP and tasks,
+STM32 scaffold or implementation, configuration headers, tests\slash{}bring-up
+code, documentation, and generated vendor code. Mark historical
+directories\textgreater{}\\
+What the figure should show: Create a directory tree for the final
+tested commit. Distinguish portable common code, ESP32 BSP and tasks,
+STM32 scaffold or implementation, configuration headers, tests\slash{}bring-up
+code, documentation, and generated vendor code. Mark historical
+directories\\
+Likely source: repository tree at the final experiment commit\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{8.1}Firmware directory and portability layers.}
+\textbf{Figure 8.1. Firmware directory and portability layers.}
+\end{center}
+
+\section{Sensor Acquisition and Estimation Path}\label{sensor-acquisition-and-estimation-path}
+
+The portable IMU interface uses \path{common/include/interfaces/if_spi.h},
+\path{common/include/drivers/drv_ism330dhcx.h}, and
+\path{common/src/drivers/drv_ism330dhcx.c} in the previously inspected
+structure. The driver reads the ISM330DHCX identity register and
+configures accelerometer and gyroscope control registers. A reported
+configuration used 208 Hz output data rate, \ensuremath{\pm}4 g acceleration range,
+\ensuremath{\pm}500 degrees\slash{}s angular-rate range, and a 14-byte burst beginning at the
+temperature\slash{}gyro\slash{}accelerometer output block. These values must be
+rechecked against the final source and the ISM330DHCX data sheet
+\cite{st2026ism330dhcx}.
+
+The higher-level path is SPI BSP \ensuremath{\rightarrow} portable IMU driver \ensuremath{\rightarrow} mounting
+transform \ensuremath{\rightarrow} gyro calibration \ensuremath{\rightarrow} attitude estimator \ensuremath{\rightarrow} timestamped IMU
+snapshot \ensuremath{\rightarrow} safety check \ensuremath{\rightarrow} balance-state extraction. The snapshot should
+include a monotonically increasing timestamp, validity flag, sequence
+counter or update marker, and diagnostic status. A consumer should copy
+one consistent snapshot rather than read fields that can change during
+the calculation.
+
+\section{Radio, Display, and User Interaction}\label{radio-display-and-user-interaction}
+
+The RadioMaster RP2 V2 receiver uses the CRSF serial protocol. The
+current firmware reportedly decodes 16 channels and monitors link state.
+CRSF framing and channel definitions are available in the ExpressLRS
+source \cite{expresslrs2026crsf}, while the installed receiver manual and configuration
+should be archived with the project \cite{radiomaster2026manuals}. The production command
+path should map only documented channels, apply range checks and
+deadbands, and force a neutral command when a valid frame is not
+received within the selected timeout.
+
+The ST7789 display provides local bring-up and operating status
+\cite{waveshare2026lcd}. UI work should run at lower priority than sensing, estimation,
+control, and motor communication. It should consume published state
+rather than directly reading hardware owned by another task. Diagnostic
+pages should show mode, arm state, pitch, IMU status, radio status,
+battery state, four actuator states, CAN faults, and timing without
+allowing the display driver to block a critical loop.
+
+\section{CAN and Actuator Path}\label{can-and-actuator-path}
+
+The ESP32 platform uses TWAI at 1 Mbit\slash{}s and communicates with CubeMars
+actuators. The firmware includes a four-slot actuator snapshot and
+feedback\slash{}fault monitoring. The inspected configuration identified motor
+1 with CAN ID 69 while the remaining IDs or enable flags were not
+confirmed. Servo-velocity commands were issued on a reported 20 ms
+period in config\_actuator.h. That interval is evidence of the current
+bring-up configuration, not necessarily the final balance-loop rate.
+
+The motor path should have one command owner. The controller publishes
+desired physical commands, safety publishes torque permission and fault
+state, and the motor task transmits the approved result. Bring-up tests
+that directly transmit actuator frames should be compiled or enabled
+only in an explicit test build. Feedback parsing should reject invalid
+lengths and identifiers, apply mode-specific scaling, timestamp every
+update, and expose motor faults without clearing them silently.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 8.2: Show producers and consumers of IMU
+samples, estimated state, CRSF command, supervisor mode, safety
+permission, desired wrench, allocated wheel commands, CAN frames,
+actuator feedback, UI state, and logging. Identify snapshot, queue,
+notification, or direct-call boundaries\textgreater{}\\
+What the figure should show: Show producers and consumers of IMU
+samples, estimated state, CRSF command, supervisor mode, safety
+permission, desired wrench, allocated wheel commands, CAN frames,
+actuator feedback, UI state, and logging. Identify snapshot, queue,
+notification, or direct-call boundaries\\
+Likely source: final firmware architecture and source review\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{8.2}Runtime data flow through sensing, estimation, supervision, control, and actuation.}
+\textbf{Figure 8.2. Runtime data flow through sensing, estimation, supervision, control, and actuation.}
+\end{center}
+
+\section{Initialization and Runtime Scheduling}\label{initialization-and-runtime-scheduling}
+
+A safe initialization order begins with outputs in inactive states,
+configuration loading, timebase and logging initialization,
+communication peripherals, sensor identity checks, actuator bus startup,
+calibration, and task creation. The supervisor remains disarmed until
+the IMU estimate is valid, actuator feedback is fresh, the operator link
+is valid, no safety fault is active, and pitch is within the arm window.
+Startup should never preserve a prior nonzero command.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 8.3: Draw the exact initialization sequence from
+reset to DISARMED and READY. Include GPIO safe levels, SPI\slash{}IMU identity,
+gyro calibration, TWAI start, motor discovery, radio start, display
+start, configuration checks, snapshot validity, and arm
+conditions\textgreater{}\\
+What the figure should show: Draw the exact initialization sequence from
+reset to DISARMED and READY. Include GPIO safe levels, SPI\slash{}IMU identity,
+gyro calibration, TWAI start, motor discovery, radio start, display
+start, configuration checks, snapshot validity, and arm conditions\\
+Likely source: final main entry point, task creation, and supervisor
+code\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{8.3}Firmware initialization and arming sequence.}
+\textbf{Figure 8.3. Firmware initialization and arming sequence.}
+\end{center}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{8.1}Runtime tasks and timing requirements}
+\textbf{Table 8.1. Runtime tasks and timing requirements}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2230}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2374}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1942}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1799}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1655}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Function\slash{}task}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Trigger or period}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Priority\slash{}deadline}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Worst-case time}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+IMU acquisition and estimation & \textless VERIFY; IMU configured ODR
+and task\slash{}event trigger\textgreater{} & Highest sensing\slash{}control class &
+\textless MEASURE\textgreater{} & Implemented infrastructure \\
+Balance control & \textless SELECT AND MEASURE\textgreater{} & Highest
+control class & \textless MEASURE\textgreater{} & Planned \\
+Motor command\slash{}feedback & Reported 20 ms servo command period; final
+pending & High & \textless MEASURE\textgreater{} & Partial \\
+CRSF receive\slash{}decode & UART\slash{}event-driven or configured poll & Medium-high
+& \textless MEASURE\textgreater{} & Implemented \\
+Supervisor\slash{}safety & \textless VERIFY\textgreater{} & High enough to
+enforce timeout & \textless MEASURE\textgreater{} & Infrastructure
+reported \\
+Display\slash{}UI & \textless VERIFY; target 10--20 Hz if
+retained\textgreater{} & Low & \textless MEASURE\textgreater{} &
+Implemented \\
+Telemetry\slash{}logging & Buffered\slash{}event-driven & Low & \textless MEASURE
+including backpressure\textgreater{} & Incomplete or unverified \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\emph{Note.} Earlier STM32 prototypes used task periods such as 2 ms
+CRSF, 10 ms IMU, 50 ms OLED, and 200 ms application UI. Those historical
+values are not attributed to the current ESP32 build without source
+confirmation.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 8.4: Create a measured timing diagram over
+several control cycles showing IMU data-ready or read, estimator
+completion, control computation, allocation, CAN transmit, actuator
+feedback, radio processing, and low-priority UI\slash{}logging. Include
+minimum, mean, maximum, and jitter\textgreater{}\\
+What the figure should show: Create a measured timing diagram over
+several control cycles showing IMU data-ready or read, estimator
+completion, control computation, allocation, CAN transmit, actuator
+feedback, radio processing, and low-priority UI\slash{}logging. Include
+minimum, mean, maximum, and jitter\\
+Likely source: firmware timestamps, logic analyzer, and CAN trace\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{8.4}Control-cycle timing and communication schedule.}
+\textbf{Figure 8.4. Control-cycle timing and communication schedule.}
+\end{center}
+
+\section{Safety, Fault Handling, and Data Freshness}\label{safety-fault-handling-and-data-freshness}
+
+Safety is implemented as explicit state and permission, not as scattered
+limit checks. Each data product carries a timestamp and validity. The
+safety logic compares age against a source-specific limit, checks
+numeric range and finiteness, and latches faults that require operator
+inspection. Motor feedback faults, bus-off, IMU failure, radio loss, low
+battery, excessive pitch, and emergency stop all remove actuator
+permission.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{8.2}Proposed operating and safety states}
+\textbf{Table 8.2. Proposed operating and safety states}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1460}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3066}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2555}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2920}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{State}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Entry condition}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Permitted actuator behavior}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Exit condition}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+DISARMED & Reset, user disarm, or safe recovery & Torque disabled or
+documented zero-output mode & Valid system and explicit prepare\slash{}arm
+sequence \\
+INITIALIZING & Peripheral and estimator startup & Disabled & Calibration
+and device checks complete or fault \\
+READY & Valid sensors and motors; within arm window & Disabled &
+Explicit arm request or new fault \\
+BALANCING & Arm request with all guards true & Safety-approved
+controller command & Disarm, fall, stale data, or fault \\
+FALLEN & Pitch\slash{}rate exceeds recovery boundary & Disabled\slash{}zero & Manual
+reset after safe repositioning \\
+FAULT & Electrical, communication, sensor, or software fault &
+Disabled\slash{}zero & Fault cleared and explicit manual reset \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 8.5: Trace one desired motor command through
+mode checks, data-age checks, pitch limits, E-stop, actuator limits,
+packing, TWAI transmission, feedback timeout, and fault transition.
+Identify the single function allowed to submit a production CAN
+command\textgreater{}\\
+What the figure should show: Trace one desired motor command through
+mode checks, data-age checks, pitch limits, E-stop, actuator limits,
+packing, TWAI transmission, feedback timeout, and fault transition.
+Identify the single function allowed to submit a production CAN
+command\\
+Likely source: final motor task and safety code\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{8.5}Motor-command safety gate and fault response.}
+\textbf{Figure 8.5. Motor-command safety gate and fault response.}
+\end{center}
+
+\section{Configuration, Testing, and Version Control}\label{configuration-testing-and-version-control}
+
+Hardware-dependent values should be centralized in configuration headers
+or generated platform configuration: pin assignments, CAN bitrate and
+identifiers, IMU ranges and sample rate, receiver UART settings, display
+pins, actuator mode, command period, limits, and safety timeouts. Values
+should use physical units at module boundaries. Compile-time assertions
+and startup logs can detect invalid combinations.
+
+Production and bring-up paths should remain separate. A bring-up build
+may contain direct tests for debug UART, CRSF, IMU identity, display
+pages, CAN loopback, and one-motor motion. The normal build should start
+through the supervisor and safety path. Each thesis experiment should
+record the Git commit, build target, configuration checksum or file
+revision, actuator firmware\slash{}settings, and any local changes.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{8.3}Firmware modules and repository evidence}
+\textbf{Table 8.3. Firmware modules and repository evidence}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3066}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2482}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2336}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2117}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Repository path or module}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Responsibility}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence at inspected snapshot}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Thesis status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\path{04_firmware/common/include/interfaces/if_spi.h} & Portable SPI
+abstraction & Previously inspected & Implemented structure \\
+\path{04_firmware/common/include/drivers/drv_ism330dhcx.h} & IMU public
+interface & Previously inspected & Implemented \\
+\path{04_firmware/common/src/drivers/drv_ism330dhcx.c} & ISM330DHCX register
+and conversion logic & Previously inspected & Implemented\slash{}verify final
+configuration \\
+\path{04_firmware/common/include/control/ctrl_balance_types.h} &
+Balance-state\slash{}control data types & Observed at commit 97e5a0a &
+Interface only; controller absent \\
+\path{04_firmware/platforms/esp32} & Active BSP, tasks, and peripheral
+integration & Reported working bring-up platform & Partial system \\
+\path{04_firmware/platforms/esp32/main/config/config_actuator.h} & Actuator
+configuration and command period & 20 ms servo-velocity period
+previously observed & Bring-up setting; final value pending \\
+\path{04_firmware/platforms/stm32} and\slash{}or generated STM32 tree & Future STM32
+implementation & Scaffold\slash{}generated code & Planned migration \\
+\path{03_electrical/Zephyr.kicad_*} & Controller PCB design & Schematic\slash{}PCB
+project present & Design in progress \\
+05\_simulation & Current repository simulation directory & Visible at
+repository root; contents not fully re-inspected & Requires ZIP\slash{}current
+connector verification \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless VERIFY FROM REPOSITORY: Replace the summarized paths in Table
+8.1 with the exact final tree, task names, line-referenced configuration
+values, and tested commit. The current GitHub directory traversal was
+not available to the document-generation environment even after
+connection; upload a ZIP containing .git metadata or git log output if
+branch and commit-history evidence is required.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}

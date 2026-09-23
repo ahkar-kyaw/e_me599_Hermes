@@ -1,0 +1,113 @@
+\chapter{Reference Verification Table}\label{ch:reference-verification-table}
+
+The table records the source identity checked during drafting.
+Bibliographic metadata should be rechecked against the publisher or
+manufacturer page immediately before submission because living
+documentation and datasheet revisions can change. Repository citation
+\cite{zephyr_repo} must be pinned to the final commit in the submitted version.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{K.1}Reference-verification matrix}
+\textbf{Table K.1. Reference-verification matrix}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.0733}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.4267}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Ref.}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Source type}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{DOI or stable URL}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Claims supported}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & Project repository & \url{https://github.com/ahkar-kyaw/e_me599_Zephyr}
+& Implementation paths, project configuration\slash{}status \\
+2 & Journal article & 10.1109\slash{}41.982254 & Mobile inverted-pendulum
+precedent \\
+3 & Journal article & 10.1109\slash{}TRO.2004.840905 & Wheeled
+inverted-pendulum control \\
+4 & Journal article & 10.1109\slash{}70.481750 & Wheeled-robot kinematic
+classification \\
+5 & Journal article & 10.1109\slash{}70.313098 & Omnidirectional\slash{}holonomic
+platforms \\
+6 & Patent & \url{https://patents.google.com/patent/US3876255A/en} &
+Mecanum-wheel origin \\
+7 & Journal article & 10.1016\slash{}j.cagd.2008.07.008 & Mecanum-wheel
+geometry\slash{}kinematics \\
+8 & Journal article & 10.1109\slash{}TRO.2008.2010360 & Swedish-wheel
+kinematics\slash{}control \\
+9 & Conference paper & 10.1109\slash{}ROBOT.1996.509271 & Omniwheel design \\
+10 & Journal article & 10.1002\slash{}rob.4620040209 & General WMR kinematic
+modeling \\
+11 & Journal article & 10.1016\slash{}j.mechatronics.2020.102467 & Mecanum
+roller contact forces \\
+12 & Review article & 10.1007\slash{}s40430-026-06505-4 & Current Mecanum
+modeling\slash{}control review \\
+13 & Journal article & 10.1007\slash{}s11768-025-00269-3 & Omnidirectional
+self-balancing control \\
+14 & Journal article & 10.1109\slash{}TAC.2008.923738 & Nonlinear complementary
+attitude filters \\
+15 & Textbook & \url{https://fbsbook.org/} & Feedback and stability
+concepts \\
+16 & Textbook & ISBN 978-0-486-45766-6 / 1990 edition cited &
+LQR\slash{}state-feedback theory \\
+17 & Textbook & ISBN 978-0-13-067389-3 & Nonlinear stability\slash{}control
+concepts \\
+18 & Journal article & 10.1145\slash{}321738.321743 & Real-time scheduling
+foundation \\
+19 & Official datasheet &
+\url{https://documentation.espressif.com/esp32_datasheet_en.pdf} & ESP32
+capabilities\slash{}limits \\
+20 & Official documentation &
+\url{https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/peripherals/twai.html}
+& TWAI operation and error states \\
+21 & Official datasheet &
+\url{https://www.st.com/resource/en/datasheet/ism330dhcx.pdf} & IMU registers,
+rates, ranges \\
+22 & Manufacturer page &
+\url{https://www.cubemars.com/product/ak40-10-robotic-actuator.html} & AK40-10
+nominal specifications \\
+23 & Official datasheet &
+\url{https://www.nxp.com/docs/en/data-sheet/TJA1051.pdf} & CAN transceiver
+limits\slash{}features \\
+24 & Official datasheet &
+\url{https://www.st.com/resource/en/datasheet/stm32h723zg.pdf} & Future STM32
+target capabilities \\
+25 & Manufacturer page &
+\url{https://www.gobilda.com/gripforce-mecanum-wheel-set-o104mm-40a-durometer-rollers/}
+& Selected wheel nominal specifications \\
+26 & Official guide &
+\url{https://cdn-learn.adafruit.com/downloads/pdf/adafruit-can-pal.pdf} & CAN
+Pal interface \\
+27 & Official source &
+\url{https://github.com/ExpressLRS/ExpressLRS/blob/master/src/include/crsf_protocol.h}
+& CRSF field\slash{}protocol definitions \\
+28 & Official datasheet &
+\url{https://www.analog.com/media/en/technical-documentation/data-sheets/LT8609S.pdf}
+& Regulator limits and design basis \\
+29 & Official datasheet & \url{https://www.ti.com/lit/ds/symlink/bq76942.pdf}
+& Candidate BMS\slash{}protector capabilities \\
+30 & Industry standard & IPC-2152 & PCB current-carrying design
+method \\
+31 & Official reference design & \url{https://www.ti.com/lit/pdf/tiducf3} &
+Linear CAN topology and termination \\
+32 & Official documentation &
+\url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/01-Tasks-and-co-routines/04-Task-scheduling}
+& RTOS scheduling behavior \\
+33 & Manufacturer manuals & \url{https://radiomasterrc.com/pages/user-manuals}
+& Receiver documentation route \\
+34 & Manufacturer wiki &
+\url{https://www.waveshare.com/wiki/2inch_LCD_Module} & Display interface
+documentation \\
+35 & Journal article & 10.1007\slash{}s40435-022-01079-0 & Self-balancing
+trajectory-control comparison \\
+\end{longtable}

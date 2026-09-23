@@ -1,0 +1,66 @@
+\chapter{Risk Assessment}\label{ch:risk-assessment}
+
+Table H.1 is preliminary and requires review by the author, advisor, and
+responsible laboratory personnel. Severity and likelihood categories
+must be replaced by the institution\textquotesingle s approved method.
+It does not supersede battery, machine-shop, electrical, or laboratory
+policy.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{H.1}Preliminary risk assessment}
+\textbf{Table H.1. Preliminary risk assessment}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1448}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1862}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2069}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2759}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1862}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Hazard}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Cause}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Potential consequence}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Existing\slash{}proposed controls}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Residual risk\slash{}action}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Robot fall\slash{}ejection & Unstable control, sign error, saturation & Impact,
+equipment damage, injury & Restraint, padded exclusion zone, low limits,
+observer, fall state & Advisor\slash{}lab approval required \\
+Wheel pinch\slash{}entanglement & Four exposed driven wheels & Pinch, abrasion,
+entanglement & Guards, tied hair\slash{}clothing, remote enable, hands clear &
+Verify guards and procedure \\
+Unexpected actuation & Startup state, stale command, CAN fault & Motion
+during handling & Hardware isolation, DISARMED boot, neutral arming,
+feedback timeout & Validate injected faults \\
+LiPo fire & Overcharge, puncture, short, overcurrent & Fire, toxic
+smoke, burns & Approved charger\slash{}storage, inspection, fuse, containment,
+supervision & Document exact pack and policy \\
+High fault current & Battery\slash{}PCB\slash{}harness short & Arcing, conductor
+heating, fire & Branch fuses, rated connectors\slash{}wire, covered terminals,
+current-limited bring-up & Complete protection design \\
+Hot surfaces & Motor\slash{}regulator\slash{}trace losses & Burn or component damage &
+Temperature logging, shutdown limits, cooling interval & Establish
+measured limits \\
+EMI\slash{}communication loss & Motor switching, topology, grounding & Stale
+feedback and unstable response & Linear CAN, termination, filtering,
+freshness gate & Bus analyzer and fault test \\
+Structural failure & Mount\slash{}shaft\slash{}fastener overload & Released component
+or fall & Inspection, locking hardware, load analysis, guarded test &
+Confirm loads\slash{}materials\slash{}safety factor \\
+Software configuration error & Wrong node, gain, units, branch &
+Uncontrolled response & Versioned configuration, checksums, peer review,
+staged limits & Add release checklist \\
+\end{longtable}
+\end{landscape}
+\clearpage

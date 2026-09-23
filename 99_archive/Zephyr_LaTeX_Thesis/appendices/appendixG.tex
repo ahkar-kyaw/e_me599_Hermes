@@ -1,0 +1,72 @@
+\chapter{Calibration and Test Protocols}\label{ch:calibration-and-test-protocols}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{G.1}Calibration and experimental protocol record}
+\textbf{Table G.1. Calibration and experimental protocol record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1351}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1824}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2703}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2027}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2095}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Protocol}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Prerequisites}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Procedure summary}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Recorded outputs}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Acceptance\slash{}stop rule}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+G-01 as-built survey & Power removed; calibrated tools & Label wheels;
+measure coordinates, radii, mass, COM & Photos, CAD comparison,
+uncertainties & All parameters traceable \\
+G-02 electrical inspection & Approved schematic and harness & Polarity,
+resistance, fuse, isolation, termination & Signed checklist\slash{}DMM values &
+No short\slash{}reversal; expected bus resistance \\
+G-03 rail bring-up & Current-limited source & Energize logic then
+actuator branches & V, I, ripple, temperature & Within approved limits;
+abort on anomaly \\
+G-04 IMU calibration & Final rigid mount & Thermal stationary and
+six-position records & Bias, scale, noise, transform & Residual within
+approved limits \\
+G-05 actuator sign test & Wheels unloaded & Command each node at low
+level & Direction, speed, current, faults & Matches model; immediate
+disable otherwise \\
+G-06 CAN validation & Two terminations; analyzer & Enumerate nodes;
+load\slash{}timeout\slash{}error test & Frames, ages, errors, utilization & No
+unresolved ID collision\slash{}error state \\
+G-07 restrained balance & Fixture, low limits, observer & Verify
+polarity; raise gains in logged steps & Pitch, commands, states, timing
+& Stable bounded response\slash{}no contact \\
+G-08 free balance & G-07 passed; padded area & Repeated neutral
+reference trials & All synchronized signals & Approved error\slash{}settling
+and no unsafe event \\
+G-09 disturbance & Free balance passed & Repeat defined input\slash{}initial
+angle & Input proxy, recovery classification & Report boundary; abort on
+limit \\
+G-10 planar motion & Balance margin known; external pose & Separate then
+combined reference profiles & Pose, twist, pitch, effort & Approved
+tracking\slash{}cross-coupling limits \\
+G-11 endurance\slash{}fault & Thermal\slash{}power instrumentation & Repeat duty
+cycle; inject safe faults & V, I, Wh, temperatures, state & Safe
+transitions; limits not exceeded \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+Each protocol requires operator, observer, date, environmental
+conditions, hardware revision, firmware commit, parameter checksum,
+battery ID\slash{}state, raw-file names, deviations, unsuccessful attempts, and
+disposition. Approval signatures and institutional laboratory
+requirements should be added where applicable.

@@ -1,0 +1,113 @@
+\chapter{Pin, Wiring, and Connector Tables}\label{ch:pin-wiring-and-connector-tables}
+
+The pin maps below reproduce the active ESP32 prototype evidence
+available during drafting. They are not a wiring authorization. Crossed
+transmit\slash{}receive naming, board silkscreen, logic voltage, connector
+orientation, and ground reference must be verified at the installed
+hardware before energization.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{C.1}ESP32 prototype pin and interface record}
+\textbf{Table C.1. ESP32 prototype pin and interface record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1757}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1689}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1216}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1554}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1486}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2297}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Interface}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Signal}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{ESP32 GPIO}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Voltage domain}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Direction at MCU}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Verification}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ISM330DHCX SPI & SCLK & 18 & 3.3 V & Out & Observed configuration;
+verify \\
+ISM330DHCX SPI & MISO\slash{}SDO & 19 & 3.3 V & In & Observed configuration;
+verify \\
+ISM330DHCX SPI & MOSI\slash{}SDI & 23 & 3.3 V & Out & Observed configuration;
+verify \\
+ISM330DHCX SPI & CS & 27 & 3.3 V & Out & Observed configuration;
+verify \\
+ISM330DHCX & INT1 / INT2 & 34 / 35 & 3.3 V & In & Observed
+configuration; verify use \\
+ST7789 display & DIN / CLK & 13 / 14 & 3.3 V & Out & Observed
+configuration; verify \\
+ST7789 display & CS / DC / RST & 25 / 21 / 22 & 3.3 V & Out & Observed
+configuration; verify \\
+CAN Pal & TX / RX & 26 / 32 & 3.3 V & Out / In & Observed configuration;
+verify \\
+RP2 receiver & MCU RX / MCU TX & 16 / 17 & UART logic; receiver power 5
+V & In / Out & Verify crossed harness and logic levels \\
+\end{longtable}
+\par\bigskip
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{C.2}Power and CAN connector record}
+\textbf{Table C.2. Power and CAN connector record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1569}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1569}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1634}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1634}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1830}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Connector\slash{}net}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Pins\slash{}conductors}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Source}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Destination}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Wire\slash{}rating}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Protection\slash{}notes}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Battery input A & \textless INSERT\textgreater{} & 6S pack\slash{}branch &
+Motors \textless INSERT\textgreater{} & 14 AWG recommended; verify &
+Independent fuse; polarity keying \\
+Battery input B & \textless INSERT\textgreater{} & 6S pack\slash{}branch &
+Motors \textless INSERT\textgreater{} & 14 AWG recommended; verify &
+Independent fuse; polarity keying \\
+Logic regulator input & \textless INSERT\textgreater{} & Protected
+battery bus & LT8609S stage & \textless INSERT\textgreater{} &
+Reverse\slash{}transient\slash{}overcurrent provisions \\
+J9--J12 CAN & Pin 1 CANH; pin 2 CANL observed & Linear CAN trunk & Four
+actuators & Twisted pair; \textless INSERT gauge\textgreater{} & Verify
+mating motor-harness pin order \\
+CAN end A / B & CANH--CANL & Bus endpoints & 120 \ensuremath{\Omega} each & --- & Exactly
+two terminations after inspection \\
+IMU & SPI, interrupts, 3.3 V, GND & Controller & ISM330DHCX board &
+Short routed harness\slash{}PCB & Quiet return; mechanical orientation label \\
+Receiver & 5 V, GND, CRSF TX\slash{}RX & Controller\slash{}power & RadioMaster RP2 V2
+& \textless INSERT\textgreater{} & Verify logic compatibility and
+failsafe \\
+Emergency isolation & \textless INSERT\textgreater{} & Battery &
+Actuator-power branches & Rated device & Reachable outside fall
+envelope \\
+\end{longtable}
+\end{landscape}
+\clearpage

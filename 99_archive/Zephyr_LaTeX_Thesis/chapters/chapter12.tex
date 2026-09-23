@@ -1,0 +1,140 @@
+\chapter{Conclusions and Future Work}\label{ch:conclusions-and-future-work}
+
+\section{Conclusions}\label{conclusions}
+
+This thesis has documented the design and development state of Zephyr, a
+four-actuator mobile robot whose Mecanum wheels are placed along a
+common axis and whose narrow support geometry requires active pitch
+stabilization. The work unifies mechanical configuration, electrical
+architecture, embedded firmware, geometry-parameterized kinematics,
+inverted-pendulum dynamics, control planning, and a traceable validation
+program. The formulation intentionally avoids applying the familiar
+rectangular four-corner Mecanum matrix to a geometry for which its lever
+arms and roller ordering have not been verified.
+
+Repository evidence confirms meaningful subsystem progress. Four AK40-10
+actuators and 104 mm nominal Mecanum wheels have been selected; the
+mechanical prototype is substantially assembled; IMU, receiver, display,
+and CAN actuator interfaces operate in the ESP32 development firmware;
+estimation and supervisor infrastructure exist; and a custom electrical
+design is in development. A symbolic Jacobian, mobility-rank test,
+nonlinear balance model, upright linearization, and constrained
+allocation formulation provide the analytical basis for controller
+design.
+
+The central research question---whether the assembled collinear
+mechanism can maintain balance while producing independently controlled
+longitudinal, lateral, and yaw motion---cannot yet be answered
+quantitatively. The exact wheel sequence, roller signs, wheel
+coordinates, mass properties, actuator configuration, final control
+gains, timing distribution, and synchronized test data remain required.
+No claim of stable balance, holonomic mobility, disturbance tolerance,
+tracking accuracy, power margin, or thermal margin is made in their
+absence.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{12.1}Objective completion at the time of this draft}
+\textbf{Table 12.1. Objective completion at the time of this draft}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2180}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3083}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1729}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3008}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Objective}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence completed}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence still required}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Document actual architecture & Repository-based subsystem and interface
+record & Partially achieved & Final as-built survey and branch-complete
+archive \\
+Establish collinear kinematics & Symbolic geometry\slash{}sign model and rank
+test & Analytically achieved & Measured y\_i, s\_i, radius, and
+experimental validation \\
+Model balance dynamics & Nonlinear and linear symbolic models &
+Analytically achieved & Measured mass properties and identified
+losses \\
+Implement embedded infrastructure & IMU, CRSF, display, CAN, feedback,
+supervisor paths & Substantially achieved & Release build, timing,
+four-node configuration, logging \\
+Implement stabilizing controller & Architecture and safety constraints
+specified & Not yet demonstrated & Code, gains, constrained test logs \\
+Demonstrate omnidirectional motion while balancing & Test method
+specified & Not yet demonstrated & External pose and synchronized
+vehicle data \\
+Verify electrical and safety design & Components and design rules
+documented & Partially achieved & Final schematic\slash{}layout, fabrication,
+bench\slash{}thermal\slash{}fault tests \\
+\end{longtable}
+
+\section{Mechanical Future Work}\label{mechanical-future-work}
+
+The highest-priority mechanical task is an as-built survey. It should
+record wheel-center coordinates, wheel order, roller handedness,
+effective loaded radius, frame dimensions, fasteners, shafts, bearings,
+couplings, actuator mount stiffness, component masses, complete vehicle
+mass, center of mass, and principal inertias. CAD should then be
+reconciled with the assembled prototype. The design should provide
+repeatable wheel alignment, protected cable routing, accessible
+fasteners, a battery restraint, lifting points, and a fall structure
+that protects hands, electronics, and rollers without interfering with
+normal motion. Structural calculations and safety factors should be
+added only after materials, loads, and interfaces are confirmed.
+
+\section{Electrical Future Work}\label{electrical-future-work}
+
+The schematic must be frozen only after the installed battery,
+protection approach, connectors, fuse ratings, regulator range, CAN
+transceiver, termination, and actuator peak demands are verified. The
+PCB should be completed with a documented copper weight, stack-up,
+branch-current assumptions, thermal paths, return-current control,
+decoupling, transient protection, and design-rule review. Low-voltage
+bring-up should precede battery testing, and the fabricated assembly
+should undergo short-circuit inspection, rail-load testing, thermal
+testing, CAN signal-integrity inspection, undervoltage response, and
+fault-injection tests.
+
+\section{Firmware and Control Future Work}\label{firmware-and-control-future-work}
+
+Firmware priorities are to freeze a reproducible ESP32 baseline, verify
+all four CAN node IDs and directions, measure task timing and feedback
+age, implement structured logging, and complete the command-to-actuator
+allocation. The controller should first be validated in restrained tests
+with explicit saturation, rate limits, anti-windup, stale-data
+rejection, tilt limits, and receiver failsafe. LQR or another
+state-feedback law may be used for the inner balance loop if the
+measured model is controllable and the estimator supplies reliable
+states \cite{anderson1990optimal}; outer planar loops should be added only after balance
+torque reserve is quantified. The STM32H723 migration should remain a
+separate milestone until behavior is equivalent on the present platform.
+
+\section{Experimental Future Work}\label{experimental-future-work}
+
+The proposed experiment sequence is: as-built metrology; power and CAN
+validation; IMU and actuator calibration; restrained balance; free
+balance; repeatable disturbance recovery; independent longitudinal,
+lateral, and yaw commands; combined trajectories; and endurance and
+fault injection. Each stage should have approved quantitative
+requirements and stop criteria before execution. External pose
+measurement, independent electrical instrumentation, synchronized
+clocks, repeated trials, uncertainty reporting, and retention of
+failures are needed for a defensible model-to-hardware comparison.
+
+When these steps are complete, the final thesis should replace the
+provisional abstract, pending result language, and ready-to-fill tables
+with measured values. The strongest potential contribution is not simply
+a four-wheel robot, but a validated account of the mobility and control
+consequences of placing four Mecanum wheels on one line while
+simultaneously stabilizing an inverted body. Whether that potential is
+realized remains an empirical question to be answered by the documented
+test program.

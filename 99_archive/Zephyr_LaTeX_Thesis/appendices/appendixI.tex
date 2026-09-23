@@ -1,0 +1,312 @@
+\chapter{Required Figures and Tables Checklist}\label{ch:required-figures-and-tables-checklist}
+
+All figure placeholders in the thesis include a proposed number,
+caption, content description, and likely source. Table I.1 consolidates
+their production route. Every completed image should be at publication
+resolution, use legible labels, identify whether it is original or
+adapted, and preserve editable source files.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{I.1}Required figure checklist}
+\textbf{Table I.1. Required figure checklist}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.0811}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3176}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3243}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1081}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1689}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Figure}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Caption subject}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{How to create\slash{}obtain}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Required review}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1.1 & Zephyr robot concept and principal degrees of freedom & Prototype
+photograph\slash{}CAD and thesis workflow diagram & Pending & Author\slash{}advisor
+review \\
+1.2 & Research and development workflow used for the Zephyr project &
+Prototype photograph\slash{}CAD and thesis workflow diagram & Pending &
+Author\slash{}advisor review \\
+2.1 & Relationship among balancing, omnidirectional mobility, state
+estimation, and embedded implementation & Original literature-synthesis
+diagram with citations & Pending & Author\slash{}advisor review \\
+3.1 & System-level architecture of the Zephyr robot & Original
+architecture\slash{}control\slash{}firmware diagram from released design & Pending &
+Author\slash{}advisor review \\
+3.2 & Power, sensing, command, and feedback paths among major subsystems
+& Original architecture\slash{}control\slash{}firmware diagram from released design &
+Pending & Author\slash{}advisor review \\
+4.1 & Current Zephyr mechanical prototype with major components
+identified & As-built photographs and dimensioned CAD & Pending &
+Author\slash{}advisor review \\
+4.2 & Exploded CAD view of the chassis, actuator mounts, wheels, and
+electronics structure & As-built photographs and dimensioned CAD &
+Pending & Author\slash{}advisor review \\
+4.3 & Body coordinate frame, collinear wheel locations, roller signs,
+and balancing axis & As-built photographs and dimensioned CAD & Pending
+& Author\slash{}advisor review \\
+4.4 & Actuator-to-wheel structural interface and load path & As-built
+photographs and dimensioned CAD & Pending & Author\slash{}advisor review \\
+5.1 & Electrical architecture and voltage domains & Final KiCad
+schematic\slash{}layout plus annotated wiring photograph & Pending &
+Author\slash{}advisor review \\
+5.2 & Battery and high-current power-distribution schematic & Final
+KiCad schematic\slash{}layout plus annotated wiring photograph & Pending &
+Author\slash{}advisor review \\
+5.3 & Controller, sensor, receiver, display, and CAN interface schematic
+& Final KiCad schematic\slash{}layout plus annotated wiring photograph &
+Pending & Author\slash{}advisor review \\
+5.4 & Recommended linear CAN topology and termination locations & Final
+KiCad schematic\slash{}layout plus annotated wiring photograph & Pending &
+Author\slash{}advisor review \\
+5.5 & Final KiCad schematic sheet set & Final KiCad schematic\slash{}layout
+plus annotated wiring photograph & Pending & Author\slash{}advisor review \\
+5.6 & Final printed-circuit-board layout with power and signal routing
+identified & Final KiCad schematic\slash{}layout plus annotated wiring
+photograph & Pending & Author\slash{}advisor review \\
+6.1 & Inertial and body coordinate frames used by the model & Original
+coordinate\slash{}free-body vector drawing from measured geometry & Pending &
+Author\slash{}advisor review \\
+6.2 & Idealized force direction for each collinear Mecanum wheel &
+Original coordinate\slash{}free-body vector drawing from measured geometry &
+Pending & Author\slash{}advisor review \\
+6.3 & Reduced inverted-pendulum free-body representation & Original
+coordinate\slash{}free-body vector drawing from measured geometry & Pending &
+Author\slash{}advisor review \\
+7.1 & Proposed cascaded control and allocation architecture & Original
+architecture\slash{}control\slash{}firmware diagram from released design & Pending &
+Author\slash{}advisor review \\
+7.2 & Attitude-estimation signal path from raw IMU data to balance state
+& Original architecture\slash{}control\slash{}firmware diagram from released design &
+Pending & Author\slash{}advisor review \\
+7.3 & Safety-oriented operating-state transitions & Original
+architecture\slash{}control\slash{}firmware diagram from released design & Pending &
+Author\slash{}advisor review \\
+8.1 & Firmware directory and portability layers & Original
+architecture\slash{}control\slash{}firmware diagram from released design & Pending &
+Author\slash{}advisor review \\
+8.2 & Runtime data flow through sensing, estimation, supervision,
+control, and actuation & Original architecture\slash{}control\slash{}firmware diagram
+from released design & Pending & Author\slash{}advisor review \\
+8.3 & Firmware initialization and arming sequence & Original
+architecture\slash{}control\slash{}firmware diagram from released design & Pending &
+Author\slash{}advisor review \\
+8.4 & Control-cycle timing and communication schedule & Original
+architecture\slash{}control\slash{}firmware diagram from released design & Pending &
+Author\slash{}advisor review \\
+8.5 & Motor-command safety gate and fault response & Original
+architecture\slash{}control\slash{}firmware diagram from released design & Pending &
+Author\slash{}advisor review \\
+9.1 & Simulation model and numerical-integration workflow & Reproducible
+MATLAB output using final parameters & Pending & Author\slash{}advisor
+review \\
+9.2 & Three-dimensional visualization of the collinear Mecanum robot
+model & Reproducible MATLAB output using final parameters & Pending &
+Author\slash{}advisor review \\
+9.3 & Kinematic validation for independent longitudinal, lateral, and
+yaw commands & Reproducible MATLAB output using final parameters &
+Pending & Author\slash{}advisor review \\
+9.4 & Simulated upright-balance response for the selected controller &
+Reproducible MATLAB output using final parameters & Pending &
+Author\slash{}advisor review \\
+9.5 & Sensitivity of balance response to mass properties, delay, and
+actuator limits & Reproducible MATLAB output using final parameters &
+Pending & Author\slash{}advisor review \\
+10.1 & Integrated prototype prepared for controlled bench testing &
+Dated laboratory photograph\slash{}experimental schematic & Pending &
+Author\slash{}advisor review \\
+10.2 & Current-limited electrical bring-up and CAN validation setup &
+Dated laboratory photograph\slash{}experimental schematic & Pending &
+Author\slash{}advisor review \\
+10.3 & Mechanical restraint used for initial balance-controller tuning &
+Dated laboratory photograph\slash{}experimental schematic & Pending &
+Author\slash{}advisor review \\
+10.4 & Synchronized data-acquisition and reference-measurement
+arrangement & Dated laboratory photograph\slash{}experimental schematic &
+Pending & Author\slash{}advisor review \\
+11.1 & Measured pitch response during upright balancing &
+Version-controlled plot from synchronized raw experimental data &
+Pending & Author\slash{}advisor review \\
+11.2 & Measured recovery from repeatable pitch disturbances &
+Version-controlled plot from synchronized raw experimental data &
+Pending & Author\slash{}advisor review \\
+11.3 & Measured longitudinal, lateral, and yaw responses &
+Version-controlled plot from synchronized raw experimental data &
+Pending & Author\slash{}advisor review \\
+11.4 & Motor current, battery voltage, and actuator temperature during
+testing & Version-controlled plot from synchronized raw experimental
+data & Pending & Author\slash{}advisor review \\
+11.5 & Measured control-loop timing and CAN communication performance &
+Version-controlled plot from synchronized raw experimental data &
+Pending & Author\slash{}advisor review \\
+\end{longtable}
+\par\bigskip
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{I.2}Required table checklist}
+\textbf{Table I.2. Required table checklist}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.0784}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3007}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3268}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1307}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1634}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Table}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Title}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{How to complete}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Quality check}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1.1 & Research questions, objectives, and verification evidence & Review
+repository trace, calculations, and author input & Ready-fill or draft &
+Check units, source, and revision \\
+2.1 & Comparison of relevant mobile-robot architectures and methods &
+Review repository trace, calculations, and author input & Ready-fill or
+draft & Check units, source, and revision \\
+3.1 & System requirements and verification matrix & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+3.2 & Major subsystem interfaces & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+4.1 & Mechanical parameters required for analysis and validation &
+Review repository trace, calculations, and author input & Ready-fill or
+draft & Check units, source, and revision \\
+4.2 & Mechanical component and interface status & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+5.1 & Electrical components and implementation status & Review
+repository trace, calculations, and author input & Ready-fill or draft &
+Check units, source, and revision \\
+5.2 & Electrical power budget & Review repository trace, calculations,
+and author input & Ready-fill or draft & Check units, source, and
+revision \\
+5.3 & ESP32 prototype pin assignments & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+5.4 & Recommended printed-circuit-board routing classes & Review
+repository trace, calculations, and author input & Ready-fill or draft &
+Check units, source, and revision \\
+6.1 & Mobility-rank conditions for the collinear wheel arrangement &
+Review repository trace, calculations, and author input & Ready-fill or
+draft & Check units, source, and revision \\
+6.2 & Kinematic and dynamic symbols & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+6.3 & Model parameters and identification method & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+7.1 & Control and estimation functions and current status & Review
+repository trace, calculations, and author input & Ready-fill or draft &
+Check units, source, and revision \\
+7.2 & Controller and estimator parameters requiring final values &
+Review repository trace, calculations, and author input & Ready-fill or
+draft & Check units, source, and revision \\
+8.1 & Runtime tasks and timing requirements & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+8.2 & Proposed operating and safety states & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+8.3 & Firmware modules and repository evidence & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+9.1 & Simulation cases and required outputs & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+9.2 & Simulation parameter record & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+10.1 & Integration and experimental test matrix & Populate from approved
+protocol and raw test data & Ready-fill or draft & Check units, source,
+and revision \\
+10.2 & Test instrumentation and measurement channels & Populate from
+approved protocol and raw test data & Ready-fill or draft & Check units,
+source, and revision \\
+10.3 & Calibration record & Populate from approved protocol and raw test
+data & Ready-fill or draft & Check units, source, and revision \\
+11.1 & Balancing and motion-performance results & Populate from approved
+protocol and raw test data & Ready-fill or draft & Check units, source,
+and revision \\
+11.2 & Requirement-verification results & Populate from approved
+protocol and raw test data & Ready-fill or draft & Check units, source,
+and revision \\
+11.3 & Failure and anomaly log & Populate from approved protocol and raw
+test data & Ready-fill or draft & Check units, source, and revision \\
+12.1 & Objective completion at the time of this draft & Review
+repository trace, calculations, and author input & Ready-fill or draft &
+Check units, source, and revision \\
+A.1 & Master system-parameter record & Populate from as-built
+measurement\slash{}configuration & Ready-fill or draft & Check units, source,
+and revision \\
+B.1 & Project evidence and completeness inventory & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+B.2 & Proposed thesis titles & Review repository trace, calculations,
+and author input & Ready-fill or draft & Check units, source, and
+revision \\
+C.1 & ESP32 prototype pin and interface record & Populate from as-built
+measurement\slash{}configuration & Ready-fill or draft & Check units, source,
+and revision \\
+C.2 & Power and CAN connector record & Populate from as-built
+measurement\slash{}configuration & Ready-fill or draft & Check units, source,
+and revision \\
+D.1 & CAN network and actuator-configuration record & Populate from
+as-built measurement\slash{}configuration & Ready-fill or draft & Check units,
+source, and revision \\
+D.2 & CAN message-definition record & Populate from as-built
+measurement\slash{}configuration & Ready-fill or draft & Check units, source,
+and revision \\
+E.1 & Firmware module and verification summary & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+G.1 & Calibration and experimental protocol record & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+H.1 & Preliminary risk assessment & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+I.1 & Required figure checklist & Review repository trace, calculations,
+and author input & Ready-fill or draft & Check units, source, and
+revision \\
+I.2 & Required table checklist & Review repository trace, calculations,
+and author input & Ready-fill or draft & Check units, source, and
+revision \\
+J.1 & Consolidated items needed from the author & Review repository
+trace, calculations, and author input & Ready-fill or draft & Check
+units, source, and revision \\
+K.1 & Reference-verification matrix & Recheck publisher\slash{}manufacturer
+landing pages before submission & Ready-fill or draft & Check units,
+source, and revision \\
+L.1 & Final consistency and compliance review & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+M.1 & Repository map and access record & Review repository trace,
+calculations, and author input & Ready-fill or draft & Check units,
+source, and revision \\
+\end{longtable}
+\end{landscape}
+\clearpage

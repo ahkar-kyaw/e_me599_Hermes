@@ -1,0 +1,342 @@
+\chapter{Control and State Estimation}\label{ch:control-and-state-estimation}
+
+\section{Current Implementation Status}\label{current-implementation-status}
+
+The inspected firmware contains types and state paths needed by a
+balance controller, including pitch, pitch rate, roll, and roll rate,
+but no completed balance-control module was confirmed. The current
+system should therefore be described as control-ready infrastructure
+rather than a demonstrated self-balancing implementation. The
+architecture in this chapter is the proposed completion path and the
+basis of the simulation draft. Final controller claims require the exact
+source revision, gains, sample interval, actuator mode, and hardware
+logs.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{7.1}Control and estimation functions and current status}
+\textbf{Table 7.1. Control and estimation functions and current status}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2090}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2761}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2164}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2985}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Function}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Current evidence}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status used in thesis}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Completion evidence}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Raw IMU acquisition & Portable ISM330DHCX driver and ESP32 SPI path &
+Implemented\slash{}bring-up & Rate, missed-sample, and noise measurements \\
+Mount transform and gyro calibration & Reported in firmware data path &
+Implemented, final calibration unverified & Axis test and retained
+calibration values \\
+Complementary attitude estimate & Reported estimator path & Implemented
+infrastructure & Static\slash{}dynamic comparison with reference angle \\
+Balance-state snapshot & Balance types and application state reported &
+Implemented interface & Atomicity and freshness test \\
+Balance control law & No confirmed controller source & Planned & Code,
+gains, timing, simulation and hardware results \\
+Wheel wrench allocation & No confirmed mapping\slash{}roller signs & Planned &
+Geometry matrix, sign test, saturation logic \\
+Yaw\slash{}lateral outer loops & No confirmed closed-loop implementation &
+Planned & Code and motion-tracking results \\
+Safety-gated motor output & Supervisor\slash{}safety command gating reported &
+Partially implemented & Fault-injection and stop-time results \\
+\end{longtable}
+
+\section{Proposed Cascaded Architecture}\label{proposed-cascaded-architecture}
+
+The proposed controller separates stabilization, planar motion,
+allocation, and actuator enforcement. The innermost balance loop uses
+pitch and pitch rate, with translational velocity or position included
+directly in a state-feedback law or applied through a slower outer loop.
+Lateral and yaw controllers produce desired body forces or moments. An
+allocation stage maps the combined body command to four wheel commands,
+enforces per-actuator limits, and reserves balance authority. A
+supervisor controls transitions among disarmed, ready, balancing, and
+faulted states.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 7.1: Draw reference conditioning, x\slash{}y\slash{}yaw outer
+loops, pitch estimator, inner balance controller, body-wrench command,
+four-wheel allocator, saturation and slew limits, safety permission, CAN
+actuator interface, and feedback paths. Mark implemented versus planned
+blocks\textgreater{}\\
+What the figure should show: Draw reference conditioning, x\slash{}y\slash{}yaw outer
+loops, pitch estimator, inner balance controller, body-wrench command,
+four-wheel allocator, saturation and slew limits, safety permission, CAN
+actuator interface, and feedback paths. Mark implemented versus planned
+blocks\\
+Likely source: firmware architecture and MATLAB controller model\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{7.1}Proposed cascaded control and allocation architecture.}
+\textbf{Figure 7.1. Proposed cascaded control and allocation architecture.}
+\end{center}
+
+The controller should not command position while disarmed or fallen. On
+entry to balancing, integrators and reference states should be
+initialized from the measured state to prevent a command step. Operator
+inputs should be deadbanded, scaled, rate limited, and set to zero when
+CRSF data become stale. Display and telemetry functions may observe
+control state but may not own motor commands.
+
+\section{State Estimation}\label{state-estimation}
+
+\subsection{Calibration and frame transformation}\label{calibration-and-frame-transformation}
+
+The IMU driver first converts raw counts to physical units using the
+configured full-scale ranges. A fixed mounting matrix transforms sensor
+axes into the body frame. Gyro bias is estimated only while the robot is
+confirmed stationary, and the calibration record includes sample count,
+duration, temperature, mean, and standard deviation. Accelerometer
+offsets and scale can be checked with multiple static orientations. The
+estimator marks its output invalid during initialization, sensor errors,
+or stale acquisition.
+
+\subsection{Complementary pitch estimate}\label{complementary-pitch-estimate}
+
+Let \ensuremath{\omega}\_p be the body-frame gyro component about the pitch axis, \ensuremath{\theta}\_a the
+gravity-derived pitch angle, and \ensuremath{\Delta}t the measured sample interval. A
+discrete complementary filter is given by Equation (7.1).
+
+\begin{equation}
+\hat{\theta}_{k}=\alpha\left(\hat{\theta}_{k-1}+\Delta t\,\omega_{p,k}\right)
++(1-\alpha)\theta_{a,k}
+\label{eq:7-1}
+\end{equation}
+
+The coefficient \ensuremath{\alpha} determines the crossover between the integrated gyro
+and accelerometer. It should be computed from a documented time constant
+and actual \ensuremath{\Delta}t, not copied as a unitless tuning constant without context.
+During forward or lateral acceleration, the accelerometer does not
+measure gravity alone; the accelerometer correction can therefore tilt
+the estimate in the direction of specific force. Validation should
+compare the estimated pitch with an external reference during static
+tilts, manual rotations, motor acceleration, and disturbance recovery.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 7.2: Show raw accelerometer and gyroscope
+samples, unit conversion, mounting transform, bias calibration, gravity
+angle, gyro integration, complementary fusion, validity\slash{}freshness
+checks, and the published pitch\slash{}pitch-rate snapshot\textgreater{}\\
+What the figure should show: Show raw accelerometer and gyroscope
+samples, unit conversion, mounting transform, bias calibration, gravity
+angle, gyro integration, complementary fusion, validity\slash{}freshness
+checks, and the published pitch\slash{}pitch-rate snapshot\\
+Likely source: firmware data-flow diagram and estimator
+implementation\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{7.2}Attitude-estimation signal path from raw IMU data to balance state.}
+\textbf{Figure 7.2. Attitude-estimation signal path from raw IMU data to balance state.}
+\end{center}
+
+\section{Balance Control}\label{balance-control}
+
+\subsection{State-feedback option}\label{state-feedback-option}
+
+For the discrete linear model, the initial proposed law is Equation
+(7.2), where x-hat contains estimated longitudinal and pitch states, r
+contains motion references, K is the state-feedback gain, and N\_r
+supplies reference feedforward or integral augmentation.
+
+\begin{equation}
+\mathbf{u}_{k}=-\mathbf{K}\hat{\mathbf{x}}_{k}+\mathbf{N}_{r}\mathbf{r}_{k},\qquad
+\mathbf{K}=\operatorname{dlqr}(\mathbf{A}_{d},\mathbf{B}_{d},\mathbf{Q},\mathbf{R})
+\label{eq:7-2}
+\end{equation}
+
+The continuous model is discretized at the measured control interval. Q
+and R are selected after scaling the states to meaningful limits so that
+numerical magnitude does not substitute for engineering priority. The
+eigenvalues of the closed-loop discrete system, control effort,
+saturation time, and robustness to parameter changes are reported.
+Integral action may be added for steady velocity or position error only
+after the inner balance loop is stable and anti-windup is implemented.
+
+\subsection{PID option and anti-windup}\label{pid-option-and-anti-windup}
+
+A cascaded PID implementation remains a valid alternative for initial
+hardware tuning. The pitch controller uses angle error, measured or
+filtered pitch rate, and carefully limited integral action. An outer
+velocity loop modifies the pitch reference. Equation (7.3) shows a
+continuous representation with back-calculation anti-windup.
+
+\begin{equation}
+u(t)=K_p e(t)+K_i\!\int e(t)\,dt+K_d\dot{e}(t),\qquad
+\dot{z}=e+K_{aw}\left(u_{sat}-u\right)
+\label{eq:7-3}
+\end{equation}
+
+Derivative action should use measured angular rate or a filtered
+derivative rather than differentiating a noisy angle. The integral state
+is reset or frozen when disarmed, fallen, or saturated in a direction
+that would increase windup. The final thesis should report which
+controller was implemented and use the other only as a comparison if it
+was actually tested.
+
+\section{Lateral, Yaw, and Motion Control}\label{lateral-yaw-and-motion-control}
+
+Longitudinal force is coupled most directly to pitch. Lateral and yaw
+commands are generated in body coordinates and passed to the allocator
+with lower priority than the balance channel. The lateral controller may
+begin as open-loop velocity command scaling because roller slip can make
+encoder-only lateral speed estimation unreliable. Closed-loop lateral
+velocity requires an independent velocity estimate or a validated
+wheel-slip model. Yaw can be estimated from the gyro and corrected with
+an external heading reference if required by the experiment.
+
+The allocator uses Equation (6.6) with measured H. Each wheel command is
+converted to the actuator\textquotesingle s selected operating mode. If
+the AK40-10 is operated in servo velocity mode, the balance design must
+account for the actuator\textquotesingle s internal velocity loop and
+command period. If torque or MIT mode is selected, torque scaling,
+stiffness, damping, and current limits must be documented. Mode
+selection is not finalized in the available evidence.
+
+\section{Saturation, Rate Limits, and Safety}\label{saturation-rate-limits-and-safety}
+
+Command limits are applied in physical units after allocation. The
+implemented order should be documented because independent clipping can
+distort the desired wrench. Equation (7.4) represents a rate limit
+followed by magnitude saturation; the actual design may use a
+constrained allocator so that all limits are considered together.
+
+\begin{equation}
+\boldsymbol{\tau}_{cmd}=\operatorname{sat}_{\boldsymbol{\tau}_{max}}
+\left(\operatorname{rateLimit}\left(\boldsymbol{\tau}^{\star},\dot{\boldsymbol{\tau}}_{max}\right)\right)
+\label{eq:7-4}
+\end{equation}
+
+Safety checks include IMU validity, estimate age, pitch and pitch-rate
+bounds, actuator-feedback age, CAN state, battery voltage, motor faults,
+operator link state, emergency-stop state, and explicit arming intent. A
+fault removes torque permission and requests a defined safe motor state.
+Automatic re-arming after a fault is prohibited unless the final hazard
+analysis supports it.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 7.3: Show DISARMED, INITIALIZING, READY,
+BALANCING, FALLEN, and FAULT states with guarded transitions for
+calibration completion, arm request, valid sensors, pitch window, stale
+data, motor fault, emergency stop, and manual reset\textgreater{}\\
+What the figure should show: Show DISARMED, INITIALIZING, READY,
+BALANCING, FALLEN, and FAULT states with guarded transitions for
+calibration completion, arm request, valid sensors, pitch window, stale
+data, motor fault, emergency stop, and manual reset\\
+Likely source: supervisor state-machine implementation\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{7.3}Safety-oriented operating-state transitions.}
+\textbf{Figure 7.3. Safety-oriented operating-state transitions.}
+\end{center}
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{7.2}Controller and estimator parameters requiring final values}
+\textbf{Table 7.2. Controller and estimator parameters requiring final values}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2941}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1471}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3824}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Parameter}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Unit}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Final value}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Selection\slash{}verification method}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Estimator sample period & s & \textless INSERT\textgreater{} & Measured
+timestamps and configured IMU ODR \\
+Control sample period & s & \textless INSERT\textgreater{} &
+Schedulability and timing measurement \\
+Complementary time constant / \ensuremath{\alpha} & s / --- &
+\textless INSERT\textgreater{} & Noise and external-angle comparison \\
+LQR Q and R or PID gains & various & \textless INSERT\textgreater{} &
+Document scaling, simulation, restrained tuning, final code revision \\
+Torque\slash{}current limit per actuator & N\ensuremath{\cdot}m / A &
+\textless INSERT\textgreater{} & Installed motor configuration and
+thermal\slash{}current tests \\
+Command slew limit & N\ensuremath{\cdot}m\slash{}s or mode-specific &
+\textless INSERT\textgreater{} & Avoid current spikes while preserving
+recovery \\
+Arm pitch window & rad & \textless INSERT\textgreater{} & Safe test
+procedure and recovery capability \\
+Fall pitch threshold & rad & \textless INSERT\textgreater{} & Mechanical
+clearance and loss-of-recovery evidence \\
+Sensor\slash{}feedback timeout & s & \textless INSERT\textgreater{} &
+Worst-case timing and fault-injection test \\
+\end{longtable}
+
+\section{Stability and Validation}\label{stability-and-validation}
+
+For a linear controller, local stability is assessed from the
+closed-loop poles or eigenvalues of the discrete system. This analysis
+is necessary but insufficient because saturation, rate limiting, delay,
+estimator error, and slip are nonlinear. Simulation should sweep mass,
+center-of-mass height, inertia, actuator delay, friction, and
+battery-dependent limits. Hardware validation then begins with low
+torque and a restraint, advances to brief free-standing trials, and
+records every fall or fault.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT RESULT: Final controller type, equations as
+implemented, exact state vector, sample interval, gains, filters,
+reference limits, saturation logic, stability analysis, simulation
+response, and hardware response. Cite the Git commit and configuration
+file containing each parameter.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}

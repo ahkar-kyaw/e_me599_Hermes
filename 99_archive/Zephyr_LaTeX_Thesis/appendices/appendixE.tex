@@ -1,0 +1,71 @@
+\chapter{Firmware Module Summary}\label{ch:firmware-module-summary}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{E.1}Firmware module and verification summary}
+\textbf{Table E.1. Firmware module and verification summary}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1419}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2770}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1959}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1824}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2027}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Layer\slash{}module}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Representative path}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Responsibility}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Evidence\slash{}status}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Required verification}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Portable interface & \path{04_firmware/common/include/interfaces/if_spi.h} &
+Abstract SPI transaction contract & Accessible path; implemented
+interface & Unit\slash{}integration error paths \\
+IMU driver & \path{common/include/drivers/drv_ism330dhcx.h};
+\path{common/src/drivers/drv_ism330dhcx.c} & Identity\slash{}configuration\slash{}raw burst
+acquisition & Observed code & Register readback and final rate\slash{}range \\
+Balance types & \path{common/include/control/ctrl_balance_types.h} & Shared
+balance state\slash{}types & Observed scaffolding & Trace to executed
+controller \\
+Actuator config & \path{platforms/esp32/main/config/config_actuator.h} & Node
+slots and command timing & Four slots; 20 ms observed; one ID observed &
+All IDs\slash{}modes\slash{}limits\slash{}directions \\
+ESP32 BSP\slash{}tasks & \path{04_firmware/platforms/esp32} & SPI, TWAI, UART,
+display, scheduling & Active development implementation & Release commit
+and worst-case timing \\
+STM32 target & \path{04_firmware/platforms/stm32} & Future target\slash{}scaffold &
+Not equivalent to active ESP32 & Complete port and regression
+comparison \\
+Legacy archive &
+\path{99_archive/documentation_actuator_CubeMars_AK40-10_KV170} and
+archived generated files & Historical component\slash{}code context & Archive
+only & Do not cite as current without trace \\
+Logging & \textless PATH NOT CONFIRMED\textgreater{} & Synchronized
+experiment records & Absent\slash{}unverified & Implement schema, time base,
+dropped-record count \\
+Wheel allocation & \textless PATH NOT CONFIRMED\textgreater{} & Map body
+wrench to four commands & Absent\slash{}unverified & Implement from measured H
+with constraints \\
+Balance control & \textless PATH NOT CONFIRMED\textgreater{} &
+Closed-loop upright stabilization & Execution not confirmed &
+Controller, gains, tests, saturation\slash{}anti-windup \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+Recommended release evidence consists of a tagged commit,
+compiler\slash{}toolchain versions, dependency lock or manifest, generated
+configuration, parameter file, clean-build transcript, binary checksum,
+flash procedure, hardware revision, and automated test output. Short
+source excerpts should be added to the thesis only when they clarify an
+interface or safety decision better than pseudocode.

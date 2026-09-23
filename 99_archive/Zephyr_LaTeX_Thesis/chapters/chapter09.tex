@@ -1,0 +1,321 @@
+\chapter{Simulation and Analysis}\label{ch:simulation-and-analysis}
+
+\section{Objectives and Status}\label{objectives-and-status}
+
+Simulation serves four purposes: verify the collinear kinematic signs
+and rank; test the nonlinear balance equations; select an initial
+controller without risking hardware; and identify which parameters most
+strongly affect performance. A MATLAB script named
+simulate\_collinear\_mecanum\_robot.m was developed in prior project
+work as a draft artifact. It used four mechanical coordinates
+q=[X,Y,\ensuremath{\psi},\ensuremath{\theta}], eight mechanical states, four actuator-lag states, a
+nonlinear Euler-Lagrange model, an LQR controller, sample-and-hold
+control, fourth-order Runge-Kutta integration, saturation, slew limits,
+and DISARMED\slash{}BALANCING\slash{}FALLEN logic. That script was created in a prior
+sandbox and was not confirmed in the repository snapshot; any numerical
+examples from it are not thesis results.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 9.1: Show parameter loading, geometry\slash{}Jacobian
+construction, rank checks, nonlinear plant, actuator lag and saturation,
+sampled controller, state machine, RK4 integration, logging, metrics,
+plots, and animation\textgreater{}\\
+What the figure should show: Show parameter loading, geometry\slash{}Jacobian
+construction, rank checks, nonlinear plant, actuator lag and saturation,
+sampled controller, state machine, RK4 integration, logging, metrics,
+plots, and animation\\
+Likely source: final MATLAB simulation code\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{9.1}Simulation model and numerical-integration workflow.}
+\textbf{Figure 9.1. Simulation model and numerical-integration workflow.}
+\end{center}
+
+\section{Model Structure and Numerical Integration}\label{model-structure-and-numerical-integration}
+
+The simulation state is x\_s=[X,Y,\ensuremath{\psi},\ensuremath{\theta},\ensuremath{\dot{X}},\ensuremath{\dot{Y}},\ensuremath{\dot{\psi}},\ensuremath{\dot{\theta}},\ensuremath{\tau}\_1,...,\ensuremath{\tau}\_4]\ensuremath{^{T}} when
+first-order actuator torque states are retained. Parameters are defined
+at the beginning of the script with units and source fields. The
+controller executes at its discrete sample period while the nonlinear
+plant is integrated at a smaller step. A zero-order hold preserves the
+last command between controller updates.
+
+Fourth-order Runge-Kutta integration is represented by Equation (9.1).
+Step-size convergence is checked by repeating each baseline case at half
+the integration step and comparing key metrics. Solver success alone is
+not evidence of model correctness; dimensional checks, energy checks for
+the unforced plant, zero-input equilibrium, forward\slash{}inverse kinematic
+round trips, and sign tests are performed before interpreting a
+response.
+
+\begin{equation}
+\mathbf{x}_{k+1}=\mathbf{x}_{k}+\frac{\Delta t}{6}
+\left(\mathbf{k}_1+2\mathbf{k}_2+2\mathbf{k}_3+\mathbf{k}_4\right)
+\label{eq:9-1}
+\end{equation}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 9.2: Render the robot body, four collinear wheel
+centers, individual wheel rotation, roller handedness, inertial and body
+axes, center of mass, pitch lean, yaw, and ground trajectory. Display
+time and operating state without implying unmeasured physical
+geometry\textgreater{}\\
+What the figure should show: Render the robot body, four collinear wheel
+centers, individual wheel rotation, roller handedness, inertial and body
+axes, center of mass, pitch lean, yaw, and ground trajectory. Display
+time and operating state without implying unmeasured physical geometry\\
+Likely source: MATLAB visualizer using measured CAD geometry\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{9.2}Three-dimensional visualization of the collinear Mecanum robot model.}
+\textbf{Figure 9.2. Three-dimensional visualization of the collinear Mecanum robot model.}
+\end{center}
+
+\section{Kinematic Validation}\label{kinematic-validation}
+
+Kinematic tests begin with unit commands in v\_x, v\_y, and \ensuremath{\dot{\psi}}. Equation
+(6.3) generates wheel rates, and Equation (6.4) reconstructs the body
+twist. The residual norm, H condition number, and sign pattern are
+reported. Combined commands then test superposition. These tests
+validate the algebra only; they do not demonstrate traction or
+wheel-ground behavior.
+
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{9.1}Simulation cases and required outputs}
+\textbf{Table 9.1. Simulation cases and required outputs}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1527}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2595}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3130}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2748}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Case}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Initial condition\slash{}input}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Signals and plot}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Derived metric}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+K1 longitudinal & Unit +v\_x; v\_y=\ensuremath{\dot{\psi}}=0 & Four wheel rates; reconstructed
+twist & Round-trip error and signs \\
+K2 lateral & Unit +v\_y; v\_x=\ensuremath{\dot{\psi}}=0 & Four wheel rates; reconstructed
+twist & Round-trip error and roller pattern \\
+K3 yaw & Unit +\ensuremath{\dot{\psi}}; v\_x=v\_y=0 & Wheel rates versus y\_i & Round-trip
+error and yaw leverage \\
+K4 combined & Bounded multiaxis command & Requested\slash{}reconstructed twist
+& Maximum and RMS error \\
+D1 small pitch & Small initial \ensuremath{\theta}; zero motion reference & \ensuremath{\theta}, \ensuremath{\dot{\theta}}, x,
+command, state & Stability, settling, saturation \\
+D2 disturbance & Defined impulse or initial angle & Pitch and command &
+Recoverable disturbance\slash{}angle \\
+D3 trajectory & Bounded x-y-yaw reference & Pose, velocities, pitch,
+wheel commands & Tracking error and torque reserve \\
+S1 sensitivity & Parameter and delay sweeps & Metric versus parameter &
+Robustness margins\slash{}trends \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 9.3: Create three panels for pure longitudinal,
+pure lateral, and pure yaw commands. Horizontal axis: time in seconds.
+Vertical axes: commanded and reconstructed body velocities in m\slash{}s and
+yaw rate in rad\slash{}s; include four wheel speeds in rad\slash{}s. Use the
+controller sample interval and at least ten samples per fastest
+displayed transient\textgreater{}\\
+What the figure should show: Create three panels for pure longitudinal,
+pure lateral, and pure yaw commands. Horizontal axis: time in seconds.
+Vertical axes: commanded and reconstructed body velocities in m\slash{}s and
+yaw rate in rad\slash{}s; include four wheel speeds in rad\slash{}s. Use the
+controller sample interval and at least ten samples per fastest
+displayed transient\\
+Likely source: MATLAB kinematic validation logs\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{9.3}Kinematic validation for independent longitudinal, lateral, and yaw commands.}
+\textbf{Figure 9.3. Kinematic validation for independent longitudinal, lateral, and yaw commands.}
+\end{center}
+
+\section{Dynamic and Controller Cases}\label{dynamic-and-controller-cases}
+
+The first dynamic case starts within the linear region with no
+planar-motion request. The second applies a documented initial pitch or
+torque disturbance. The third adds low-amplitude longitudinal commands,
+followed by lateral and yaw commands after balance remains stable.
+Saturation, state transitions, and actuator states appear on every plot
+so that apparent tracking is not mistaken for unconstrained performance.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 9.4: Plot time in seconds on the horizontal
+axis. Use vertically aligned panels for pitch angle in degrees, pitch
+rate in degrees\slash{}s, longitudinal position\slash{}velocity, collective command in
+N\ensuremath{\cdot}m or mode-specific units, individual wheel commands, saturation flag,
+and operating state. Compare nonlinear and linear predictions if both
+are simulated\textgreater{}\\
+What the figure should show: Plot time in seconds on the horizontal
+axis. Use vertically aligned panels for pitch angle in degrees, pitch
+rate in degrees\slash{}s, longitudinal position\slash{}velocity, collective command in
+N\ensuremath{\cdot}m or mode-specific units, individual wheel commands, saturation flag,
+and operating state. Compare nonlinear and linear predictions if both
+are simulated\\
+Likely source: MATLAB simulation output from the final parameter
+set\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{9.4}Simulated upright-balance response for the selected controller.}
+\textbf{Figure 9.4. Simulated upright-balance response for the selected controller.}
+\end{center}
+
+\section{Sensitivity and Uncertainty}\label{sensitivity-and-uncertainty}
+
+Sensitivity cases vary assembled mass, center-of-mass height, pitch
+inertia, effective radius, actuator delay, torque limit, feedback age,
+damping, and roller-force effectiveness over documented ranges.
+One-factor sweeps show local trends; selected combinations expose
+interactions. The ranges should come from measurement uncertainty or
+credible configuration bounds, not arbitrary percentages.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT FIGURE 9.5: Use an x-axis of the varied parameter with
+units and y-axes for RMS pitch error, peak pitch, settling time, maximum
+torque\slash{}current, and stability\slash{}fall outcome. Include the nominal case and
+uncertainty bounds; compare delay, COM height, inertia, torque limit,
+and lateral-force effectiveness\textgreater{}\\
+What the figure should show: Use an x-axis of the varied parameter with
+units and y-axes for RMS pitch error, peak pitch, settling time, maximum
+torque\slash{}current, and stability\slash{}fall outcome. Include the nominal case and
+uncertainty bounds; compare delay, COM height, inertia, torque limit,
+and lateral-force effectiveness\\
+Likely source: MATLAB parameter-sweep results\strut
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}
+
+\begin{center}\singlespacing
+\phantomsection\addcontentsline{lof}{figure}{\protect\numberline{9.5}Sensitivity of balance response to mass properties, delay, and actuator limits.}
+\textbf{Figure 9.5. Sensitivity of balance response to mass properties, delay, and actuator limits.}
+\end{center}
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{9.2}Simulation parameter record}
+\textbf{Table 9.2. Simulation parameter record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2482}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1825}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1460}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2628}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1606}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Parameter}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Value}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Unit}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Source\slash{}revision}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Wheel radius & \textless INSERT\textgreater{} & m & Loaded rollout\slash{}CAD &
+Required \\
+Wheel coordinates and signs & \textless INSERT\textgreater{} & m / --- &
+Final assembly & Required \\
+Body and total mass & \textless INSERT\textgreater{} & kg & Scale\slash{}CAD &
+Required \\
+COM height and offsets & \textless INSERT\textgreater{} & m &
+CAD\slash{}physical test & Required \\
+Pitch and yaw inertias & \textless INSERT\textgreater{} & kg\ensuremath{\cdot}m\ensuremath{^{2}} &
+CAD\slash{}identification & Required \\
+Actuator response and delay & \textless INSERT\textgreater{} & s & Bench
+step test & Required \\
+Torque\slash{}current\slash{}speed limits & \textless INSERT\textgreater{} & N\ensuremath{\cdot}m / A /
+rad\slash{}s & Installed settings & Required \\
+Controller period & \textless INSERT\textgreater{} & s & Firmware
+measurement & Required \\
+Integrator step & \textless INSERT\textgreater{} & s & Convergence study
+& Required \\
+Initial conditions & \textless INSERT\textgreater{} & SI units & Case
+definition & Required \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\section{Model-to-Hardware Comparison}\label{model-to-hardware-comparison}
+
+After hardware tests, simulation and measured data should share the same
+reference commands, initial conditions, sampling grid, sign convention,
+and units. Compare pitch, pitch rate, wheel or actuator feedback, body
+velocity, and command. Quantify time alignment and filtering. Fit only
+parameters designated for identification, then validate the fitted model
+on different trials. Reporting only a visually similar trace would not
+establish predictive validity.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 0\tabcolsep) * \real{1.0000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textless INSERT DATA: Provide final MATLAB code, parameter file, raw
+simulation logs, software release, solver settings, sample interval,
+integration step, and reproducibility instructions. Replace all example
+values with measured or cited parameters.\textgreater{}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\end{longtable}

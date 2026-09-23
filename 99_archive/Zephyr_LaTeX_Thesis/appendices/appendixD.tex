@@ -1,0 +1,113 @@
+\chapter{CAN and Actuator Configuration}\label{ch:can-and-actuator-configuration}
+
+All entries in this appendix must be read from the installed actuator
+configuration and released firmware. Manufacturer capability is not
+equivalent to the chosen project setting. Node identity should be tied
+to a physical wheel label, connector, wheel coordinate, roller sign,
+direction multiplier, and encoder zero.
+
+\clearpage
+\begin{landscape}
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{D.1}CAN network and actuator-configuration record}
+\textbf{Table D.1. CAN network and actuator-configuration record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0759}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1448}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1241}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1034}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1172}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1241}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1724}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1379}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Wheel}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Physical location y\_i}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Roller sign s\_i}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{CAN ID}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Direction}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Mode}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Limits}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Status}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & \textless INSERT m\textgreater{} & \textless INSERT \ensuremath{\pm}1\textgreater{}
+& 69 observed & \textless INSERT\textgreater{} &
+\textless VERIFY\textgreater{} & \textless INSERT\textgreater{} &
+Partially observed \\
+2 & \textless INSERT m\textgreater{} & \textless INSERT \ensuremath{\pm}1\textgreater{}
+& \textless INSERT\textgreater{} & \textless INSERT\textgreater{} &
+\textless VERIFY\textgreater{} & \textless INSERT\textgreater{} &
+Pending \\
+3 & \textless INSERT m\textgreater{} & \textless INSERT \ensuremath{\pm}1\textgreater{}
+& \textless INSERT\textgreater{} & \textless INSERT\textgreater{} &
+\textless VERIFY\textgreater{} & \textless INSERT\textgreater{} &
+Pending \\
+4 & \textless INSERT m\textgreater{} & \textless INSERT \ensuremath{\pm}1\textgreater{}
+& \textless INSERT\textgreater{} & \textless INSERT\textgreater{} &
+\textless VERIFY\textgreater{} & \textless INSERT\textgreater{} &
+Pending \\
+\end{longtable}
+\par\bigskip
+\par\medskip\noindent\singlespacing
+\phantomsection\addcontentsline{lot}{table}{\protect\numberline{D.2}CAN message-definition record}
+\textbf{Table D.2. CAN message-definition record}\par
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1069}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1258}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.0692}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.2138}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1509}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1824}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1509}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Frame ID}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Direction}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{DLC}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Byte\slash{}bit definition}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Scale\slash{}offset\slash{}unit}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Period\slash{}timeout}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Source}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textless INSERT\textgreater{} & MCU\ensuremath{\rightarrow}motor &
+\textless INSERT\textgreater{} & Command\slash{}mode fields &
+\textless INSERT\textgreater{} & 20 ms command period observed; verify &
+Released protocol\slash{}firmware \\
+\textless INSERT\textgreater{} & Motor\ensuremath{\rightarrow}MCU &
+\textless INSERT\textgreater{} & Position, velocity, torque\slash{}current &
+\textless INSERT\textgreater{} & \textless INSERT\textgreater{} &
+Released protocol\slash{}firmware \\
+\textless INSERT\textgreater{} & Motor\ensuremath{\rightarrow}MCU &
+\textless INSERT\textgreater{} & Temperature, voltage, fault flags &
+\textless INSERT\textgreater{} & \textless INSERT\textgreater{} &
+Released protocol\slash{}firmware \\
+\end{longtable}
+\end{landscape}
+\clearpage
+
+\emph{Note.} Include endianness, signedness, saturation behavior,
+invalid codes, rolling counters, and firmware revision.

@@ -100,10 +100,10 @@ Gyroscope full-scale
     ±500 dps
 
 Task period
-    10 ms
+    5 ms
 
 Effective polling rate
-    about 100 Hz
+    about 200 Hz
 ```
 
 Use a larger accelerometer range only if shock or impact causes saturation. Use a larger gyro range only if fast falls or disturbances saturate the gyro.

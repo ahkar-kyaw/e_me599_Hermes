@@ -15,7 +15,7 @@ Platform tasks
     task_motor
     task_supervisor
     task_safety
-    future task_control
+    task_control
     future task_log
 
 Platform BSP
@@ -68,17 +68,18 @@ est_imu_calibration
 est_attitude
     |
     v
-imu_snapshot_t
-    |
-    +--> safety_imu_check
-    |       |
-    |       v
-    |   safety_imu_status_t
-    |
-    +--> app_balance_state_from_imu
-            |
-            v
-        balance_state_t
+imu_snapshot_t --> safety_imu_check --> safety_imu_status_t
+                                                |
+actuator_snapshot_t                             |
+    |                                           |
+    v                                           v
+est_collinear_mecanum ------------> app_balance_state_compose
+                                                |
+                                                v
+                                          balance_state_t
+                                                |
+                                                v
+                                        control_snapshot_t
 ```
 
 ## Current RC pipeline
@@ -258,11 +259,18 @@ safety_imu
 safety_rc
     Owns RC validity, freshness, and raw channel-range checks.
 
+est_collinear_mecanum
+    Owns portable four-wheel planar odometry.
+
 app_balance_state
-    Owns the conversion from IMU and safety status to control-facing balance state.
+    Owns composition of checked IMU lean state and wheel odometry.
 
 ctrl_balance_types
-    Owns only the control-facing balance state definition.
+    Owns the full control-facing state and timing diagnostic definitions.
+
+task_control
+    Runs state estimation at 200 Hz and publishes a dry-run snapshot.
+    Has no motor-command or safety-approval authority.
 ```
 
 ## Planned full robot task flow

@@ -107,10 +107,10 @@ four actuators to the bus.
 
 Each slot also has an `APP_ACTUATOR_n_DIRECTION_SIGN` set to `1` or `-1`.
 The sign converts bus commands and feedback into one robot-level direction
-convention without changing the CubeMars protocol code. Leave every sign at
-`1` until a restrained, single-wheel commissioning test identifies the
-physical polarity. Change only the corresponding configuration value when
-a wheel is reversed.
+convention without changing the CubeMars protocol code. Motors 1 and 2
+currently use `-1`; motors 3 and 4 use `1`, based on the restrained
+single-wheel direction test. Change only the corresponding
+configuration value if the physical motor mapping changes.
 
 All actuators on this bus must use:
 

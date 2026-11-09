@@ -35,6 +35,7 @@ common/
 
         estimation/
             est_attitude.h
+            est_collinear_mecanum.h
             est_imu_calibration.h
             est_imu_mount.h
 
@@ -69,6 +70,7 @@ common/
 
         estimation/
             est_attitude.c
+            est_collinear_mecanum.c
             est_imu_calibration.c
             est_imu_mount.c
 
@@ -157,6 +159,11 @@ est_attitude
     Currently implements a complementary filter.
     Reserves algorithm modes for Madgwick and Kalman filters.
     Supports 6DOF inputs now and 9DOF inputs later.
+
+est_collinear_mecanum
+    Precomputes a four-wheel least-squares kinematic inverse.
+    Estimates planar position, velocity, yaw, and yaw rate in SI units.
+    Contains no motor-protocol, RTOS, or platform dependencies.
 ```
 
 ### safety
@@ -180,8 +187,8 @@ safety_manual_drive
 
 ```text
 ctrl_balance_types
-    Defines balance_state_t only.
-    Does not depend on IMU or safety modules.
+    Defines the full eight-state balance snapshot and task diagnostics.
+    Does not depend on IMU, actuator, RTOS, or safety modules.
 ```
 
 ### ui
@@ -225,8 +232,8 @@ app_rc_types
     validity, and communication error counters.
 
 app_balance_state
-    Converts imu_snapshot_t and safety_imu_status_t into balance_state_t.
-    This keeps control types independent from IMU and safety details.
+    Combines checked IMU lean state and portable wheel odometry into
+    balance_state_t. This keeps control types independent from source snapshots.
 ```
 
 ## Dependency direction

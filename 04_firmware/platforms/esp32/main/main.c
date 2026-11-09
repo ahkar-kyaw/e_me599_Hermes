@@ -1,3 +1,4 @@
+#include "task_control.h"
 #include "task_imu.h"
 #include "task_motor.h"
 #include "task_rc.h"
@@ -17,6 +18,10 @@ void app_main(void)
 
 #if APP_ENABLE_ACTUATORS
     task_motor_start();
+#endif
+
+#if APP_ENABLE_ACTUATORS && APP_ENABLE_CONTROL_STATE
+    task_control_start();
 #endif
 
 #if APP_ENABLE_RC_RECEIVER

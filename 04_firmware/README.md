@@ -55,6 +55,7 @@ docs/
 app_main
     starts task_imu
     starts task_motor when APP_ENABLE_ACTUATORS is enabled
+    starts dry-run task_control when APP_ENABLE_CONTROL_STATE is enabled
     starts task_rc and task_ui when enabled
     starts task_supervisor and task_safety for manual commissioning
 
@@ -90,6 +91,12 @@ task_motor
     decodes timestamped servo feedback and driver faults
     transmits only fresh, safety-approved servo velocity commands
     sends no command automatically at boot
+
+task_control
+    runs the portable state estimator at 200 Hz
+    combines four-wheel odometry with checked IMU lean state
+    publishes timing and validity diagnostics
+    remains dry-run and cannot transmit motor commands
 
 ```
 
@@ -146,11 +153,14 @@ est_attitude
 safety_imu
     checks IMU validity, calibration, freshness, tilt, and acceleration magnitude
 
+est_collinear_mecanum
+    converts four wheel speeds into planar position, velocity, and yaw
+
 app_balance_state
-    converts imu_snapshot_t and safety_imu_status_t into balance_state_t
+    combines checked IMU lean state with wheel odometry
 
 ctrl_balance_types
-    defines the control-facing balance state type
+    defines the full eight-state control snapshot and timing diagnostics
 ```
 
 ## ESP32 build commands
@@ -191,6 +201,10 @@ APP_ENABLE_UI
 APP_ENABLE_ACTUATORS
     Starts the ESP32 actuator task. It always receives feedback and
     accepts only fresh commands approved by task_safety.
+
+APP_ENABLE_CONTROL_STATE
+    Starts the 200 Hz dry-run state-estimation task. It publishes state
+    and timing diagnostics but has no motor-command path.
 
 ```
 
@@ -234,6 +248,9 @@ Do not let UI, tests, or control write directly to motors.
 
 04_firmware/docs/imu_subsystem.md
     IMU driver, calibration, mounting, estimator, safety, and balance-state pipeline.
+
+04_firmware/docs/state_estimation_and_control.md
+    Four-wheel odometry, state composition, timing, configuration, and tests.
 
 04_firmware/docs/ui_subsystem.md
     LCD pages, RC controls, UI state machine, CRSF ranges, and future tuning boundary.

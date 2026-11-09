@@ -5,7 +5,7 @@
 #include "estimation/est_attitude.h"
 #include "estimation/est_imu_mount.h"
 
-#define APP_IMU_TASK_PERIOD_MS             10u
+#define APP_IMU_TASK_PERIOD_MS              5u
 #define APP_IMU_CALIBRATION_SAMPLES        200u
 
 #define APP_IMU_ACCEL_ODR                  DRV_ISM330DHCX_ODR_208_HZ

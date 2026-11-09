@@ -16,8 +16,8 @@ baseline. It can:
 - display RC, IMU, CAN, and manual-drive state on an ST7789 LCD; and
 - pass every manual motor command through supervisor and safety ownership.
 
-It does not yet balance the robot. There is no final balance controller,
-balance-control task, actuator mixer, complete system-mode state machine,
+It does not yet balance the robot. There is no final balance controller, actuator mixer, complete
+system-mode state machine,
 persistent tuning service, or STM32 implementation of the ESP32 BSPs.
 
 ## 2. The main architectural idea
@@ -71,9 +71,8 @@ Application-facing data types and portable glue.
 - `app_manual_drive_types.h` defines requests, inhibit flags, and approved
   manual-drive state.
 - `app_supervisor_types.h` defines the current whole-system modes.
-- `app_balance_state.[ch]` converts checked IMU data into the smaller state
-  expected by future balance control. It is retained but not linked into the
-  current ESP32 image because no controller consumes it yet.
+- `app_balance_state.[ch]` combines checked IMU lean state and portable wheel
+  odometry into the eight-state interface published by the dry-run control task.
 
 ### `common/include/interfaces`
 
@@ -203,6 +202,7 @@ received frame must be processed.
 ```text
 task_imu
 task_motor       when APP_ENABLE_ACTUATORS=1
+task_control     when APP_ENABLE_ACTUATORS=1 and APP_ENABLE_CONTROL_STATE=1
 task_rc          when APP_ENABLE_RC_RECEIVER=1
 task_ui          when APP_ENABLE_UI=1
 task_supervisor  when actuators, RC, and UI are all enabled
@@ -214,15 +214,16 @@ Current task timing and relative priorities:
 | Task | Period or blocking interval | Priority | Responsibility |
 | --- | ---: | ---: | --- |
 | `task_safety` | 20 ms | idle + 4 | Approve or block manual motion |
-| `task_imu` | 10 ms | idle + 3 | Read IMU and publish estimated attitude |
+| `task_control` | 5 ms | idle + 4 | Publish dry-run combined state and timing diagnostics |
+| `task_imu` | 5 ms | idle + 3 | Read IMU and publish estimated attitude |
 | `task_motor` | CAN read up to 20 ms; command cadence 20 ms | idle + 3 | Own CAN and actuator command transmission |
 | `task_rc` | UART read up to 20 ms | idle + 2 | Parse and publish CRSF channels |
 | `task_supervisor` | 20 ms | idle + 2 | Own whole-system mode |
 | `task_ui` | 50 ms; render every 200 ms | idle + 1 | Handle UI input and update LCD |
 
-This is appropriate for commissioning. The final balance loop will need a
-deliberate fixed-rate execution design and measured timing; it should not be
-inserted casually into the UI or motor receive loop.
+The 200 Hz control task now provides that fixed-rate boundary and measures its
+execution timing. It remains dry-run: no balance law or actuator command path
+is connected.
 
 ## 5. Current data flow
 
@@ -274,7 +275,7 @@ flowchart TD
 11. Publishes raw data, converted data, bias, attitude, counters, validity,
     calibration state, and timestamp in one `imu_snapshot_t`.
 
-Current settings are a 10 ms task period, 208 Hz sensor ODR, ±4 g
+Current settings are a 5 ms task period, 208 Hz sensor ODR, ±4 g
 accelerometer, ±500 degrees/s gyro, and complementary-filter alpha 0.98.
 
 ### `task_rc`
@@ -496,24 +497,21 @@ the desired commands before `task_motor` transmits them.
 
 ## 10. Important current limitations
 
-- Only one actuator is enabled and manually selectable.
+- All four actuators are enabled; wheel geometry and feedback conversion still need restrained physical validation.
 - Only servo velocity transmission is used by the runtime motor task.
 - MIT mode is not implemented.
-- CAN page actuator selection is not implemented.
 - The supervisor has only SAFE_IDLE and MANUAL_DRIVE modes.
 - IMU safety is calculated for display, but it is not part of the current
   manual-drive gate.
 - There is no final balance-control mode or controller.
 - There is no RC command shaping for requested speed or steering.
-- There is no actuator role, direction, gear ratio, or wheel mapping.
 - There is no persistent parameter storage or validated tuning transaction.
-- There is no deadline monitor, task watchdog policy, or control overrun
-  counter.
+- The dry-run control task counts overruns; a complete watchdog policy is not implemented.
 - There is no structured runtime log or telemetry capture for controller
   tuning.
 - STM32 currently contains generated startup and an empty user application
   hook; the active subsystems have not been ported.
-- Common logic has no automated host unit-test target yet.
+- Host tests currently cover only the wheel estimator; broader portable-module coverage is still needed.
 
 ## 11. Recommended software roadmap
 
@@ -660,15 +658,16 @@ revision, and known limitations are traceable for the final robot.
 
 ## 12. Recommended immediate next action
 
-Do Steps 1 and 2 next:
+Validate the new dry-run state path on the restrained robot before adding a
+balance law:
 
-1. add the host-side portable test target; then
-2. add actuator roles/directions and commission all four feedback paths.
+1. confirm all four signed wheel speeds are positive for commanded forward motion;
+2. confirm pure forward, lateral, and yaw motion produce the expected state signs;
+3. confirm the 200 Hz task has no overruns under full CAN, RC, IMU, and LCD load; and
+4. measure the physical wheel radius and confirm the ERPM-to-output-speed ratio.
 
-Do not begin tuning a balance controller until all actuator identities,
-directions, feedback signs, freshness behavior, and stop behavior are known.
-That information becomes the contract used by the mixer, safety manager, and
-controller.
+After that evidence is clean, implement a generic desired-command snapshot and
+the supervisor/safety states needed for restrained balance-control trials.
 
 ## 13. Build and monitor
 

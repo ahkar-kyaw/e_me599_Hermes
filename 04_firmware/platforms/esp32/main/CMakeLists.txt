@@ -5,14 +5,17 @@ idf_component_register(
         "bsp/bsp_crsf_uart_esp32.c"
         "bsp/bsp_display_spi_esp32.c"
         "bsp/bsp_imu_spi_esp32.c"
+        "tasks/task_control.c"
         "tasks/task_imu.c"
         "tasks/task_motor.c"
         "tasks/task_rc.c"
         "tasks/task_safety.c"
         "tasks/task_supervisor.c"
         "tasks/task_ui.c"
+        "../../../common/src/app/app_balance_state.c"
         "../../../common/src/drivers/drv_ism330dhcx.c"
         "../../../common/src/drivers/drv_st7789.c"
+        "../../../common/src/estimation/est_collinear_mecanum.c"
         "../../../common/src/estimation/est_imu_calibration.c"
         "../../../common/src/estimation/est_attitude.c"
         "../../../common/src/estimation/est_imu_mount.c"
@@ -48,6 +51,7 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
     APP_PLATFORM_ESP32=1
     BOARD_ESP32_NODEMCU_V1=1
     APP_ENABLE_ACTUATORS=1
+    APP_ENABLE_CONTROL_STATE=1
     APP_ENABLE_RC_RECEIVER=1
     APP_ENABLE_UI=1
 )

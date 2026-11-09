@@ -9,7 +9,7 @@ It:
 ```text
 uses one 1 Mbit/s classic CAN bus
 supports four configurable actuator slots
-enables motor 1 at CAN ID 69 decimal
+enables motors 1-4 at CAN IDs 1-4
 decodes periodic servo feedback
 publishes timestamped actuator snapshots
 checks feedback freshness
@@ -95,17 +95,22 @@ The current entries are:
 
 ```text
 Slot    Enabled    CAN ID
-1       yes        69
-2       no         70
-3       no         71
-4       no         72
+1       yes        1
+2       yes        2
+3       yes        3
+4       yes        4
 ```
 
-IDs are decimal in this file. ID 69 is hexadecimal `0x45`. The other
-three IDs are reserved configuration values, not assumptions about the
-motors. Before enabling them, assign each physical actuator a unique
-CAN ID with the CubeMars configuration tool, update the matching
-`APP_ACTUATOR_n_CAN_ID`, and set `APP_ACTUATOR_n_ENABLED` to `true`.
+IDs are decimal in this file. Assign each physical actuator the matching
+unique CAN ID with the CubeMars configuration tool before connecting all
+four actuators to the bus.
+
+Each slot also has an `APP_ACTUATOR_n_DIRECTION_SIGN` set to `1` or `-1`.
+The sign converts bus commands and feedback into one robot-level direction
+convention without changing the CubeMars protocol code. Leave every sign at
+`1` until a restrained, single-wheel commissioning test identifies the
+physical polarity. Change only the corresponding configuration value when
+a wheel is reversed.
 
 All actuators on this bus must use:
 
@@ -180,10 +185,10 @@ Motion requires all of the following:
 CAN page selected
 SC UI input gate enabled
 SD Interact mode enabled
-actuator slot 1 configured
+selected actuator slot configured
 RC snapshot valid and fresh
 CAN bus active
-M1 feedback fresh and fault-free
+selected actuator feedback fresh and fault-free
 CH2 throttle centered when SD is enabled
 ```
 
@@ -199,14 +204,15 @@ running fault, cycle SD off and on before rearming.
 ```text
 CH1 Ail    Browse to the CAN page.
 CH6 SD     Enable or disable manual drive on the CAN page.
-CH2 Thr    Command -1000 to +1000 ERPM after the display says LIVE.
+CH2 Thr    Select M1-M4 in Browse mode.
+CH2 Thr    Command -1000 to +1000 ERPM in Interact mode after LIVE.
 CH10 SC    UI input gate; dropping it cancels the request.
 ```
 
-The simplified commissioning path currently targets slot M1. A separate
-motor-selection input can be added when additional actuators are
-enabled. All mappings, polarities, limits, freshness times, and the
-zero-command hold time are in
+The selected slot is frozen when Interact mode begins, so the same throttle
+channel can command velocity without changing motors. Leave Interact mode
+before selecting another motor. All mappings, polarities, limits, freshness
+times, and the zero-command hold time are in
 `platforms/esp32/main/config/config_actuator.h`.
 
 ## Future MIT mode

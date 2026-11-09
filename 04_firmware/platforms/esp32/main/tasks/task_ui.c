@@ -245,7 +245,7 @@ static void task_ui_entry(void *argument)
         const app_manual_drive_request_t manual_drive_request =
         {
             .timestamp_us = now_us,
-            .actuator_index = 0u,
+            .actuator_index = ui_state.selection,
             .enabled = ui_state.input_enabled &&
                        (ui_state.page == UI_PAGE_CAN) &&
                        (ui_state.mode == UI_MODE_INTERACT),

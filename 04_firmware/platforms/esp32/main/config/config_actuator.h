@@ -26,30 +26,51 @@
 #define APP_MANUAL_DRIVE_VELOCITY_POSITIVE_HIGH 1
 
 #define APP_ACTUATOR_1_ENABLED true
-#define APP_ACTUATOR_1_CAN_ID  69u
+#define APP_ACTUATOR_1_CAN_ID  1u
+#define APP_ACTUATOR_1_DIRECTION_SIGN  1
 
-#define APP_ACTUATOR_2_ENABLED false
-#define APP_ACTUATOR_2_CAN_ID  70u
+#define APP_ACTUATOR_2_ENABLED true
+#define APP_ACTUATOR_2_CAN_ID  2u
+#define APP_ACTUATOR_2_DIRECTION_SIGN  1
 
-#define APP_ACTUATOR_3_ENABLED false
-#define APP_ACTUATOR_3_CAN_ID  71u
+#define APP_ACTUATOR_3_ENABLED true
+#define APP_ACTUATOR_3_CAN_ID  3u
+#define APP_ACTUATOR_3_DIRECTION_SIGN  1
 
-#define APP_ACTUATOR_4_ENABLED false
-#define APP_ACTUATOR_4_CAN_ID  72u
+#define APP_ACTUATOR_4_ENABLED true
+#define APP_ACTUATOR_4_CAN_ID  4u
+#define APP_ACTUATOR_4_DIRECTION_SIGN  1
 
 typedef struct
 {
     uint8_t motor_id;
+    int8_t direction_sign;
     bool enabled;
 } config_actuator_entry_t;
 
 static const config_actuator_entry_t
     APP_ACTUATOR_CONFIG[APP_ACTUATOR_COUNT] =
 {
-    {APP_ACTUATOR_1_CAN_ID, APP_ACTUATOR_1_ENABLED},
-    {APP_ACTUATOR_2_CAN_ID, APP_ACTUATOR_2_ENABLED},
-    {APP_ACTUATOR_3_CAN_ID, APP_ACTUATOR_3_ENABLED},
-    {APP_ACTUATOR_4_CAN_ID, APP_ACTUATOR_4_ENABLED},
+    {
+        APP_ACTUATOR_1_CAN_ID,
+        APP_ACTUATOR_1_DIRECTION_SIGN,
+        APP_ACTUATOR_1_ENABLED,
+    },
+    {
+        APP_ACTUATOR_2_CAN_ID,
+        APP_ACTUATOR_2_DIRECTION_SIGN,
+        APP_ACTUATOR_2_ENABLED,
+    },
+    {
+        APP_ACTUATOR_3_CAN_ID,
+        APP_ACTUATOR_3_DIRECTION_SIGN,
+        APP_ACTUATOR_3_ENABLED,
+    },
+    {
+        APP_ACTUATOR_4_CAN_ID,
+        APP_ACTUATOR_4_DIRECTION_SIGN,
+        APP_ACTUATOR_4_ENABLED,
+    },
 };
 
 #endif

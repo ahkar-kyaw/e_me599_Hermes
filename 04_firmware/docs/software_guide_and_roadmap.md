@@ -310,8 +310,8 @@ transmitter has ten active configured channels.
 13. Sends zero velocity for the configured stop-hold window when approval is
     removed or expires.
 
-Only actuator slot 1 is currently enabled, at decimal CAN ID 69. Slots 2-4
-hold placeholder IDs 70-72 and remain disabled.
+All four actuator slots are enabled at decimal CAN IDs 1-4. Configure the
+same IDs in the physical actuator drives before connecting the complete bus.
 
 ### `task_ui`
 
@@ -327,9 +327,9 @@ hold placeholder IDs 70-72 and remain disabled.
 10. Publishes a timestamped manual-drive request when the UI is unlocked,
     on the CAN page, and in interact mode.
 
-The UI always requests actuator index 0 today. The CAN page cannot yet select
-another actuator because CH2 is reserved as the live velocity input while the
-CAN page is in interact mode.
+On the CAN page, the throttle channel selects a motor in Browse mode.
+Entering Interact mode freezes that selection and reuses the throttle channel
+for the bounded manual velocity command.
 
 ### `task_supervisor`
 

@@ -120,7 +120,7 @@ static void task_motor_entry(void *argument)
 
     if (!task_motor_config_is_valid())
     {
-        ESP_LOGE(TAG, "actuator CAN IDs must be unique");
+        ESP_LOGE(TAG, "invalid actuator configuration");
         vTaskDelete(NULL);
         return;
     }
@@ -196,6 +196,12 @@ static bool task_motor_config_is_valid(void)
          first < APP_ACTUATOR_COUNT;
          first++)
     {
+        if ((APP_ACTUATOR_CONFIG[first].direction_sign != -1) &&
+            (APP_ACTUATOR_CONFIG[first].direction_sign != 1))
+        {
+            return false;
+        }
+
         if (!APP_ACTUATOR_CONFIG[first].enabled)
         {
             continue;
@@ -339,9 +345,12 @@ static void task_motor_process_frame(
 
     feedback->timestamp_us = timestamp_us;
     feedback->feedback_count++;
-    feedback->position_deg = decoded.position_deg;
-    feedback->velocity_erpm = decoded.velocity_erpm;
-    feedback->current_a = decoded.current_a;
+    feedback->position_deg = decoded.position_deg *
+        (float)APP_ACTUATOR_CONFIG[actuator_index].direction_sign;
+    feedback->velocity_erpm = decoded.velocity_erpm *
+        (float)APP_ACTUATOR_CONFIG[actuator_index].direction_sign;
+    feedback->current_a = decoded.current_a *
+        (float)APP_ACTUATOR_CONFIG[actuator_index].direction_sign;
     feedback->temperature_c = decoded.temperature_c;
     feedback->fault_code = decoded.fault_code;
     feedback->valid = true;
@@ -437,7 +446,8 @@ static void task_motor_send_velocity(
         !APP_ACTUATOR_CONFIG[actuator_index].enabled ||
         (proto_cubemars_ak_encode_servo_velocity(
              APP_ACTUATOR_CONFIG[actuator_index].motor_id,
-             velocity_erpm,
+             velocity_erpm *
+                 (float)APP_ACTUATOR_CONFIG[actuator_index].direction_sign,
              &frame) != PROTO_CUBEMARS_AK_OK))
     {
         snapshot->command_tx_error_count++;

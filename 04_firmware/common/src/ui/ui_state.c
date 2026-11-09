@@ -57,14 +57,24 @@ bool ui_state_update(ui_state_t *state, ui_event_flags_t events)
     if ((events & UI_EVENT_INTERACT_OFF) != 0u)
     {
         state->mode = UI_MODE_BROWSE;
-        state->selection = 0u;
+
+        if (state->page != UI_PAGE_CAN)
+        {
+            state->selection = 0u;
+        }
+
         return memcmp(&previous, state, sizeof(*state)) != 0;
     }
 
     if ((events & UI_EVENT_INTERACT_ON) != 0u)
     {
         state->mode = UI_MODE_INTERACT;
-        state->selection = 0u;
+
+        if (state->page != UI_PAGE_CAN)
+        {
+            state->selection = 0u;
+        }
+
         return memcmp(&previous, state, sizeof(*state)) != 0;
     }
 
@@ -87,6 +97,23 @@ bool ui_state_update(ui_state_t *state, ui_event_flags_t events)
         {
             state->page = (ui_page_t)((state->page + 1) % UI_PAGE_COUNT);
             state->selection = 0u;
+        }
+        else if (state->page == UI_PAGE_CAN)
+        {
+            const uint8_t selection_count =
+                ui_state_selection_count(state->page);
+
+            if ((events & UI_EVENT_UP) != 0u)
+            {
+                state->selection = (state->selection == 0u)
+                    ? (uint8_t)(selection_count - 1u)
+                    : (uint8_t)(state->selection - 1u);
+            }
+            else if ((events & UI_EVENT_DOWN) != 0u)
+            {
+                state->selection =
+                    (uint8_t)((state->selection + 1u) % selection_count);
+            }
         }
     }
     else

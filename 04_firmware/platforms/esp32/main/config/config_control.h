@@ -25,4 +25,22 @@
 
 #define APP_CONTROL_LEAN_AXIS CTRL_BALANCE_LEAN_PITCH
 
+#define APP_CONTROL_TORQUE_INPUT_CHANNEL            2u
+#define APP_CONTROL_TORQUE_INPUT_POSITIVE_HIGH       1
+#define APP_CONTROL_TORQUE_MAX_CURRENT_A          1.0f
+#define APP_CONTROL_TORQUE_SLEW_RATE_A_PER_S      4.0f
+
+#define APP_CONTROL_TORQUE_MIX_1                  1.0f
+#define APP_CONTROL_TORQUE_MIX_2                  1.0f
+#define APP_CONTROL_TORQUE_MIX_3                  1.0f
+#define APP_CONTROL_TORQUE_MIX_4                  1.0f
+
+#define APP_CONTROL_REQUEST_MAX_AGE_US          100000u
+#define APP_CONTROL_STATE_MAX_AGE_US             20000u
+#define APP_CONTROL_STOP_HOLD_US                200000u
+
+#define APP_CONTROL_ARM_LEAN_LIMIT_RAD          0.1745329f
+#define APP_CONTROL_ARM_LEAN_RATE_LIMIT_RPS     1.3962634f
+#define APP_CONTROL_FALL_LEAN_LIMIT_RAD         0.5235988f
+
 #endif

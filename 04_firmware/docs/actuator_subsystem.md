@@ -2,8 +2,9 @@
 
 ## Current scope
 
-The current implementation provides CubeMars AK40-10 feedback and a
-deliberately limited manual velocity commissioning path in servo mode.
+The current implementation provides CubeMars AK40-10 feedback, a
+single-actuator manual velocity path, and a four-actuator fixture current path
+in servo mode.
 It:
 
 ```text
@@ -18,11 +19,14 @@ requests ESP32 TWAI recovery after bus-off
 allows one selected actuator to be driven at a time
 limits the manual command to 1000 electrical RPM by default
 requires explicit UI, supervisor, safety, and arm-switch approval
+allows all four actuators to receive bounded servo-current commands
+limits fixture current to 1.0 A per actuator by default
+requires valid IMU, state, RC, CAN, and all four feedback snapshots
 ```
 
-The manual path is for an unloaded bench test. It is not the final robot
-motion mode and does not replace a hardware E-stop, power contactor, or
-the actuator's configured CAN command timeout.
+Both command paths are commissioning tools, not the final balance controller.
+They do not replace a hardware E-stop, power contactor, or the actuator's
+configured CAN command timeout.
 
 ## Layer ownership
 
@@ -69,17 +73,17 @@ task_motor
     Owns the CAN BSP.
     Matches feedback to configured actuator slots.
     Publishes the latest snapshot for all four actuators.
-    Transmits only fresh, safety-approved manual velocity commands.
+    Transmits only fresh, safety-approved velocity or current commands.
     Applies a local command freshness check and zero-command stop hold.
 
 task_supervisor
-    Owns SAFE_IDLE and MANUAL_DRIVE whole-system modes.
-    Accepts a fresh CAN-page request from task_ui.
+    Owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL modes.
+    Accepts fresh, mutually exclusive UI requests.
 
 task_safety
-    Owns permission to move during manual commissioning.
-    Checks RC, CAN, actuator feedback, driver fault, selected slot,
-    neutral stick, and fresh supervisor mode.
+    Owns permission to move during commissioning.
+    Checks RC, state, IMU, CAN, actuator feedback, driver faults,
+    command limits, neutral stick, and fresh supervisor mode.
 
 ```
 
@@ -152,11 +156,16 @@ The distinction between electrical RPM and output-shaft RPM is
 intentional. Conversion to mechanical units depends on motor pole pairs
 and gear ratio and belongs above the wire protocol.
 
-The active manual path uses servo velocity command function `0x03`, a
-29-bit extended identifier, and a signed four-byte big-endian ERPM
-value. Origin-setting, persistent configuration writes, runtime mode
-switching, current mode, position mode, and MIT commands are not wired
+The manual path uses servo velocity command function `0x03` and a signed
+four-byte big-endian ERPM value. Fixture torque commissioning uses servo
+current command function `0x01` and a signed four-byte milliampere value. Both
+use a 29-bit extended identifier. Origin-setting, persistent configuration
+writes, runtime mode switching, position mode, and MIT commands are not wired
 to runtime control.
+
+The current command is amperes at the motor controller. Firmware does not
+claim a verified output torque until torque constant and drivetrain efficiency
+have been measured.
 
 ## Manual-drive ownership and safety path
 
@@ -214,6 +223,49 @@ channel can command velocity without changing motors. Leave Interact mode
 before selecting another motor. All mappings, polarities, limits, freshness
 times, and the zero-command hold time are in
 `platforms/esp32/main/config/config_actuator.h`.
+
+## Four-actuator fixture current path
+
+```text
+task_ui
+    requests torque control only on the CONTROL page in Interact mode
+    |
+    v
+task_supervisor
+    selects TORQUE_CONTROL
+    |
+    v
+task_control
+    converts CH2 into slew-limited desired motor current at 200 Hz
+    |
+    v
+task_safety + safety_torque_control
+    checks all safety inputs and publishes approved current or zero current
+    |
+    v
+task_motor
+    applies per-slot direction signs and transmits servo-current frames
+```
+
+Default controls:
+
+```text
+CH1 Ail    Browse to CONTROL.
+CH2 Thr    Select the CONTROL subpage in Browse mode.
+CH6 SD     Request torque control in Interact mode.
+CH2 Thr    Command signed current after the UI reports LIVE.
+CH10 SC    UI input gate; dropping it cancels the request.
+```
+
+CH2 must be centered before arming. Any running hard fault starts a zero-current
+stop window and requires SD to be cycled off and on before rearming. Current
+limit, slew rate, motor mix, state limits, and timeouts are in
+`platforms/esp32/main/config/config_control.h`.
+
+Before powered trials, configure the actuator-side CAN command timeout to about
+100 ms or less and verify that timeout behavior removes torque. The bundled
+parameter set currently contains a 1000 ms timeout, which is too long for this
+commissioning path.
 
 ## Future MIT mode
 

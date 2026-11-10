@@ -5,6 +5,8 @@
 #include "app/app_imu_types.h"
 #include "app/app_manual_drive_types.h"
 #include "app/app_rc_types.h"
+#include "app/app_torque_control_types.h"
+#include "control/ctrl_balance_types.h"
 #include "safety/safety_imu.h"
 #include "safety/safety_rc.h"
 #include "ui/ui_canvas.h"
@@ -22,6 +24,8 @@ typedef struct
     const safety_imu_status_t *imu_status;
     const actuator_snapshot_t *actuator_snapshot;
     const app_manual_drive_snapshot_t *manual_drive_snapshot;
+    const control_snapshot_t *control_snapshot;
+    const app_torque_control_snapshot_t *torque_control_snapshot;
 } ui_page_model_t;
 
 void ui_pages_render(ui_canvas_t *canvas,

@@ -10,7 +10,8 @@ extern "C" {
 typedef enum
 {
     APP_SYSTEM_MODE_SAFE_IDLE = 0,
-    APP_SYSTEM_MODE_MANUAL_DRIVE
+    APP_SYSTEM_MODE_MANUAL_DRIVE,
+    APP_SYSTEM_MODE_TORQUE_CONTROL
 } app_system_mode_t;
 
 typedef struct

@@ -4,10 +4,14 @@
 #include "config_actuator.h"
 #include "config_control.h"
 #include "config_imu.h"
+#include "config_rc.h"
+#include "control/ctrl_torque_input.h"
 #include "estimation/est_collinear_mecanum.h"
 #include "safety/safety_imu.h"
 #include "task_imu.h"
 #include "task_motor.h"
+#include "task_rc.h"
+#include "task_supervisor.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -22,8 +26,13 @@
 
 _Static_assert(APP_ACTUATOR_COUNT == EST_COLLINEAR_MECANUM_WHEEL_COUNT,
                "control estimator requires four actuator slots");
+_Static_assert(APP_ACTUATOR_COUNT == CTRL_BALANCE_ACTUATOR_COUNT,
+               "control output requires four actuator slots");
 _Static_assert(configTICK_RATE_HZ >= 200,
                "control task requires an RTOS tick rate of at least 200 Hz");
+_Static_assert((APP_CONTROL_TORQUE_INPUT_CHANNEL >= 1u) &&
+               (APP_CONTROL_TORQUE_INPUT_CHANNEL <= APP_RC_CHANNEL_COUNT),
+               "torque input channel is out of range");
 
 static const char *TAG = "task_control";
 
@@ -91,6 +100,18 @@ static void task_control_entry(void *argument)
     };
     safety_imu_config_t imu_safety_config =
         safety_imu_default_config();
+    ctrl_torque_input_t torque_input;
+    const ctrl_torque_input_config_t torque_input_config =
+    {
+        .channel_min = APP_RC_CHANNEL_MIN,
+        .channel_max = APP_RC_CHANNEL_MAX,
+        .neutral_low = APP_MANUAL_DRIVE_STICK_NEUTRAL_LOW,
+        .neutral_high = APP_MANUAL_DRIVE_STICK_NEUTRAL_HIGH,
+        .max_current_a = APP_CONTROL_TORQUE_MAX_CURRENT_A,
+        .slew_rate_a_per_s = APP_CONTROL_TORQUE_SLEW_RATE_A_PER_S,
+        .positive_high =
+            (APP_CONTROL_TORQUE_INPUT_POSITIVE_HIGH != 0),
+    };
     control_snapshot_t snapshot;
 
     memset(&snapshot, 0, sizeof(snapshot));
@@ -112,7 +133,15 @@ static void task_control_entry(void *argument)
         return;
     }
 
-    ESP_LOGI(TAG, "200 Hz state estimator started in dry-run mode");
+    if (!ctrl_torque_input_init(&torque_input,
+                                &torque_input_config))
+    {
+        ESP_LOGE(TAG, "invalid torque input configuration");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    ESP_LOGI(TAG, "200 Hz state estimator and torque request started");
 
     TickType_t last_wake = xTaskGetTickCount();
     uint64_t last_loop_us = 0u;
@@ -125,6 +154,8 @@ static void task_control_entry(void *argument)
             ((float)(loop_start_us - last_loop_us) * 0.000001f);
         imu_snapshot_t imu_snapshot;
         actuator_snapshot_t actuator_snapshot;
+        app_supervisor_snapshot_t supervisor_snapshot;
+        rc_snapshot_t rc_snapshot;
         safety_imu_status_t imu_status;
         est_collinear_mecanum_output_t odometry;
 
@@ -133,10 +164,17 @@ static void task_control_entry(void *argument)
         snapshot.loop_count++;
         snapshot.input_fault_flags = CTRL_STATE_FAULT_NONE;
         memset(&snapshot.state, 0, sizeof(snapshot.state));
+        memset(snapshot.desired_current_a,
+               0,
+               sizeof(snapshot.desired_current_a));
         snapshot.state.timestamp_us = loop_start_us;
+        snapshot.requested_current_a = 0.0f;
+        snapshot.torque_command_valid = false;
 
         task_imu_get_snapshot(&imu_snapshot);
         task_motor_get_snapshot(&actuator_snapshot);
+        task_rc_get_snapshot(&rc_snapshot);
+        task_supervisor_get_snapshot(&supervisor_snapshot);
         (void)safety_imu_check(&imu_snapshot,
                                loop_start_us,
                                &imu_safety_config,
@@ -195,6 +233,45 @@ static void task_control_entry(void *argument)
                 &snapshot.state))
         {
             snapshot.input_fault_flags |= CTRL_STATE_FAULT_ESTIMATOR;
+        }
+
+        if (supervisor_snapshot.mode == APP_SYSTEM_MODE_TORQUE_CONTROL)
+        {
+            const uint8_t channel =
+                (uint8_t)(APP_CONTROL_TORQUE_INPUT_CHANNEL - 1u);
+            float requested_current_a = 0.0f;
+
+            if (snapshot.state.valid && rc_snapshot.valid &&
+                ctrl_torque_input_update(
+                    &torque_input,
+                    rc_snapshot.channel[channel],
+                    dt_s,
+                    &requested_current_a))
+            {
+                static const float torque_mix[APP_ACTUATOR_COUNT] =
+                {
+                    APP_CONTROL_TORQUE_MIX_1,
+                    APP_CONTROL_TORQUE_MIX_2,
+                    APP_CONTROL_TORQUE_MIX_3,
+                    APP_CONTROL_TORQUE_MIX_4,
+                };
+
+                snapshot.requested_current_a = requested_current_a;
+
+                for (uint32_t actuator = 0u;
+                     actuator < APP_ACTUATOR_COUNT;
+                     actuator++)
+                {
+                    snapshot.desired_current_a[actuator] =
+                        requested_current_a * torque_mix[actuator];
+                }
+
+                snapshot.torque_command_valid = true;
+            }
+        }
+        else
+        {
+            ctrl_torque_input_reset(&torque_input);
         }
 
         const uint64_t loop_end_us = (uint64_t)esp_timer_get_time();

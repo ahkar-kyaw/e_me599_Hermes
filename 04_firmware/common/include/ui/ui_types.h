@@ -13,6 +13,7 @@ typedef enum
     UI_PAGE_STATUS = 0,
     UI_PAGE_RC,
     UI_PAGE_IMU,
+    UI_PAGE_CONTROL,
     UI_PAGE_CAN,
     UI_PAGE_COUNT
 } ui_page_t;

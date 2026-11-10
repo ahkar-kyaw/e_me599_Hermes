@@ -20,16 +20,15 @@ static const char *TAG = "task_motor";
 static actuator_snapshot_t g_actuator_snapshot;
 static portMUX_TYPE g_actuator_snapshot_lock =
     portMUX_INITIALIZER_UNLOCKED;
-static app_manual_drive_snapshot_t g_approved_manual_command;
-static portMUX_TYPE g_approved_manual_command_lock =
+static app_actuator_command_snapshot_t g_approved_command;
+static portMUX_TYPE g_approved_command_lock =
     portMUX_INITIALIZER_UNLOCKED;
 
 typedef struct
 {
     uint64_t next_tx_us;
     uint64_t stop_until_us;
-    float velocity_erpm;
-    uint8_t actuator_index;
+    app_actuator_command_entry_t actuator[APP_ACTUATOR_COUNT];
     bool session_active;
     bool stopping;
 } task_motor_tx_state_t;
@@ -52,19 +51,25 @@ static void task_motor_process_frame(
     actuator_snapshot_t *snapshot,
     const if_can_frame_t *frame,
     uint64_t timestamp_us);
-static void task_motor_get_approved_manual_command(
-    app_manual_drive_snapshot_t *command);
+static void task_motor_get_approved_command(
+    app_actuator_command_snapshot_t *command);
 static void task_motor_update_command_tx(
     actuator_snapshot_t *snapshot,
     task_motor_tx_state_t *tx_state,
     uint64_t now_us);
-static bool task_motor_manual_command_fresh(
-    const app_manual_drive_snapshot_t *command,
+static bool task_motor_approved_command_fresh(
+    const app_actuator_command_snapshot_t *command,
     uint64_t now_us);
+static bool task_motor_command_has_enabled_actuator(
+    const app_actuator_command_snapshot_t *command);
 static void task_motor_send_velocity(
     actuator_snapshot_t *snapshot,
     uint8_t actuator_index,
     float velocity_erpm);
+static void task_motor_send_current(
+    actuator_snapshot_t *snapshot,
+    uint8_t actuator_index,
+    float current_a);
 
 void task_motor_start(void)
 {
@@ -94,17 +99,17 @@ void task_motor_get_snapshot(actuator_snapshot_t *snapshot)
     portEXIT_CRITICAL(&g_actuator_snapshot_lock);
 }
 
-void task_motor_set_approved_manual_command(
-    const app_manual_drive_snapshot_t *command)
+void task_motor_set_approved_command(
+    const app_actuator_command_snapshot_t *command)
 {
     if (command == NULL)
     {
         return;
     }
 
-    portENTER_CRITICAL(&g_approved_manual_command_lock);
-    g_approved_manual_command = *command;
-    portEXIT_CRITICAL(&g_approved_manual_command_lock);
+    portENTER_CRITICAL(&g_approved_command_lock);
+    g_approved_command = *command;
+    portEXIT_CRITICAL(&g_approved_command_lock);
 }
 
 static void task_motor_entry(void *argument)
@@ -356,12 +361,12 @@ static void task_motor_process_frame(
     feedback->valid = true;
 }
 
-static void task_motor_get_approved_manual_command(
-    app_manual_drive_snapshot_t *command)
+static void task_motor_get_approved_command(
+    app_actuator_command_snapshot_t *command)
 {
-    portENTER_CRITICAL(&g_approved_manual_command_lock);
-    *command = g_approved_manual_command;
-    portEXIT_CRITICAL(&g_approved_manual_command_lock);
+    portENTER_CRITICAL(&g_approved_command_lock);
+    *command = g_approved_command;
+    portEXIT_CRITICAL(&g_approved_command_lock);
 }
 
 static void task_motor_update_command_tx(
@@ -369,35 +374,40 @@ static void task_motor_update_command_tx(
     task_motor_tx_state_t *tx_state,
     uint64_t now_us)
 {
-    app_manual_drive_snapshot_t command;
+    app_actuator_command_snapshot_t command;
 
-    task_motor_get_approved_manual_command(&command);
+    task_motor_get_approved_command(&command);
 
-    if (task_motor_manual_command_fresh(&command, now_us) &&
-        command.transmit_enabled &&
-        (command.actuator_index < APP_ACTUATOR_COUNT) &&
-        APP_ACTUATOR_CONFIG[command.actuator_index].enabled)
+    if (task_motor_approved_command_fresh(&command, now_us) &&
+        task_motor_command_has_enabled_actuator(&command))
     {
         tx_state->session_active = true;
-        tx_state->stopping = !command.motion_allowed;
+        tx_state->stopping = false;
         tx_state->stop_until_us = 0u;
-        tx_state->actuator_index = command.actuator_index;
-        tx_state->velocity_erpm = command.motion_allowed ?
-            command.velocity_erpm : 0.0f;
+        memcpy(tx_state->actuator,
+               command.actuator,
+               sizeof(tx_state->actuator));
     }
     else if (tx_state->session_active && !tx_state->stopping)
     {
         tx_state->stopping = true;
         tx_state->stop_until_us =
-            now_us + APP_MANUAL_DRIVE_STOP_HOLD_US;
-        tx_state->velocity_erpm = 0.0f;
+            now_us + APP_ACTUATOR_COMMAND_STOP_HOLD_US;
+
+        for (uint32_t actuator = 0u;
+             actuator < APP_ACTUATOR_COUNT;
+             actuator++)
+        {
+            tx_state->actuator[actuator].value = 0.0f;
+        }
+
         tx_state->next_tx_us = 0u;
     }
     else if (tx_state->session_active && tx_state->stopping &&
              (tx_state->stop_until_us == 0u))
     {
         tx_state->stop_until_us =
-            now_us + APP_MANUAL_DRIVE_STOP_HOLD_US;
+            now_us + APP_ACTUATOR_COMMAND_STOP_HOLD_US;
     }
 
     if (tx_state->session_active && tx_state->stopping &&
@@ -408,8 +418,7 @@ static void task_motor_update_command_tx(
     }
 
     snapshot->command_tx_active = tx_state->session_active;
-    snapshot->command_actuator_index = tx_state->actuator_index;
-    snapshot->last_command_velocity_erpm = tx_state->velocity_erpm;
+    snapshot->last_command_velocity_erpm = 0.0f;
 
     if (!tx_state->session_active ||
         ((tx_state->next_tx_us != 0u) &&
@@ -418,21 +427,65 @@ static void task_motor_update_command_tx(
         return;
     }
 
-    task_motor_send_velocity(snapshot,
-                             tx_state->actuator_index,
-                             tx_state->velocity_erpm);
+    for (uint8_t actuator = 0u;
+         actuator < APP_ACTUATOR_COUNT;
+         actuator++)
+    {
+        const app_actuator_command_entry_t *entry =
+            &tx_state->actuator[actuator];
+
+        if (!entry->enabled)
+        {
+            continue;
+        }
+
+        snapshot->command_actuator_index = actuator;
+
+        if (entry->mode == APP_ACTUATOR_COMMAND_SERVO_CURRENT)
+        {
+            task_motor_send_current(snapshot, actuator, entry->value);
+        }
+        else if (entry->mode == APP_ACTUATOR_COMMAND_SERVO_VELOCITY)
+        {
+            snapshot->last_command_velocity_erpm = entry->value;
+            task_motor_send_velocity(snapshot, actuator, entry->value);
+        }
+        else
+        {
+            snapshot->command_tx_error_count++;
+        }
+    }
+
     tx_state->next_tx_us = now_us +
-        ((uint64_t)APP_MANUAL_DRIVE_TASK_PERIOD_MS * 1000u);
+        ((uint64_t)APP_ACTUATOR_COMMAND_PERIOD_MS * 1000u);
 }
 
-static bool task_motor_manual_command_fresh(
-    const app_manual_drive_snapshot_t *command,
+static bool task_motor_approved_command_fresh(
+    const app_actuator_command_snapshot_t *command,
     uint64_t now_us)
 {
-    return (command->timestamp_us != 0u) &&
+    return command->valid &&
+           (command->timestamp_us != 0u) &&
            (now_us >= command->timestamp_us) &&
            ((now_us - command->timestamp_us) <=
-            APP_MANUAL_DRIVE_COMMAND_MAX_AGE_US);
+            APP_ACTUATOR_COMMAND_MAX_AGE_US);
+}
+
+static bool task_motor_command_has_enabled_actuator(
+    const app_actuator_command_snapshot_t *command)
+{
+    for (uint32_t actuator = 0u;
+         actuator < APP_ACTUATOR_COUNT;
+         actuator++)
+    {
+        if (command->actuator[actuator].enabled &&
+            APP_ACTUATOR_CONFIG[actuator].enabled)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 static void task_motor_send_velocity(
@@ -447,6 +500,36 @@ static void task_motor_send_velocity(
         (proto_cubemars_ak_encode_servo_velocity(
              APP_ACTUATOR_CONFIG[actuator_index].motor_id,
              velocity_erpm *
+                 (float)APP_ACTUATOR_CONFIG[actuator_index].direction_sign,
+             &frame) != PROTO_CUBEMARS_AK_OK))
+    {
+        snapshot->command_tx_error_count++;
+        return;
+    }
+
+    if (bsp_can_esp32_transmit(
+            &frame,
+            APP_ACTUATOR_CAN_TX_TIMEOUT_MS) != BSP_CAN_ESP32_OK)
+    {
+        snapshot->command_tx_error_count++;
+        return;
+    }
+
+    snapshot->command_tx_count++;
+}
+
+static void task_motor_send_current(
+    actuator_snapshot_t *snapshot,
+    uint8_t actuator_index,
+    float current_a)
+{
+    if_can_frame_t frame;
+
+    if ((actuator_index >= APP_ACTUATOR_COUNT) ||
+        !APP_ACTUATOR_CONFIG[actuator_index].enabled ||
+        (proto_cubemars_ak_encode_servo_current(
+             APP_ACTUATOR_CONFIG[actuator_index].motor_id,
+             current_a *
                  (float)APP_ACTUATOR_CONFIG[actuator_index].direction_sign,
              &frame) != PROTO_CUBEMARS_AK_OK))
     {

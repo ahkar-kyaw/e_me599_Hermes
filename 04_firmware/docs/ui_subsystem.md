@@ -12,11 +12,11 @@ dependencies.
 | Channel | Radio control | Current UI function |
 | --- | --- | --- |
 | CH1 | Ail, right stick left/right | Previous/next page in browse mode |
-| CH2 | Thr, right stick up/down | Page selection normally; M1 velocity while CAN DRIVE is live |
+| CH2 | Thr, right stick up/down | Page selection; velocity on CAN; current on CONTROL |
 | CH3 | Ele, left stick up/down | Unassigned |
 | CH4 | Rud, left stick left/right | Unassigned |
 | CH5 | SA, latching switch | Unassigned |
-| CH6 | SD, latching switch | Interact mode; enables manual drive on CAN |
+| CH6 | SD, latching switch | Interact mode; requests the active commissioning mode |
 | CH7 | SE, momentary switch | Enter, currently unused on CAN |
 | CH8 | S1, non-return potentiometer | Reserved for future value adjustment |
 | CH9 | SB, three-position switch | Unassigned |
@@ -69,8 +69,9 @@ BROWSE
     SC inactive or RC link lost -> LOCKED
 
 INTERACT
-    CH2 up/down -> previous/next selection or view on non-CAN pages
+    CH2 up/down -> previous/next selection on ordinary pages
     CAN page -> CH2 is the manual velocity input
+    CONTROL page -> CH2 is the four-actuator current input
     CH7 press -> Enter event
     CH6 inactive -> BROWSE
     SC inactive or RC link lost -> LOCKED
@@ -99,6 +100,13 @@ CRSF
 IMU
     Selection 1 shows attitude, pitch rate, and calibration state.
     Selection 2 shows acceleration, gyro, temperature, and norm.
+
+CONTROL
+    Selection 1 shows the estimated position, attitude, velocity, and rates.
+    Selection 2 shows state validity, loop counters, execution time, and faults.
+    Selection 3 shows torque state, requested current, four approved currents,
+    and the inhibit bit mask.
+    SD requests torque-control mode; CH2 must be centered before LIVE.
 
 CAN
     Shows CAN bus state and command transmit errors.
@@ -143,7 +151,7 @@ ui_canvas
     rendering.
 
 ui_pages
-    Formats STATUS, CRSF, IMU, and actuator snapshots on a ui_canvas.
+    Formats STATUS, CRSF, IMU, CONTROL, and CAN snapshots on a ui_canvas.
 
 drv_st7789
     Owns ST7789 initialization, orientation, RGB565 framebuffer storage,
@@ -155,10 +163,10 @@ bsp_display_spi_esp32
 
 task_ui
     Owns the display instance and static framebuffer.
-    Collects RC, IMU, and actuator snapshots.
+    Collects RC, IMU, control, safety, and actuator snapshots.
     Runs safety freshness checks.
     Feeds the portable input and UI state machines.
-    Publishes a timestamped manual-drive request.
+    Publishes timestamped manual-drive and torque-control requests.
     Does not grant motion permission or write CAN commands.
 ```
 
@@ -201,6 +209,22 @@ The UI request passes through `task_supervisor` and
 `safety_manual_drive` before `task_motor` can transmit it. The display
 never directly enables torque or writes a motor frame.
 
+## CONTROL fixture-current interaction
+
+```text
+1. Keep SD and SC low and center CH2.
+2. Move SC high to enable UI input.
+3. Browse to CONTROL with CH1.
+4. Use CH2 in Browse mode to choose state, snapshot, or torque view.
+5. Center CH2 and move SD high.
+6. Wait for TORQUE LIVE, then move CH2 gently to request current.
+7. Move SD low, move SC low, or leave CONTROL to stop.
+```
+
+The UI request passes through `task_supervisor`, `task_control`, and
+`safety_torque_control` before `task_motor` can transmit. A hard running fault
+requires SD to be cycled before rearming.
+
 ## Reassigning controls
 
 Edit:
@@ -224,6 +248,13 @@ Manual-drive assignments are separately configurable in
 
 ```c
 #define APP_MANUAL_DRIVE_VELOCITY_CHANNEL 2u
+```
+
+The fixture current input is separately configurable in
+`platforms/esp32/main/config/config_control.h`:
+
+```c
+#define APP_CONTROL_TORQUE_INPUT_CHANNEL 2u
 ```
 
 Direction and polarity are also configurable:

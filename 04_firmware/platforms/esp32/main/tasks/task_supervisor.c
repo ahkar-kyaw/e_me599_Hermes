@@ -1,6 +1,7 @@
 #include "task_supervisor.h"
 
 #include "config_actuator.h"
+#include "config_control.h"
 #include "task_ui.h"
 
 #include "esp_log.h"
@@ -25,6 +26,9 @@ static void task_supervisor_publish_snapshot(
     const app_supervisor_snapshot_t *snapshot);
 static bool task_supervisor_request_fresh(
     const app_manual_drive_request_t *request,
+    uint64_t now_us);
+static bool task_supervisor_torque_request_fresh(
+    const app_torque_control_request_t *request,
     uint64_t now_us);
 
 void task_supervisor_start(void)
@@ -71,15 +75,23 @@ static void task_supervisor_entry(void *argument)
     for (;;)
     {
         app_manual_drive_request_t request;
+        app_torque_control_request_t torque_request;
         const uint64_t now_us = (uint64_t)esp_timer_get_time();
 
         task_ui_get_manual_drive_request(&request);
+        task_ui_get_torque_control_request(&torque_request);
 
         snapshot.timestamp_us = now_us;
         snapshot.mode = APP_SYSTEM_MODE_SAFE_IDLE;
         snapshot.manual_drive_actuator_index = 0u;
 
-        if (task_supervisor_request_fresh(&request, now_us) &&
+        if (task_supervisor_torque_request_fresh(&torque_request,
+                                                 now_us) &&
+            torque_request.enabled)
+        {
+            snapshot.mode = APP_SYSTEM_MODE_TORQUE_CONTROL;
+        }
+        else if (task_supervisor_request_fresh(&request, now_us) &&
             request.enabled &&
             (request.actuator_index < APP_ACTUATOR_COUNT))
         {
@@ -112,4 +124,14 @@ static bool task_supervisor_request_fresh(
            (now_us >= request->timestamp_us) &&
            ((now_us - request->timestamp_us) <=
             APP_MANUAL_DRIVE_REQUEST_MAX_AGE_US);
+}
+
+static bool task_supervisor_torque_request_fresh(
+    const app_torque_control_request_t *request,
+    uint64_t now_us)
+{
+    return (request->timestamp_us != 0u) &&
+           (now_us >= request->timestamp_us) &&
+           ((now_us - request->timestamp_us) <=
+            APP_CONTROL_REQUEST_MAX_AGE_US);
 }

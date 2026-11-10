@@ -5,6 +5,8 @@ an STM32H723ZG target platform while keeping reusable robot logic
 portable. The active ESP32 target includes the IMU pipeline, a
 16-channel CRSF receiver path, an ST7789 status display, and a
 CubeMars feedback path with safety-gated manual velocity control.
+The current milestone also provides safety-gated four-actuator current control
+for restrained fixture commissioning.
 
 ## Current targets
 
@@ -55,7 +57,7 @@ docs/
 app_main
     starts task_imu
     starts task_motor when APP_ENABLE_ACTUATORS is enabled
-    starts dry-run task_control when APP_ENABLE_CONTROL_STATE is enabled
+    starts task_control when APP_ENABLE_CONTROL_STATE is enabled
     starts task_rc and task_ui when enabled
     starts task_supervisor and task_safety for manual commissioning
 
@@ -79,24 +81,25 @@ task_ui
     publishes a timestamped CAN-page manual-drive request
 
 task_supervisor
-    owns SAFE_IDLE and MANUAL_DRIVE whole-system modes
+    owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL whole-system modes
 
 task_safety
-    validates RC, supervisor mode, neutral stick, CAN, and feedback
-    publishes the only manual command accepted by task_motor
+    validates RC, supervisor mode, state, IMU, CAN, feedback, and limits
+    publishes the only actuator command accepted by task_motor
 
 task_motor
     owns ESP32 TWAI through bsp_can_esp32
     monitors four configurable CubeMars actuator slots
     decodes timestamped servo feedback and driver faults
-    transmits only fresh, safety-approved servo velocity commands
+    transmits only fresh, safety-approved servo velocity or current commands
     sends no command automatically at boot
 
 task_control
     runs the portable state estimator at 200 Hz
     combines four-wheel odometry with checked IMU lean state
-    publishes timing and validity diagnostics
-    remains dry-run and cannot transmit motor commands
+    publishes timing, validity, state, and desired-current diagnostics
+    maps CH2 to bounded fixture current in TORQUE_CONTROL mode
+    never transmits motor commands directly
 
 ```
 
@@ -135,6 +138,12 @@ ui_pages
 
 safety_manual_drive
     owns the portable manual commissioning gate and arm state machine
+
+safety_torque_control
+    owns portable fixture-current safety gates, stop, and rearm state
+
+ctrl_torque_input
+    maps a raw RC channel to bounded, slew-limited desired current
 
 drv_ism330dhcx
     portable ISM330DHCX register driver
@@ -203,8 +212,8 @@ APP_ENABLE_ACTUATORS
     accepts only fresh commands approved by task_safety.
 
 APP_ENABLE_CONTROL_STATE
-    Starts the 200 Hz dry-run state-estimation task. It publishes state
-    and timing diagnostics but has no motor-command path.
+    Starts the 200 Hz state-estimation and desired-command task. Motor
+    transmission still requires supervisor and safety approval.
 
 ```
 
@@ -258,6 +267,9 @@ Do not let UI, tests, or control write directly to motors.
 04_firmware/docs/actuator_subsystem.md
     CubeMars servo CAN, four-motor configuration, feedback snapshots,
     safety ownership, bring-up, and MIT-mode growth path.
+
+04_firmware/docs/robot_configuration_checklist.md
+    Values to verify from the assembled robot before fixture and balance tests.
 
 04_firmware/docs/electrical_interfaces.md
     Firmware-facing electrical interface notes and pin maps.

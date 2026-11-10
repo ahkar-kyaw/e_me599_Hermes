@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#define CTRL_BALANCE_ACTUATOR_COUNT 4u
+
 typedef enum
 {
     CTRL_BALANCE_LEAN_ROLL = 0,
@@ -43,6 +45,9 @@ typedef struct
 {
     balance_state_t state;
 
+    float requested_current_a;
+    float desired_current_a[CTRL_BALANCE_ACTUATOR_COUNT];
+
     uint64_t timestamp_us;
     uint32_t loop_count;
     uint32_t invalid_input_count;
@@ -50,6 +55,7 @@ typedef struct
     uint32_t execution_time_us;
     uint32_t max_execution_time_us;
     uint32_t input_fault_flags;
+    bool torque_command_valid;
 } control_snapshot_t;
 
 #ifdef __cplusplus

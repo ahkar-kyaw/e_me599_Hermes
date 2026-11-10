@@ -11,6 +11,7 @@
 #include "task_motor.h"
 #include "task_rc.h"
 #include "task_safety.h"
+#include "task_control.h"
 #include "ui/ui_canvas.h"
 #include "ui/ui_pages.h"
 #include "ui/ui_rc_input.h"
@@ -34,6 +35,9 @@ static _Alignas(4)
 static app_manual_drive_request_t g_manual_drive_request;
 static portMUX_TYPE g_manual_drive_request_lock =
     portMUX_INITIALIZER_UNLOCKED;
+static app_torque_control_request_t g_torque_control_request;
+static portMUX_TYPE g_torque_control_request_lock =
+    portMUX_INITIALIZER_UNLOCKED;
 
 static void task_ui_entry(void *argument);
 static void task_ui_draw_pixel(void *context,
@@ -48,6 +52,8 @@ static void task_ui_fill_rect(void *context,
                               ui_color_t color);
 static void task_ui_publish_manual_drive_request(
     const app_manual_drive_request_t *request);
+static void task_ui_publish_torque_control_request(
+    const app_torque_control_request_t *request);
 
 void task_ui_start(void)
 {
@@ -76,6 +82,19 @@ void task_ui_get_manual_drive_request(
     portENTER_CRITICAL(&g_manual_drive_request_lock);
     *request = g_manual_drive_request;
     portEXIT_CRITICAL(&g_manual_drive_request_lock);
+}
+
+void task_ui_get_torque_control_request(
+    app_torque_control_request_t *request)
+{
+    if (request == NULL)
+    {
+        return;
+    }
+
+    portENTER_CRITICAL(&g_torque_control_request_lock);
+    *request = g_torque_control_request;
+    portEXIT_CRITICAL(&g_torque_control_request_lock);
 }
 
 static void task_ui_entry(void *argument)
@@ -195,6 +214,8 @@ static void task_ui_entry(void *argument)
         imu_snapshot_t imu_snapshot;
         actuator_snapshot_t actuator_snapshot;
         app_manual_drive_snapshot_t manual_drive_snapshot;
+        app_torque_control_snapshot_t torque_control_snapshot;
+        control_snapshot_t control_snapshot;
         safety_rc_status_t rc_status;
         safety_imu_status_t imu_status;
         const uint64_t now_us = (uint64_t)esp_timer_get_time();
@@ -203,6 +224,8 @@ static void task_ui_entry(void *argument)
         task_imu_get_snapshot(&imu_snapshot);
         task_motor_get_snapshot(&actuator_snapshot);
         task_safety_get_manual_drive_snapshot(&manual_drive_snapshot);
+        task_safety_get_torque_control_snapshot(&torque_control_snapshot);
+        task_control_get_snapshot(&control_snapshot);
 
         safety_rc_check(&rc_snapshot,
                         now_us,
@@ -253,6 +276,16 @@ static void task_ui_entry(void *argument)
 
         task_ui_publish_manual_drive_request(&manual_drive_request);
 
+        const app_torque_control_request_t torque_control_request =
+        {
+            .timestamp_us = now_us,
+            .enabled = ui_state.input_enabled &&
+                       (ui_state.page == UI_PAGE_CONTROL) &&
+                       (ui_state.mode == UI_MODE_INTERACT),
+        };
+
+        task_ui_publish_torque_control_request(&torque_control_request);
+
         const TickType_t now_tick = xTaskGetTickCount();
 
         if (render_required ||
@@ -267,6 +300,8 @@ static void task_ui_entry(void *argument)
                 .imu_status = &imu_status,
                 .actuator_snapshot = &actuator_snapshot,
                 .manual_drive_snapshot = &manual_drive_snapshot,
+                .control_snapshot = &control_snapshot,
+                .torque_control_snapshot = &torque_control_snapshot,
             };
 
             ui_pages_render(&canvas, &ui_state, &model);
@@ -291,6 +326,14 @@ static void task_ui_publish_manual_drive_request(
     portENTER_CRITICAL(&g_manual_drive_request_lock);
     g_manual_drive_request = *request;
     portEXIT_CRITICAL(&g_manual_drive_request_lock);
+}
+
+static void task_ui_publish_torque_control_request(
+    const app_torque_control_request_t *request)
+{
+    portENTER_CRITICAL(&g_torque_control_request_lock);
+    g_torque_control_request = *request;
+    portEXIT_CRITICAL(&g_torque_control_request_lock);
 }
 
 static void task_ui_draw_pixel(void *context,

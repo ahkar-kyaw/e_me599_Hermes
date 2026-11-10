@@ -1,10 +1,10 @@
-# State estimation and deterministic control foundation
+# State estimation and torque-control foundation
 
 ## Current scope
 
-The active implementation creates the full state interface needed by future
-balance control without transmitting control commands. It combines checked IMU
-attitude with four-wheel odometry in a fixed-rate ESP32 task.
+The active implementation runs state estimation and a bounded manual-current
+commissioning path at 200 Hz. It is intended for restrained fixture testing.
+It is not yet the closed-loop balance controller.
 
 ```text
 CubeMars feedback
@@ -20,21 +20,23 @@ ISM330DHCX snapshot
 odometry + IMU
     -> balance_state_t
     -> task_control at 200 Hz
-    -> read-only control_snapshot_t
+    -> desired current snapshot
+    -> safety_torque_control
+    -> safety-approved current snapshot
+    -> task_motor
 ```
 
-`task_control` is intentionally dry-run only. It has no motor-command API and
-cannot call the motor transmit path.
+The UI only requests torque-control mode. The supervisor owns the system mode,
+the control task computes desired current, the safety task decides whether it
+may move, and the motor task alone owns CAN transmission.
 
 ## Coordinate and state convention
-
-The firmware convention is:
 
 ```text
 +X    forward
 +Y    left
 +Z    up
-+yaw  positive counterclockwise about +Z
+yaw  positive counterclockwise about +Z
 ```
 
 The eight-state order is:
@@ -50,12 +52,12 @@ yaw_rate_rps
 lean_rate_rps
 ```
 
-The wheel axle lies along body Y, so the default balance lean is pitch about
+The wheel axle lies along body Y, so the configured balance lean is pitch about
 body Y. `APP_CONTROL_LEAN_AXIS` keeps this mapping explicit.
 
 ## Wheel kinematics
 
-The portable estimator uses the relationship:
+The portable estimator uses:
 
 ```text
 wheel_linear_speed[i] =
@@ -64,65 +66,103 @@ wheel_linear_speed[i] =
     - wheel_lateral_position[i] * yaw_rate
 ```
 
-It computes the least-squares inverse once during initialization, then uses the
-precomputed four-wheel-to-body matrix at runtime. Body velocity is rotated into
-the world frame before position integration.
+It computes the least-squares inverse during initialization and uses the
+precomputed matrix at runtime. Body velocity is rotated into the world frame
+before position integration.
 
-Geometry is configured in `config_control.h`:
+Robot geometry is configured in:
 
 ```text
-wheel radius              0.060 m
-wheel lateral positions   +0.240, +0.080, -0.080, -0.240 m
-roller lateral factors    +1, -1, +1, -1
+04_firmware/platforms/esp32/main/config/config_control.h
 ```
 
-These values follow the MATLAB model after mapping its right/forward axes into
-the firmware forward/left convention.
+The checked-in dimensions are placeholders until the assembled robot is
+measured. Do not tune the balance controller from these values.
 
 ## Actuator conversion
 
-CubeMars feedback reports electrical RPM. The current conversion is explicit:
+CubeMars feedback reports electrical RPM:
 
 ```text
-motor poles       14
-pole pairs         7
-gear reduction    10:1
-wheel rad/s = ERPM * 2*pi / (60 * 7 * 10)
+wheel rad/s = ERPM * 2*pi / (60 * pole_pairs * gear_ratio)
 ```
 
-The pole count comes from the bundled AK40-10 parameter file. Confirm the
-physical output-speed ratio during commissioning before controller tuning.
-Protocol code continues to expose ERPM and does not contain robot geometry.
+The current configuration uses seven pole pairs and a 10:1 reduction. Confirm
+the mechanical ratio and wheel speed on the assembled robot. Protocol code
+continues to expose ERPM and does not contain robot geometry.
 
-## Timing
+## Fixture current control
 
-`task_control` runs every 5 ms. ESP-IDF is configured for a 1000 Hz FreeRTOS
-tick so the period is representable. The snapshot records:
+CH2 maps to a signed current command with a neutral band, current limit, and
+slew-rate limit. The configured mix applies that robot-level command to all
+four actuator slots. The motor task applies each slot's direction sign before
+packing the CubeMars servo-current CAN frame.
+
+Current is commanded in amperes. It is not treated as verified output torque
+until motor torque constant, gear efficiency, and drivetrain losses have been
+measured.
+
+Default commissioning limits:
 
 ```text
-loop count
-invalid-input count
-overrun count
-last execution time
-maximum execution time
-input fault flags
+maximum current       1.0 A
+current slew rate     4.0 A/s
+control period        5 ms
+arm lean limit        10 deg
+arm lean-rate limit   80 deg/s
+running fall limit    30 deg
 ```
 
-A state is invalid if IMU data is unavailable, uncalibrated, or stale, any actuator feedback is missing,
-stale, or faulted, CAN is not error-active, the update interval is invalid, or
-the estimator fails. Invalid input is never silently reused as a valid control
-state.
+These values live in `config_control.h`. Keep the initial current limit low and
+increase it only from measured test results.
+
+## Torque safety state machine
+
+```text
+DISABLED
+    No torque-control request.
+
+WAIT_SAFE
+    A hard condition is invalid: RC, state, IMU, CAN, feedback, motor fault,
+    or current bounds.
+
+WAIT_NEUTRAL
+    Conditions are healthy, but CH2 must return to neutral or SD must be
+    cycled after a running fault.
+
+ARMED
+    Fresh bounded current commands are approved.
+
+STOPPING
+    Zero current is transmitted for a bounded stop window.
+```
+
+No actuator command is sent automatically at boot. Torque control requires the
+CONTROL page, SC input enable, SD Interact request, healthy snapshots from all
+four actuators, a safe IMU state, and centered CH2 before arming.
+
+## Timing and validity
+
+`task_control` runs every 5 ms. The snapshot records loop count, invalid-input
+count, overrun count, execution time, maximum execution time, and input fault
+flags.
+
+State is invalid if IMU data is unavailable, uncalibrated, or stale; any
+actuator feedback is missing, stale, or faulted; CAN is not error-active; the
+update interval is invalid; or the estimator fails. Safety never approves an
+invalid or stale desired command.
 
 ## Verification
 
-Portable host tests cover pure forward, pure lateral, and pure yaw wheel-speed
-patterns. Run them from the firmware directory:
+Portable tests cover wheel kinematics, current mapping and slew limiting, and
+the torque safety arm, fault-stop, and rearm sequence:
 
 ```bash
-cmake -S tests -B /tmp/app_common_tests
+cmake -S 04_firmware/tests -B /tmp/app_common_tests
 cmake --build /tmp/app_common_tests
 ctest --test-dir /tmp/app_common_tests --output-on-failure
 ```
 
-The ESP32 build includes the estimator and dry-run task. No balance gains or
-motor commands are part of this milestone.
+The next control milestone is a measured, model-based closed-loop balance law.
+It should replace the fixture current source while preserving the existing
+supervisor, safety, command snapshot, and motor ownership boundaries.

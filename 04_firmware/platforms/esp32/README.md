@@ -159,25 +159,26 @@ task_rc
 
 task_ui
     Owns the ST7789 and static 160 x 120 / 120 x 160 RGB565 canvas.
-    Collects RC, IMU, and actuator snapshots.
+    Collects RC, IMU, control, safety, and actuator snapshots.
     Runs the portable UI input mapper and state machine.
-    Renders STATUS, CRSF, IMU, and CAN pages.
-    Publishes a timestamped manual-drive request.
+    Renders STATUS, CRSF, IMU, CONTROL, and CAN pages.
+    Publishes timestamped manual-drive and torque-control requests.
     Does not own safety state or motion commands.
 
 task_supervisor
-    Owns SAFE_IDLE and MANUAL_DRIVE system modes.
+    Owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL system modes.
 
 task_safety
-    Owns manual-drive permission.
-    Checks RC, CAN, feedback, fault, neutral-stick, and supervisor gates.
+    Owns permission to move.
+    Checks RC, state, IMU, CAN, feedback, faults, command bounds,
+    neutral-stick, and supervisor gates.
     Publishes the only approved command accepted by task_motor.
 
 task_motor
     Owns the TWAI BSP.
     Decodes CubeMars periodic servo feedback.
     Publishes timestamped feedback for four configurable actuator slots.
-    Transmits only fresh, safety-approved velocity commands.
+    Transmits only fresh, safety-approved velocity or current commands.
     Sends no command automatically at boot.
 ```
 
@@ -199,9 +200,13 @@ config_actuator.h
     CAN bitrate, freshness, and four actuator enable/ID entries.
     Manual-drive channel, polarity, 1000 ERPM limit, command freshness,
     and zero-command hold time.
-    Motor 1 is enabled at decimal CAN ID 69.
-    Motors 2 through 4 are disabled until their unique physical IDs are
-    assigned and verified.
+    Motors 1 through 4 are enabled at decimal CAN IDs 1 through 4.
+    Per-slot direction signs convert physical mounting to robot signs.
+
+config_control.h
+    State geometry and conversion values.
+    Fixture-current channel, polarity, current limit, slew rate, motor mix,
+    freshness, stop hold, and lean safety limits.
 ```
 
 Current UI mapping:

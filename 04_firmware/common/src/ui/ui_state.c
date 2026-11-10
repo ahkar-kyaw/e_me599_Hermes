@@ -58,7 +58,8 @@ bool ui_state_update(ui_state_t *state, ui_event_flags_t events)
     {
         state->mode = UI_MODE_BROWSE;
 
-        if (state->page != UI_PAGE_CAN)
+        if ((state->page != UI_PAGE_CAN) &&
+            (state->page != UI_PAGE_CONTROL))
         {
             state->selection = 0u;
         }
@@ -70,7 +71,8 @@ bool ui_state_update(ui_state_t *state, ui_event_flags_t events)
     {
         state->mode = UI_MODE_INTERACT;
 
-        if (state->page != UI_PAGE_CAN)
+        if ((state->page != UI_PAGE_CAN) &&
+            (state->page != UI_PAGE_CONTROL))
         {
             state->selection = 0u;
         }
@@ -98,7 +100,8 @@ bool ui_state_update(ui_state_t *state, ui_event_flags_t events)
             state->page = (ui_page_t)((state->page + 1) % UI_PAGE_COUNT);
             state->selection = 0u;
         }
-        else if (state->page == UI_PAGE_CAN)
+        else if ((state->page == UI_PAGE_CAN) ||
+                 (state->page == UI_PAGE_CONTROL))
         {
             const uint8_t selection_count =
                 ui_state_selection_count(state->page);
@@ -118,7 +121,8 @@ bool ui_state_update(ui_state_t *state, ui_event_flags_t events)
     }
     else
     {
-        if (state->page == UI_PAGE_CAN)
+        if ((state->page == UI_PAGE_CAN) ||
+            (state->page == UI_PAGE_CONTROL))
         {
             return memcmp(&previous, state, sizeof(*state)) != 0;
         }
@@ -154,6 +158,9 @@ uint8_t ui_state_selection_count(ui_page_t page)
 
         case UI_PAGE_CAN:
             return APP_ACTUATOR_COUNT;
+
+        case UI_PAGE_CONTROL:
+            return 3u;
 
         case UI_PAGE_STATUS:
         default:

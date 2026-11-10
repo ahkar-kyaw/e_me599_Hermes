@@ -206,8 +206,8 @@ ui_canvas
     Portable RGB565 drawing surface and compact font renderer.
 
 ui_pages
-    Renders STATUS, CRSF, IMU, and CAN pages through ui_canvas.
-    Displays manual-drive safety status without granting permission.
+    Renders STATUS, CRSF, IMU, CONTROL, and CAN pages through ui_canvas.
+    Displays commissioning safety state without granting permission.
 ```
 
 ### app
@@ -224,8 +224,14 @@ app_actuator_types
 app_manual_drive_types
     Defines the UI request and safety-approved manual-drive snapshot.
 
+app_torque_control_types
+    Defines fixture-current requests, safety states, inhibits, and snapshots.
+
+app_actuator_command_types
+    Defines the generic safety-approved per-actuator command boundary.
+
 app_supervisor_types
-    Defines SAFE_IDLE and MANUAL_DRIVE whole-system modes.
+    Defines SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL modes.
 
 app_rc_types
     Defines rc_snapshot_t with all 16 raw CRSF channels, timestamp,

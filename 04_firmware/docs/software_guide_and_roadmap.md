@@ -70,9 +70,13 @@ Application-facing data types and portable glue.
 - `app_actuator_types.h` defines four actuator feedback slots and CAN status.
 - `app_manual_drive_types.h` defines requests, inhibit flags, and approved
   manual-drive state.
+- `app_torque_control_types.h` defines the fixture-current request, safety
+  state, inhibit flags, and approved current snapshot.
+- `app_actuator_command_types.h` defines the generic safety-approved command
+  boundary consumed by the motor task.
 - `app_supervisor_types.h` defines the current whole-system modes.
 - `app_balance_state.[ch]` combines checked IMU lean state and portable wheel
-  odometry into the eight-state interface published by the dry-run control task.
+  odometry into the eight-state interface published by the control task.
 
 ### `common/include/interfaces`
 
@@ -213,17 +217,17 @@ Current task timing and relative priorities:
 
 | Task | Period or blocking interval | Priority | Responsibility |
 | --- | ---: | ---: | --- |
-| `task_safety` | 20 ms | idle + 4 | Approve or block manual motion |
-| `task_control` | 5 ms | idle + 4 | Publish dry-run combined state and timing diagnostics |
+| `task_safety` | 5 ms | idle + 4 | Approve or block actuator commands |
+| `task_control` | 5 ms | idle + 4 | Publish state, desired current, and timing diagnostics |
 | `task_imu` | 5 ms | idle + 3 | Read IMU and publish estimated attitude |
-| `task_motor` | CAN read up to 20 ms; command cadence 20 ms | idle + 3 | Own CAN and actuator command transmission |
+| `task_motor` | CAN read up to 1 ms; command cadence 5 ms | idle + 3 | Own CAN and actuator command transmission |
 | `task_rc` | UART read up to 20 ms | idle + 2 | Parse and publish CRSF channels |
 | `task_supervisor` | 20 ms | idle + 2 | Own whole-system mode |
 | `task_ui` | 50 ms; render every 200 ms | idle + 1 | Handle UI input and update LCD |
 
-The 200 Hz control task now provides that fixed-rate boundary and measures its
-execution timing. It remains dry-run: no balance law or actuator command path
-is connected.
+The 200 Hz control task provides the fixed-rate boundary and measures its
+execution timing. It currently maps CH2 to a bounded fixture-current request;
+the closed-loop balance law is not implemented.
 
 ## 5. Current data flow
 
@@ -498,20 +502,21 @@ the desired commands before `task_motor` transmits them.
 ## 10. Important current limitations
 
 - All four actuators are enabled; wheel geometry and feedback conversion still need restrained physical validation.
-- Only servo velocity transmission is used by the runtime motor task.
+- Runtime transmission supports servo velocity and servo current.
 - MIT mode is not implemented.
-- The supervisor has only SAFE_IDLE and MANUAL_DRIVE modes.
-- IMU safety is calculated for display, but it is not part of the current
-  manual-drive gate.
+- The supervisor currently has SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL
+  modes; final balance, controlled-stop, and latched-fault modes remain.
+- IMU safety gates torque control but not single-actuator manual velocity.
 - There is no final balance-control mode or controller.
 - There is no RC command shaping for requested speed or steering.
 - There is no persistent parameter storage or validated tuning transaction.
-- The dry-run control task counts overruns; a complete watchdog policy is not implemented.
+- The control task counts overruns; a complete watchdog policy is not implemented.
 - There is no structured runtime log or telemetry capture for controller
   tuning.
 - STM32 currently contains generated startup and an empty user application
   hook; the active subsystems have not been ported.
-- Host tests currently cover only the wheel estimator; broader portable-module coverage is still needed.
+- Host tests cover the wheel estimator, current mapping, and torque safety;
+  broader portable-module coverage is still needed.
 
 ## 11. Recommended software roadmap
 
@@ -549,8 +554,8 @@ but no combination of page navigation or stale RC data can start motion.
 Replace the motor task's dependency on a manual-drive-specific command with
 a generic safety-approved actuator command snapshot. Include timestamp,
 validity, mode, per-actuator command, and explicit disabled state. Keep servo
-velocity implemented first; add MIT or current/torque fields only after the
-final control mode is selected.
+velocity and servo current implemented first; add MIT fields only after the
+final control mode requires them.
 
 Completion condition: manual commissioning and future balance control use
 the same `control -> safety -> motor` ownership chain.
@@ -658,16 +663,16 @@ revision, and known limitations are traceable for the final robot.
 
 ## 12. Recommended immediate next action
 
-Validate the new dry-run state path on the restrained robot before adding a
-balance law:
+Validate the new safety-gated fixture-current path before adding a balance law:
 
-1. confirm all four signed wheel speeds are positive for commanded forward motion;
-2. confirm pure forward, lateral, and yaw motion produce the expected state signs;
-3. confirm the 200 Hz task has no overruns under full CAN, RC, IMU, and LCD load; and
-4. measure the physical wheel radius and confirm the ERPM-to-output-speed ratio.
+1. confirm forward tilt is positive pitch and left tilt is negative roll;
+2. confirm all four currents and wheel speeds use the documented robot signs;
+3. inject RC, IMU, feedback, motor-fault, and CAN faults and verify zero-current stop plus SD rearm;
+4. confirm the 200 Hz task has no overruns under full CAN, RC, IMU, and LCD load; and
+5. measure every item in `robot_configuration_checklist.md` needed by the updated MATLAB model.
 
-After that evidence is clean, implement a generic desired-command snapshot and
-the supervisor/safety states needed for restrained balance-control trials.
+After that evidence is clean, implement the portable closed-loop balance law
+behind the existing desired-command and safety-approved command boundaries.
 
 ## 13. Build and monitor
 

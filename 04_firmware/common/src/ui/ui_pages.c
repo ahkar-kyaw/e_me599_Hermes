@@ -34,6 +34,9 @@ static void ui_pages_render_rc(ui_canvas_t *canvas,
 static void ui_pages_render_imu(ui_canvas_t *canvas,
                                 const ui_state_t *state,
                                 const ui_page_model_t *model);
+static void ui_pages_render_control(ui_canvas_t *canvas,
+                                    const ui_state_t *state,
+                                    const ui_page_model_t *model);
 static void ui_pages_render_can(ui_canvas_t *canvas,
                                 const ui_state_t *state,
                                 const ui_page_model_t *model);
@@ -58,6 +61,11 @@ static const char *ui_pages_manual_drive_state(
     const app_manual_drive_snapshot_t *snapshot);
 static ui_color_t ui_pages_manual_drive_color(
     const app_manual_drive_snapshot_t *snapshot);
+static const char *ui_pages_torque_control_state(
+    const app_torque_control_snapshot_t *snapshot);
+static ui_color_t ui_pages_torque_control_color(
+    const app_torque_control_snapshot_t *snapshot);
+static const char *ui_pages_torque_inhibit(uint32_t flags);
 static uint32_t ui_pages_age_ms(uint64_t age_us);
 static uint16_t ui_pages_footer_y(const ui_canvas_t *canvas);
 static uint16_t ui_pages_content_offset(const ui_canvas_t *canvas);
@@ -80,7 +88,9 @@ void ui_pages_render(ui_canvas_t *canvas,
         (model->rc_snapshot == NULL) || (model->rc_status == NULL) ||
         (model->imu_snapshot == NULL) || (model->imu_status == NULL) ||
         (model->actuator_snapshot == NULL) ||
-        (model->manual_drive_snapshot == NULL))
+        (model->manual_drive_snapshot == NULL) ||
+        (model->control_snapshot == NULL) ||
+        (model->torque_control_snapshot == NULL))
     {
         return;
     }
@@ -96,6 +106,10 @@ void ui_pages_render(ui_canvas_t *canvas,
 
         case UI_PAGE_IMU:
             ui_pages_render_imu(canvas, state, model);
+            break;
+
+        case UI_PAGE_CONTROL:
+            ui_pages_render_control(canvas, state, model);
             break;
 
         case UI_PAGE_CAN:
@@ -119,6 +133,7 @@ static void ui_pages_draw_header(ui_canvas_t *canvas,
         "STATUS",
         "CRSF",
         "IMU",
+        "CONTROL",
         "CAN",
     };
     static const ui_color_t page_color[UI_PAGE_COUNT] =
@@ -126,6 +141,7 @@ static void ui_pages_draw_header(ui_canvas_t *canvas,
         UI_COLOR_CYAN,
         UI_COLOR_GREEN,
         UI_COLOR_MAGENTA,
+        UI_COLOR_CYAN,
         UI_COLOR_AMBER,
     };
     const char *mode;
@@ -140,6 +156,12 @@ static void ui_pages_draw_header(ui_canvas_t *canvas,
              (state->mode == UI_MODE_INTERACT))
     {
         mode = "DRIVE";
+        mode_color = UI_COLOR_AMBER;
+    }
+    else if ((state->page == UI_PAGE_CONTROL) &&
+             (state->mode == UI_MODE_INTERACT))
+    {
+        mode = "TORQUE";
         mode_color = UI_COLOR_AMBER;
     }
     else if (state->mode == UI_MODE_INTERACT)
@@ -497,6 +519,163 @@ static void ui_pages_render_imu(ui_canvas_t *canvas,
                        (double)model->imu_status->accel_norm_mps2);
         ui_canvas_draw_text(canvas, 4u, 92u + y_offset,
                             line, UI_COLOR_MUTED, 1u);
+    }
+}
+
+static void ui_pages_render_control(ui_canvas_t *canvas,
+                                    const ui_state_t *state,
+                                    const ui_page_model_t *model)
+{
+    const control_snapshot_t *control = model->control_snapshot;
+    const app_torque_control_snapshot_t *torque =
+        model->torque_control_snapshot;
+    const uint16_t y_offset = ui_pages_content_offset(canvas);
+    char line[32];
+
+    if (state->selection == 0u)
+    {
+        (void)snprintf(line,
+                       sizeof(line),
+                       "STATE %s  F%02lX",
+                       control->state.valid ? "OK" : "INVALID",
+                       (unsigned long)control->input_fault_flags);
+        ui_canvas_draw_text(canvas,
+                            4u,
+                            25u + y_offset,
+                            line,
+                            control->state.valid ?
+                                UI_COLOR_GREEN : UI_COLOR_RED,
+                            1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "X%+.3f  Y%+.3f",
+                       (double)control->state.position_x_m,
+                       (double)control->state.position_y_m);
+        ui_canvas_draw_text(canvas, 4u, 39u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "YAW%+.1f LEAN%+.1f",
+                       (double)(control->state.yaw_rad * UI_RAD_TO_DEG),
+                       (double)(control->state.lean_rad * UI_RAD_TO_DEG));
+        ui_canvas_draw_text(canvas, 4u, 53u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "VX%+.3f VY%+.3f",
+                       (double)control->state.velocity_x_mps,
+                       (double)control->state.velocity_y_mps);
+        ui_canvas_draw_text(canvas, 4u, 67u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "YR%+.2f LR%+.2f",
+                       (double)control->state.yaw_rate_rps,
+                       (double)control->state.lean_rate_rps);
+        ui_canvas_draw_text(canvas, 4u, 81u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        ui_canvas_draw_text(canvas, 4u, 96u + y_offset,
+                            "STATE 1/3", UI_COLOR_MUTED, 1u);
+    }
+    else if (state->selection == 1u)
+    {
+        (void)snprintf(line,
+                       sizeof(line),
+                       "SNAP %s",
+                       control->state.valid ? "VALID" : "INVALID");
+        ui_canvas_draw_text(canvas,
+                            4u,
+                            25u + y_offset,
+                            line,
+                            control->state.valid ?
+                                UI_COLOR_GREEN : UI_COLOR_RED,
+                            1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "LOOP %lu",
+                       (unsigned long)control->loop_count);
+        ui_canvas_draw_text(canvas, 4u, 39u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "INVALID %lu  OVR %lu",
+                       (unsigned long)control->invalid_input_count,
+                       (unsigned long)control->overrun_count);
+        ui_canvas_draw_text(canvas, 4u, 53u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "EXEC %luus MAX %luus",
+                       (unsigned long)control->execution_time_us,
+                       (unsigned long)control->max_execution_time_us);
+        ui_canvas_draw_text(canvas, 4u, 67u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "FAULT 0x%02lX",
+                       (unsigned long)control->input_fault_flags);
+        ui_canvas_draw_text(canvas, 4u, 81u + y_offset,
+                            line, UI_COLOR_MUTED, 1u);
+
+        ui_canvas_draw_text(canvas, 4u, 96u + y_offset,
+                            "SNAPSHOT 2/3", UI_COLOR_MUTED, 1u);
+    }
+    else
+    {
+        (void)snprintf(line,
+                       sizeof(line),
+                       "TORQUE %s",
+                       ui_pages_torque_control_state(torque));
+        ui_canvas_draw_text(canvas,
+                            4u,
+                            25u + y_offset,
+                            line,
+                            ui_pages_torque_control_color(torque),
+                            1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "REQUEST %+.2f A",
+                       (double)control->requested_current_a);
+        ui_canvas_draw_text(canvas, 4u, 39u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "M1%+.2f M2%+.2f",
+                       (double)torque->approved_current_a[0],
+                       (double)torque->approved_current_a[1]);
+        ui_canvas_draw_text(canvas, 4u, 53u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "M3%+.2f M4%+.2f",
+                       (double)torque->approved_current_a[2],
+                       (double)torque->approved_current_a[3]);
+        ui_canvas_draw_text(canvas, 4u, 67u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "INH %-8s %03lX",
+                       ui_pages_torque_inhibit(torque->inhibit_flags),
+                       (unsigned long)torque->inhibit_flags);
+        ui_canvas_draw_text(canvas, 4u, 81u + y_offset,
+                            line, UI_COLOR_MUTED, 1u);
+
+        ui_canvas_draw_text(canvas, 4u, 96u + y_offset,
+                            "SC+SD ARM, THR CURRENT",
+                            UI_COLOR_MUTED, 1u);
     }
 }
 
@@ -880,6 +1059,115 @@ static ui_color_t ui_pages_manual_drive_color(
         default:
             return UI_COLOR_MUTED;
     }
+}
+
+static const char *ui_pages_torque_control_state(
+    const app_torque_control_snapshot_t *snapshot)
+{
+    switch (snapshot->state)
+    {
+        case APP_TORQUE_CONTROL_WAIT_SAFE:
+            return "BLOCKED";
+
+        case APP_TORQUE_CONTROL_WAIT_NEUTRAL:
+            if ((snapshot->inhibit_flags & APP_TORQUE_INHIBIT_REARM) != 0u)
+            {
+                return "SD OFF-ON";
+            }
+
+            return "CENTER THR";
+
+        case APP_TORQUE_CONTROL_ARMED:
+            return "LIVE";
+
+        case APP_TORQUE_CONTROL_STOPPING:
+            return "STOPPING";
+
+        case APP_TORQUE_CONTROL_DISABLED:
+        default:
+            return "OFF";
+    }
+}
+
+static ui_color_t ui_pages_torque_control_color(
+    const app_torque_control_snapshot_t *snapshot)
+{
+    switch (snapshot->state)
+    {
+        case APP_TORQUE_CONTROL_ARMED:
+            return UI_COLOR_GREEN;
+
+        case APP_TORQUE_CONTROL_WAIT_SAFE:
+        case APP_TORQUE_CONTROL_STOPPING:
+            return UI_COLOR_RED;
+
+        case APP_TORQUE_CONTROL_WAIT_NEUTRAL:
+            return UI_COLOR_AMBER;
+
+        case APP_TORQUE_CONTROL_DISABLED:
+        default:
+            return UI_COLOR_MUTED;
+    }
+}
+
+static const char *ui_pages_torque_inhibit(uint32_t flags)
+{
+    if (flags == APP_TORQUE_INHIBIT_NONE)
+    {
+        return "NONE";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_REARM) != 0u)
+    {
+        return "REARM";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_RC) != 0u)
+    {
+        return "RC";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_IMU) != 0u)
+    {
+        return "IMU";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_BUS) != 0u)
+    {
+        return "CAN";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_FEEDBACK) != 0u)
+    {
+        return "FEEDBACK";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_MOTOR_FAULT) != 0u)
+    {
+        return "MOTOR";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_CURRENT) != 0u)
+    {
+        return "CURRENT";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_STATE) != 0u)
+    {
+        return "STATE";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_STICK) != 0u)
+    {
+        return "STICK";
+    }
+
+    if ((flags & APP_TORQUE_INHIBIT_REQUEST_STALE) != 0u)
+    {
+        return "REQ AGE";
+    }
+
+    return "REQUEST";
 }
 
 static uint32_t ui_pages_age_ms(uint64_t age_us)

@@ -217,13 +217,13 @@ task_motor
     Applies a local zero-command fallback when approval expires.
 
 task_supervisor
-    Owns SAFE_IDLE and MANUAL_DRIVE whole-system modes.
+    Owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL whole-system modes.
     Converts a fresh UI request into an explicit system mode.
 
 task_safety
-    Owns manual-drive permission.
-    Checks RC freshness and range, CAN state, selected actuator,
-    feedback freshness, motor fault, neutral stick, and supervisor mode.
+    Owns permission to move.
+    Checks RC, state, IMU, CAN, feedback, motor faults, command bounds,
+    neutral stick, and supervisor mode.
     Publishes the only command accepted by task_motor.
 
 ui_rc_input
@@ -235,7 +235,7 @@ ui_state
     events.
 
 ui_pages
-    Owns STATUS, CRSF, IMU, and CAN page formatting.
+    Owns STATUS, CRSF, IMU, CONTROL, and CAN page formatting.
     Displays safety state but does not grant permission to move.
 
 ui_canvas
@@ -269,8 +269,8 @@ ctrl_balance_types
     Owns the full control-facing state and timing diagnostic definitions.
 
 task_control
-    Runs state estimation at 200 Hz and publishes a dry-run snapshot.
-    Has no motor-command or safety-approval authority.
+    Runs state estimation and desired-command calculation at 200 Hz.
+    Has no motor-transmission or safety-approval authority.
 ```
 
 ## Planned full robot task flow

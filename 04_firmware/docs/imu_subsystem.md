@@ -63,7 +63,7 @@ Body Z positive
 Mounting is configured in:
 
 ```text
-platforms/esp32/src/config/config_imu.h
+04_firmware/platforms/esp32/main/config/config_imu.h
 ```
 
 Important settings:
@@ -73,12 +73,32 @@ APP_IMU_MOUNT_FORWARD_AXIS
 APP_IMU_MOUNT_UP_AXIS
 ```
 
+The current mapping is:
+
+```c
+#define APP_IMU_MOUNT_FORWARD_AXIS EST_IMU_AXIS_SENSOR_Y_NEG
+#define APP_IMU_MOUNT_UP_AXIS      EST_IMU_AXIS_SENSOR_Z_POS
+```
+
+This mapping was selected from the observed installation where forward tilt
+appeared as positive roll and left tilt appeared as positive pitch. After
+flashing, verify the body-frame convention before enabling torque:
+
+```text
+tilt forward    pitch becomes positive
+tilt left       roll becomes negative
+stationary      acceleration Z is approximately +9.81 m/s^2
+```
+
+If any result is wrong, change only the two mount-axis macros. Do not repair a
+mounting error with controller-gain signs.
+
 ## IMU hardware configuration
 
 Configured in:
 
 ```text
-platforms/esp32/src/config/config_imu.h
+04_firmware/platforms/esp32/main/config/config_imu.h
 ```
 
 Current settings:
@@ -185,13 +205,17 @@ Main fields:
 ```text
 valid
 timestamp_us
-pitch_rad
-pitch_rate_rps
-roll_rad
-roll_rate_rps
+position_x_m
+position_y_m
+yaw_rad
+lean_rad
+velocity_x_mps
+velocity_y_mps
+yaw_rate_rps
+lean_rate_rps
 ```
 
-Future balance control should use `balance_state_t`, not the full IMU snapshot.
+Balance control should use `balance_state_t`, not the full IMU snapshot.
 
 ## Startup behavior
 

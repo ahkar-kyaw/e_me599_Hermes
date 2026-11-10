@@ -1,10 +1,9 @@
-# State estimation and torque-control foundation
+# State estimation and control
 
 ## Current scope
 
-The active implementation runs state estimation and a bounded manual-current
-commissioning path at 200 Hz. It is intended for restrained fixture testing.
-It is not yet the closed-loop balance controller.
+The active implementation runs state estimation, bounded manual-current
+commissioning, and forward-plane closed-loop balance control at 200 Hz.
 
 ```text
 CubeMars feedback
@@ -20,15 +19,16 @@ ISM330DHCX snapshot
 odometry + IMU
     -> balance_state_t
     -> task_control at 200 Hz
+    -> manual-current or balance controller
     -> desired current snapshot
     -> safety_torque_control
     -> safety-approved current snapshot
     -> task_motor
 ```
 
-The UI only requests torque-control mode. The supervisor owns the system mode,
-the control task computes desired current, the safety task decides whether it
-may move, and the motor task alone owns CAN transmission.
+The UI only requests a mode. The supervisor owns the system mode, the control
+task computes desired current, the safety task decides whether it may move,
+and the motor task alone owns CAN transmission.
 
 ## Coordinate and state convention
 
@@ -116,6 +116,19 @@ running fall limit    30 deg
 These values live in `config_control.h`. Keep the initial current limit low and
 increase it only from measured test results.
 
+## Balance and disturbance rejection
+
+`ctrl_balance_controller` captures the current forward position when balance
+mode is requested. It combines lean, lean rate, forward position, forward
+velocity, and bounded position integral feedback into one common actuator
+current. This provides balance stabilization, recovery after impulse pushes,
+and configurable rejection of small constant disturbances.
+
+The controller currently covers the forward balance plane only. Lateral and
+yaw control remain future work after the physical model is updated. The
+complete control law, configuration variables, UI flow, and ordered
+commissioning tests are documented in `balance_control.md`.
+
 ## Torque safety state machine
 
 ```text
@@ -137,9 +150,10 @@ STOPPING
     Zero current is transmitted for a bounded stop window.
 ```
 
-No actuator command is sent automatically at boot. Torque control requires the
-CONTROL page, SC input enable, SD Interact request, healthy snapshots from all
-four actuators, a safe IMU state, and centered CH2 before arming.
+No actuator command is sent automatically at boot. Manual current uses CONTROL
+selection 3; balance uses CONTROL selection 4. Both require SC, SD, healthy
+snapshots from all four actuators, a safe IMU state, and centered CH2 before
+arming. CH2 must remain centered throughout balance mode.
 
 ## Timing and validity
 
@@ -154,8 +168,9 @@ invalid or stale desired command.
 
 ## Verification
 
-Portable tests cover wheel kinematics, current mapping and slew limiting, and
-the torque safety arm, fault-stop, and rearm sequence:
+Portable tests cover wheel kinematics, current mapping and slew limiting,
+balance feedback, saturation, reference capture, and the current-safety arm,
+fault-stop, neutral-stick, and rearm sequence:
 
 ```bash
 cmake -S 04_firmware/tests -B /tmp/app_common_tests
@@ -163,6 +178,6 @@ cmake --build /tmp/app_common_tests
 ctest --test-dir /tmp/app_common_tests --output-on-failure
 ```
 
-The next control milestone is a measured, model-based closed-loop balance law.
-It should replace the fixture current source while preserving the existing
-supervisor, safety, command snapshot, and motor ownership boundaries.
+The next control milestone is hardware identification and gain tuning followed
+by lateral/yaw control and motion references. The existing supervisor, safety,
+command snapshot, and motor ownership boundaries should remain unchanged.

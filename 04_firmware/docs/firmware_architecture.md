@@ -217,7 +217,7 @@ task_motor
     Applies a local zero-command fallback when approval expires.
 
 task_supervisor
-    Owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL whole-system modes.
+    Owns SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and BALANCE_CONTROL modes.
     Converts a fresh UI request into an explicit system mode.
 
 task_safety
@@ -267,6 +267,9 @@ app_balance_state
 
 ctrl_balance_types
     Owns the full control-facing state and timing diagnostic definitions.
+
+ctrl_balance_controller
+    Owns portable forward-plane balance and disturbance-rejection math.
 
 task_control
     Runs state estimation and desired-command calculation at 200 Hz.

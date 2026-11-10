@@ -181,6 +181,10 @@ safety_manual_drive
     Checks the supervisor request, RC, selected actuator, CAN state,
     feedback freshness, motor fault, and neutral-stick entry.
     Publishes a bounded manual velocity command and stop state.
+
+safety_torque_control
+    Gates manual-current and balance-current commands using RC, IMU, state,
+    CAN, feedback, fault, lean, current, stop, and rearm checks.
 ```
 
 ### control
@@ -189,6 +193,13 @@ safety_manual_drive
 ctrl_balance_types
     Defines the full eight-state balance snapshot and task diagnostics.
     Does not depend on IMU, actuator, RTOS, or safety modules.
+
+ctrl_balance_controller
+    Implements forward lean stabilization, position recovery, velocity
+    damping, and bounded integral disturbance rejection.
+
+ctrl_torque_input
+    Maps a raw RC channel into bounded, slew-limited manual current.
 ```
 
 ### ui
@@ -227,11 +238,14 @@ app_manual_drive_types
 app_torque_control_types
     Defines fixture-current requests, safety states, inhibits, and snapshots.
 
+app_balance_control_types
+    Defines the UI-to-supervisor balance-mode request.
+
 app_actuator_command_types
     Defines the generic safety-approved per-actuator command boundary.
 
 app_supervisor_types
-    Defines SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL modes.
+    Defines SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and BALANCE_CONTROL modes.
 
 app_rc_types
     Defines rc_snapshot_t with all 16 raw CRSF channels, timestamp,

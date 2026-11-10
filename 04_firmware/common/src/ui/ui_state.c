@@ -160,7 +160,7 @@ uint8_t ui_state_selection_count(ui_page_t page)
             return APP_ACTUATOR_COUNT;
 
         case UI_PAGE_CONTROL:
-            return 3u;
+            return 4u;
 
         case UI_PAGE_STATUS:
         default:

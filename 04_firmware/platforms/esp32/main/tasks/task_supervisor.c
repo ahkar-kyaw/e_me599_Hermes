@@ -30,6 +30,9 @@ static bool task_supervisor_request_fresh(
 static bool task_supervisor_torque_request_fresh(
     const app_torque_control_request_t *request,
     uint64_t now_us);
+static bool task_supervisor_balance_request_fresh(
+    const app_balance_control_request_t *request,
+    uint64_t now_us);
 
 void task_supervisor_start(void)
 {
@@ -76,17 +79,25 @@ static void task_supervisor_entry(void *argument)
     {
         app_manual_drive_request_t request;
         app_torque_control_request_t torque_request;
+        app_balance_control_request_t balance_request;
         const uint64_t now_us = (uint64_t)esp_timer_get_time();
 
         task_ui_get_manual_drive_request(&request);
         task_ui_get_torque_control_request(&torque_request);
+        task_ui_get_balance_control_request(&balance_request);
 
         snapshot.timestamp_us = now_us;
         snapshot.mode = APP_SYSTEM_MODE_SAFE_IDLE;
         snapshot.manual_drive_actuator_index = 0u;
 
-        if (task_supervisor_torque_request_fresh(&torque_request,
-                                                 now_us) &&
+        if (task_supervisor_balance_request_fresh(&balance_request,
+                                                  now_us) &&
+            balance_request.enabled)
+        {
+            snapshot.mode = APP_SYSTEM_MODE_BALANCE_CONTROL;
+        }
+        else if (task_supervisor_torque_request_fresh(&torque_request,
+                                                      now_us) &&
             torque_request.enabled)
         {
             snapshot.mode = APP_SYSTEM_MODE_TORQUE_CONTROL;
@@ -128,6 +139,16 @@ static bool task_supervisor_request_fresh(
 
 static bool task_supervisor_torque_request_fresh(
     const app_torque_control_request_t *request,
+    uint64_t now_us)
+{
+    return (request->timestamp_us != 0u) &&
+           (now_us >= request->timestamp_us) &&
+           ((now_us - request->timestamp_us) <=
+            APP_CONTROL_REQUEST_MAX_AGE_US);
+}
+
+static bool task_supervisor_balance_request_fresh(
+    const app_balance_control_request_t *request,
     uint64_t now_us)
 {
     return (request->timestamp_us != 0u) &&

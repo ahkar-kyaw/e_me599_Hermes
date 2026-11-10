@@ -186,7 +186,10 @@ static void task_safety_entry(void *argument)
 
         torque_request.timestamp_us = supervisor_snapshot.timestamp_us;
         torque_request.enabled =
-            supervisor_snapshot.mode == APP_SYSTEM_MODE_TORQUE_CONTROL;
+            (supervisor_snapshot.mode == APP_SYSTEM_MODE_TORQUE_CONTROL) ||
+            (supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL);
+        torque_request.stick_must_remain_neutral =
+            supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL;
 
         safety_rc_check(&rc_snapshot,
                         now_us,

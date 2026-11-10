@@ -13,6 +13,7 @@ idf_component_register(
         "tasks/task_supervisor.c"
         "tasks/task_ui.c"
         "../../../common/src/app/app_balance_state.c"
+        "../../../common/src/control/ctrl_balance_controller.c"
         "../../../common/src/control/ctrl_torque_input.c"
         "../../../common/src/drivers/drv_ism330dhcx.c"
         "../../../common/src/drivers/drv_st7789.c"

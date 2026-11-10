@@ -6,7 +6,8 @@ portable. The active ESP32 target includes the IMU pipeline, a
 16-channel CRSF receiver path, an ST7789 status display, and a
 CubeMars feedback path with safety-gated manual velocity control.
 The current milestone also provides safety-gated four-actuator current control
-for restrained fixture commissioning.
+for restrained fixture commissioning and forward-plane balance control with
+bounded disturbance rejection.
 
 ## Current targets
 
@@ -76,12 +77,12 @@ task_rc
 
 task_ui
     owns the ST7789 SPI display
-    shows STATUS, CRSF, IMU, and CAN pages
+    shows STATUS, CRSF, IMU, CONTROL, and CAN pages
     uses a portable locked/browse/interact UI state machine
-    publishes a timestamped CAN-page manual-drive request
+    publishes timestamped manual-drive, current, and balance requests
 
 task_supervisor
-    owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL whole-system modes
+    owns SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and BALANCE_CONTROL modes
 
 task_safety
     validates RC, supervisor mode, state, IMU, CAN, feedback, and limits
@@ -99,6 +100,7 @@ task_control
     combines four-wheel odometry with checked IMU lean state
     publishes timing, validity, state, and desired-current diagnostics
     maps CH2 to bounded fixture current in TORQUE_CONTROL mode
+    runs portable forward-plane balance and position recovery in BALANCE mode
     never transmits motor commands directly
 
 ```
@@ -144,6 +146,10 @@ safety_torque_control
 
 ctrl_torque_input
     maps a raw RC channel to bounded, slew-limited desired current
+
+ctrl_balance_controller
+    stabilizes lean and returns toward a captured forward position
+    includes bounded integral action for constant-disturbance rejection
 
 drv_ism330dhcx
     portable ISM330DHCX register driver
@@ -260,6 +266,9 @@ Do not let UI, tests, or control write directly to motors.
 
 04_firmware/docs/state_estimation_and_control.md
     Four-wheel odometry, state composition, timing, configuration, and tests.
+
+04_firmware/docs/balance_control.md
+    Balance law, safety flow, UI operation, commissioning tests, and tuning variables.
 
 04_firmware/docs/ui_subsystem.md
     LCD pages, RC controls, UI state machine, CRSF ranges, and future tuning boundary.

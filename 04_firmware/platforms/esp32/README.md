@@ -162,11 +162,11 @@ task_ui
     Collects RC, IMU, control, safety, and actuator snapshots.
     Runs the portable UI input mapper and state machine.
     Renders STATUS, CRSF, IMU, CONTROL, and CAN pages.
-    Publishes timestamped manual-drive and torque-control requests.
+    Publishes timestamped manual-drive, torque-control, and balance requests.
     Does not own safety state or motion commands.
 
 task_supervisor
-    Owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL system modes.
+    Owns SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and BALANCE_CONTROL modes.
 
 task_safety
     Owns permission to move.

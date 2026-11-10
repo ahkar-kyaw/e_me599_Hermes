@@ -77,7 +77,7 @@ task_motor
     Applies a local command freshness check and zero-command stop hold.
 
 task_supervisor
-    Owns SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL modes.
+    Owns SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and BALANCE_CONTROL modes.
     Accepts fresh, mutually exclusive UI requests.
 
 task_safety

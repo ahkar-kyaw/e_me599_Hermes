@@ -101,8 +101,14 @@ void safety_torque_control_update(
         imu_status,
         actuator_snapshot,
         stick_neutral);
-    const uint32_t hard_inhibits = base_inhibits &
-        ~(APP_TORQUE_INHIBIT_STICK | APP_TORQUE_INHIBIT_REARM);
+    uint32_t hard_inhibits = base_inhibits &
+        ~APP_TORQUE_INHIBIT_REARM;
+
+    if (!request->stick_must_remain_neutral ||
+        (safety->state != APP_TORQUE_CONTROL_ARMED))
+    {
+        hard_inhibits &= ~APP_TORQUE_INHIBIT_STICK;
+    }
 
     if (!request_fresh || !request->enabled)
     {
@@ -320,7 +326,8 @@ static uint32_t safety_torque_control_inhibits(
     }
 
     if (!stick_neutral &&
-        (safety->state != APP_TORQUE_CONTROL_ARMED))
+        ((safety->state != APP_TORQUE_CONTROL_ARMED) ||
+         request->stick_must_remain_neutral))
     {
         flags |= APP_TORQUE_INHIBIT_STICK;
     }

@@ -580,7 +580,7 @@ static void ui_pages_render_control(ui_canvas_t *canvas,
                             line, UI_COLOR_WHITE, 1u);
 
         ui_canvas_draw_text(canvas, 4u, 96u + y_offset,
-                            "STATE 1/3", UI_COLOR_MUTED, 1u);
+                            "STATE 1/4", UI_COLOR_MUTED, 1u);
     }
     else if (state->selection == 1u)
     {
@@ -627,9 +627,9 @@ static void ui_pages_render_control(ui_canvas_t *canvas,
                             line, UI_COLOR_MUTED, 1u);
 
         ui_canvas_draw_text(canvas, 4u, 96u + y_offset,
-                            "SNAPSHOT 2/3", UI_COLOR_MUTED, 1u);
+                            "SNAPSHOT 2/4", UI_COLOR_MUTED, 1u);
     }
-    else
+    else if (state->selection == 2u)
     {
         (void)snprintf(line,
                        sizeof(line),
@@ -674,7 +674,57 @@ static void ui_pages_render_control(ui_canvas_t *canvas,
                             line, UI_COLOR_MUTED, 1u);
 
         ui_canvas_draw_text(canvas, 4u, 96u + y_offset,
-                            "SC+SD ARM, THR CURRENT",
+                            "MANUAL 3/4  SD+THR",
+                            UI_COLOR_MUTED, 1u);
+    }
+    else
+    {
+        (void)snprintf(line,
+                       sizeof(line),
+                       "BALANCE %s",
+                       ui_pages_torque_control_state(torque));
+        ui_canvas_draw_text(canvas,
+                            4u,
+                            25u + y_offset,
+                            line,
+                            ui_pages_torque_control_color(torque),
+                            1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "LEAN%+.1f RATE%+.2f",
+                       (double)(control->balance_lean_error_rad *
+                                UI_RAD_TO_DEG),
+                       (double)control->state.lean_rate_rps);
+        ui_canvas_draw_text(canvas, 4u, 39u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "POS%+.3f INT%+.3f",
+                       (double)control->balance_position_error_m,
+                       (double)control->balance_position_integral_m_s);
+        ui_canvas_draw_text(canvas, 4u, 53u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "CMD%+.2fA %s",
+                       (double)control->balance_common_current_a,
+                       control->balance_output_saturated ? "LIMIT" : "");
+        ui_canvas_draw_text(canvas, 4u, 67u + y_offset,
+                            line, UI_COLOR_WHITE, 1u);
+
+        (void)snprintf(line,
+                       sizeof(line),
+                       "INH %-8s %03lX",
+                       ui_pages_torque_inhibit(torque->inhibit_flags),
+                       (unsigned long)torque->inhibit_flags);
+        ui_canvas_draw_text(canvas, 4u, 81u + y_offset,
+                            line, UI_COLOR_MUTED, 1u);
+
+        ui_canvas_draw_text(canvas, 4u, 96u + y_offset,
+                            "BALANCE 4/4  SD ARM",
                             UI_COLOR_MUTED, 1u);
     }
 }

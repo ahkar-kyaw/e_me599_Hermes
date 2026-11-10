@@ -38,6 +38,9 @@ static portMUX_TYPE g_manual_drive_request_lock =
 static app_torque_control_request_t g_torque_control_request;
 static portMUX_TYPE g_torque_control_request_lock =
     portMUX_INITIALIZER_UNLOCKED;
+static app_balance_control_request_t g_balance_control_request;
+static portMUX_TYPE g_balance_control_request_lock =
+    portMUX_INITIALIZER_UNLOCKED;
 
 static void task_ui_entry(void *argument);
 static void task_ui_draw_pixel(void *context,
@@ -54,6 +57,8 @@ static void task_ui_publish_manual_drive_request(
     const app_manual_drive_request_t *request);
 static void task_ui_publish_torque_control_request(
     const app_torque_control_request_t *request);
+static void task_ui_publish_balance_control_request(
+    const app_balance_control_request_t *request);
 
 void task_ui_start(void)
 {
@@ -95,6 +100,19 @@ void task_ui_get_torque_control_request(
     portENTER_CRITICAL(&g_torque_control_request_lock);
     *request = g_torque_control_request;
     portEXIT_CRITICAL(&g_torque_control_request_lock);
+}
+
+void task_ui_get_balance_control_request(
+    app_balance_control_request_t *request)
+{
+    if (request == NULL)
+    {
+        return;
+    }
+
+    portENTER_CRITICAL(&g_balance_control_request_lock);
+    *request = g_balance_control_request;
+    portEXIT_CRITICAL(&g_balance_control_request_lock);
 }
 
 static void task_ui_entry(void *argument)
@@ -281,10 +299,22 @@ static void task_ui_entry(void *argument)
             .timestamp_us = now_us,
             .enabled = ui_state.input_enabled &&
                        (ui_state.page == UI_PAGE_CONTROL) &&
-                       (ui_state.mode == UI_MODE_INTERACT),
+                       (ui_state.mode == UI_MODE_INTERACT) &&
+                       (ui_state.selection == 2u),
         };
 
         task_ui_publish_torque_control_request(&torque_control_request);
+
+        const app_balance_control_request_t balance_control_request =
+        {
+            .timestamp_us = now_us,
+            .enabled = ui_state.input_enabled &&
+                       (ui_state.page == UI_PAGE_CONTROL) &&
+                       (ui_state.mode == UI_MODE_INTERACT) &&
+                       (ui_state.selection == 3u),
+        };
+
+        task_ui_publish_balance_control_request(&balance_control_request);
 
         const TickType_t now_tick = xTaskGetTickCount();
 
@@ -334,6 +364,14 @@ static void task_ui_publish_torque_control_request(
     portENTER_CRITICAL(&g_torque_control_request_lock);
     g_torque_control_request = *request;
     portEXIT_CRITICAL(&g_torque_control_request_lock);
+}
+
+static void task_ui_publish_balance_control_request(
+    const app_balance_control_request_t *request)
+{
+    portENTER_CRITICAL(&g_balance_control_request_lock);
+    g_balance_control_request = *request;
+    portEXIT_CRITICAL(&g_balance_control_request_lock);
 }
 
 static void task_ui_draw_pixel(void *context,

@@ -13,12 +13,15 @@ baseline. It can:
 - receive and validate 16-channel CRSF data from a RadioMaster RP2;
 - monitor four configurable CubeMars actuator slots over CAN;
 - manually command one configured actuator in servo velocity mode;
-- display RC, IMU, CAN, and manual-drive state on an ST7789 LCD; and
-- pass every manual motor command through supervisor and safety ownership.
+- command bounded four-actuator current on a fixture;
+- run forward-plane balance and position disturbance rejection at 200 Hz;
+- display RC, IMU, state, controller, CAN, and safety state on an ST7789 LCD; and
+- pass every motor command through supervisor and safety ownership.
 
-It does not yet balance the robot. There is no final balance controller, actuator mixer, complete
-system-mode state machine,
-persistent tuning service, or STM32 implementation of the ESP32 BSPs.
+The checked-in balance gains are commissioning values and are not validated
+robot gains. Lateral/yaw control, motion references, a complete system-mode
+state machine, persistent tuning service, and STM32 implementations of the
+ESP32 BSPs remain future work.
 
 ## 2. The main architectural idea
 
@@ -324,13 +327,13 @@ same IDs in the physical actuator drives before connecting the complete bus.
 2. Initializes the portable RC input mapper and UI state machine.
 3. Initializes the ESP32 display BSP and ST7789 driver.
 4. Uses a 38,400-byte RGB565 logical framebuffer.
-5. Reads the latest RC, IMU, actuator, and manual-drive snapshots.
+5. Reads the latest RC, IMU, actuator, control, and safety snapshots.
 6. Checks RC and IMU freshness for display and input gating.
 7. Converts RC movement and switch edges into UI events.
 8. Updates the locked/browse/interact state machine.
-9. Renders STATUS, CRSF, IMU, or CAN data.
-10. Publishes a timestamped manual-drive request when the UI is unlocked,
-    on the CAN page, and in interact mode.
+9. Renders STATUS, CRSF, IMU, CONTROL, or CAN data.
+10. Publishes timestamped commissioning or balance requests from the
+    corresponding page selection.
 
 On the CAN page, the throttle channel selects a motor in Browse mode.
 Entering Interact mode freezes that selection and reuses the throttle channel
@@ -338,28 +341,29 @@ for the bounded manual velocity command.
 
 ### `task_supervisor`
 
-The supervisor currently has two modes:
+The supervisor currently has four modes:
 
 ```text
 APP_SYSTEM_MODE_SAFE_IDLE
 APP_SYSTEM_MODE_MANUAL_DRIVE
+APP_SYSTEM_MODE_TORQUE_CONTROL
+APP_SYSTEM_MODE_BALANCE_CONTROL
 ```
 
-Every 20 ms it defaults to SAFE_IDLE. It enters MANUAL_DRIVE only when the
-UI request is enabled, fresh, and references a valid actuator index. It
-publishes the mode and selected actuator as a snapshot.
+Every 20 ms it defaults to SAFE_IDLE. It accepts only fresh requests and
+publishes the selected mode and manual actuator index as a snapshot.
 
 The supervisor decides the requested whole-system mode. It does not decide
 whether the conditions are safe enough to move.
 
 ### `task_safety`
 
-Every 20 ms it:
+Every 5 ms it:
 
-1. reads the supervisor, RC, and actuator snapshots;
-2. converts supervisor mode into a manual-drive request;
+1. reads supervisor, RC, IMU, control, and actuator snapshots;
+2. converts supervisor mode into the appropriate motion request;
 3. checks RC validity, range, and freshness;
-4. runs the portable manual-drive safety state machine;
+4. runs the portable manual-drive and current safety state machines;
 5. publishes the resulting state and inhibit flags; and
 6. sends the approved snapshot to `task_motor`.
 
@@ -504,10 +508,11 @@ the desired commands before `task_motor` transmits them.
 - All four actuators are enabled; wheel geometry and feedback conversion still need restrained physical validation.
 - Runtime transmission supports servo velocity and servo current.
 - MIT mode is not implemented.
-- The supervisor currently has SAFE_IDLE, MANUAL_DRIVE, and TORQUE_CONTROL
-  modes; final balance, controlled-stop, and latched-fault modes remain.
+- The supervisor has SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and
+  BALANCE_CONTROL modes; controlled-stop and latched-fault modes remain.
 - IMU safety gates torque control but not single-actuator manual velocity.
-- There is no final balance-control mode or controller.
+- The balance controller covers only the forward plane and still requires
+  hardware identification and gain tuning.
 - There is no RC command shaping for requested speed or steering.
 - There is no persistent parameter storage or validated tuning transaction.
 - The control task counts overruns; a complete watchdog policy is not implemented.
@@ -515,7 +520,8 @@ the desired commands before `task_motor` transmits them.
   tuning.
 - STM32 currently contains generated startup and an empty user application
   hook; the active subsystems have not been ported.
-- Host tests cover the wheel estimator, current mapping, and torque safety;
+- Host tests cover the wheel estimator, current mapping, balance controller,
+  and torque safety;
   broader portable-module coverage is still needed.
 
 ## 11. Recommended software roadmap

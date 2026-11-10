@@ -5,6 +5,7 @@
 #include "config_control.h"
 #include "config_imu.h"
 #include "config_rc.h"
+#include "control/ctrl_balance_controller.h"
 #include "control/ctrl_torque_input.h"
 #include "estimation/est_collinear_mecanum.h"
 #include "safety/safety_imu.h"
@@ -100,6 +101,23 @@ static void task_control_entry(void *argument)
     };
     safety_imu_config_t imu_safety_config =
         safety_imu_default_config();
+    ctrl_balance_controller_t balance_controller;
+    const ctrl_balance_controller_config_t balance_controller_config =
+    {
+        .lean_trim_rad = APP_BALANCE_LEAN_TRIM_RAD,
+        .lean_gain_a_per_rad = APP_BALANCE_LEAN_GAIN_A_PER_RAD,
+        .lean_rate_gain_a_per_rps =
+            APP_BALANCE_LEAN_RATE_GAIN_A_PER_RPS,
+        .position_gain_a_per_m = APP_BALANCE_POSITION_GAIN_A_PER_M,
+        .velocity_gain_a_per_mps =
+            APP_BALANCE_VELOCITY_GAIN_A_PER_MPS,
+        .position_integral_gain_a_per_m_s =
+            APP_BALANCE_POSITION_INTEGRAL_GAIN_A_PER_M_S,
+        .position_integral_limit_m_s =
+            APP_BALANCE_POSITION_INTEGRAL_LIMIT_M_S,
+        .max_current_a = APP_CONTROL_TORQUE_MAX_CURRENT_A,
+        .output_sign = APP_BALANCE_OUTPUT_SIGN,
+    };
     ctrl_torque_input_t torque_input;
     const ctrl_torque_input_config_t torque_input_config =
     {
@@ -141,10 +159,19 @@ static void task_control_entry(void *argument)
         return;
     }
 
-    ESP_LOGI(TAG, "200 Hz state estimator and torque request started");
+    if (!ctrl_balance_controller_init(&balance_controller,
+                                      &balance_controller_config))
+    {
+        ESP_LOGE(TAG, "invalid balance controller configuration");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    ESP_LOGI(TAG, "200 Hz state estimator and controller started");
 
     TickType_t last_wake = xTaskGetTickCount();
     uint64_t last_loop_us = 0u;
+    bool balance_reference_captured = false;
 
     for (;;)
     {
@@ -169,7 +196,14 @@ static void task_control_entry(void *argument)
                sizeof(snapshot.desired_current_a));
         snapshot.state.timestamp_us = loop_start_us;
         snapshot.requested_current_a = 0.0f;
+        snapshot.balance_reference_position_x_m = 0.0f;
+        snapshot.balance_position_error_m = 0.0f;
+        snapshot.balance_position_integral_m_s = 0.0f;
+        snapshot.balance_lean_error_rad = 0.0f;
+        snapshot.balance_common_current_a = 0.0f;
+        snapshot.command_mode = CTRL_COMMAND_MODE_NONE;
         snapshot.torque_command_valid = false;
+        snapshot.balance_output_saturated = false;
 
         task_imu_get_snapshot(&imu_snapshot);
         task_motor_get_snapshot(&actuator_snapshot);
@@ -237,6 +271,7 @@ static void task_control_entry(void *argument)
 
         if (supervisor_snapshot.mode == APP_SYSTEM_MODE_TORQUE_CONTROL)
         {
+            balance_reference_captured = false;
             const uint8_t channel =
                 (uint8_t)(APP_CONTROL_TORQUE_INPUT_CHANNEL - 1u);
             float requested_current_a = 0.0f;
@@ -257,6 +292,8 @@ static void task_control_entry(void *argument)
                 };
 
                 snapshot.requested_current_a = requested_current_a;
+                snapshot.command_mode =
+                    CTRL_COMMAND_MODE_MANUAL_CURRENT;
 
                 for (uint32_t actuator = 0u;
                      actuator < APP_ACTUATOR_COUNT;
@@ -269,9 +306,65 @@ static void task_control_entry(void *argument)
                 snapshot.torque_command_valid = true;
             }
         }
+        else if (supervisor_snapshot.mode ==
+                 APP_SYSTEM_MODE_BALANCE_CONTROL)
+        {
+            static const float balance_mix[APP_ACTUATOR_COUNT] =
+            {
+                APP_BALANCE_MIX_1,
+                APP_BALANCE_MIX_2,
+                APP_BALANCE_MIX_3,
+                APP_BALANCE_MIX_4,
+            };
+            ctrl_balance_controller_output_t balance_output;
+
+            ctrl_torque_input_reset(&torque_input);
+
+            if (snapshot.state.valid && !balance_reference_captured)
+            {
+                ctrl_balance_controller_reset(
+                    &balance_controller,
+                    snapshot.state.position_x_m);
+                balance_reference_captured = true;
+            }
+
+            if (balance_reference_captured &&
+                ctrl_balance_controller_update(
+                    &balance_controller,
+                    &snapshot.state,
+                    dt_s,
+                    &balance_output))
+            {
+                snapshot.balance_reference_position_x_m =
+                    balance_output.reference_position_x_m;
+                snapshot.balance_position_error_m =
+                    balance_output.position_error_m;
+                snapshot.balance_position_integral_m_s =
+                    balance_output.position_integral_m_s;
+                snapshot.balance_lean_error_rad =
+                    balance_output.lean_error_rad;
+                snapshot.balance_common_current_a =
+                    balance_output.common_current_a;
+                snapshot.balance_output_saturated =
+                    balance_output.saturated;
+                snapshot.command_mode = CTRL_COMMAND_MODE_BALANCE;
+
+                for (uint32_t actuator = 0u;
+                     actuator < APP_ACTUATOR_COUNT;
+                     actuator++)
+                {
+                    snapshot.desired_current_a[actuator] =
+                        balance_output.common_current_a *
+                        balance_mix[actuator];
+                }
+
+                snapshot.torque_command_valid = true;
+            }
+        }
         else
         {
             ctrl_torque_input_reset(&torque_input);
+            balance_reference_captured = false;
         }
 
         const uint64_t loop_end_us = (uint64_t)esp_timer_get_time();

@@ -35,6 +35,20 @@
 #define APP_CONTROL_TORQUE_MIX_3                  1.0f
 #define APP_CONTROL_TORQUE_MIX_4                  1.0f
 
+#define APP_BALANCE_OUTPUT_SIGN                  1.0f
+#define APP_BALANCE_LEAN_TRIM_RAD                0.0f
+#define APP_BALANCE_LEAN_GAIN_A_PER_RAD          2.0f
+#define APP_BALANCE_LEAN_RATE_GAIN_A_PER_RPS     0.15f
+#define APP_BALANCE_POSITION_GAIN_A_PER_M        0.30f
+#define APP_BALANCE_VELOCITY_GAIN_A_PER_MPS      0.20f
+#define APP_BALANCE_POSITION_INTEGRAL_GAIN_A_PER_M_S 0.0f
+#define APP_BALANCE_POSITION_INTEGRAL_LIMIT_M_S  1.0f
+
+#define APP_BALANCE_MIX_1                        1.0f
+#define APP_BALANCE_MIX_2                        1.0f
+#define APP_BALANCE_MIX_3                        1.0f
+#define APP_BALANCE_MIX_4                        1.0f
+
 #define APP_CONTROL_REQUEST_MAX_AGE_US          100000u
 #define APP_CONTROL_STATE_MAX_AGE_US             20000u
 #define APP_CONTROL_STOP_HOLD_US                200000u

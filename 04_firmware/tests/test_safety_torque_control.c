@@ -41,6 +41,7 @@ int main(void)
     {
         .timestamp_us = TEST_NOW_US,
         .enabled = true,
+        .stick_must_remain_neutral = false,
     };
     control_snapshot_t control;
     rc_snapshot_t rc;
@@ -160,6 +161,21 @@ int main(void)
                                  request.timestamp_us,
                                  &snapshot);
     expect_state(&snapshot, APP_TORQUE_CONTROL_ARMED);
+
+    request.stick_must_remain_neutral = true;
+    rc.channel[config.current_channel] = 1400u;
+    request.timestamp_us += 5000u;
+    control.timestamp_us = request.timestamp_us;
+    safety_torque_control_update(&safety,
+                                 &request,
+                                 &control,
+                                 &rc,
+                                 &rc_status,
+                                 &imu_status,
+                                 &actuators,
+                                 request.timestamp_us,
+                                 &snapshot);
+    expect_state(&snapshot, APP_TORQUE_CONTROL_STOPPING);
 
     return EXIT_SUCCESS;
 }

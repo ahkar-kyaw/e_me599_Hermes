@@ -42,6 +42,25 @@ target_link_libraries(test_ctrl_torque_input PRIVATE m)
 
 add_test(NAME ctrl_torque_input COMMAND test_ctrl_torque_input)
 
+add_executable(test_ctrl_balance_controller
+    test_ctrl_balance_controller.c
+    ../common/src/control/ctrl_balance_controller.c
+)
+
+target_include_directories(test_ctrl_balance_controller PRIVATE
+    ../common/include
+)
+
+target_compile_features(test_ctrl_balance_controller PRIVATE c_std_11)
+target_compile_options(test_ctrl_balance_controller PRIVATE
+    -Wall
+    -Wextra
+    -Werror
+)
+target_link_libraries(test_ctrl_balance_controller PRIVATE m)
+
+add_test(NAME ctrl_balance_controller COMMAND test_ctrl_balance_controller)
+
 add_executable(test_safety_torque_control
     test_safety_torque_control.c
     ../common/src/safety/safety_torque_control.c

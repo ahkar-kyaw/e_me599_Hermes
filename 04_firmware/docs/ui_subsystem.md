@@ -71,7 +71,8 @@ BROWSE
 INTERACT
     CH2 up/down -> previous/next selection on ordinary pages
     CAN page -> CH2 is the manual velocity input
-    CONTROL page -> CH2 is the four-actuator current input
+    CONTROL selection 3 -> CH2 is the four-actuator current input
+    CONTROL selection 4 -> CH2 must remain centered for balance
     CH7 press -> Enter event
     CH6 inactive -> BROWSE
     SC inactive or RC link lost -> LOCKED
@@ -106,7 +107,9 @@ CONTROL
     Selection 2 shows state validity, loop counters, execution time, and faults.
     Selection 3 shows torque state, requested current, four approved currents,
     and the inhibit bit mask.
-    SD requests torque-control mode; CH2 must be centered before LIVE.
+    Selection 4 shows balance safety state, lean and lean rate, position error,
+    integral state, common current, saturation, and inhibit cause.
+    SD requests the selected mode; CH2 must be centered before LIVE.
 
 CAN
     Shows CAN bus state and command transmit errors.
@@ -166,7 +169,7 @@ task_ui
     Collects RC, IMU, control, safety, and actuator snapshots.
     Runs safety freshness checks.
     Feeds the portable input and UI state machines.
-    Publishes timestamped manual-drive and torque-control requests.
+    Publishes timestamped manual-drive, torque-control, and balance requests.
     Does not grant motion permission or write CAN commands.
 ```
 
@@ -224,6 +227,22 @@ never directly enables torque or writes a motor frame.
 The UI request passes through `task_supervisor`, `task_control`, and
 `safety_torque_control` before `task_motor` can transmit. A hard running fault
 requires SD to be cycled before rearming.
+
+## CONTROL balance interaction
+
+```text
+1. Keep SD and SC low and center CH2.
+2. Move SC high and browse to CONTROL.
+3. Use CH2 in Browse mode to select BALANCE 4/4.
+4. Return CH2 to center and move SD high.
+5. Confirm BALANCE LIVE before applying a small fixture disturbance.
+6. Keep CH2 centered while balance remains active.
+7. Move SD low, move SC low, or leave CONTROL to stop.
+```
+
+The request passes through the supervisor, portable controller, and current
+safety state machine. Moving CH2 while balancing is treated as a hard fault
+and requires an SD off-on cycle.
 
 ## Reassigning controls
 

@@ -39,6 +39,7 @@ typedef struct
 {
     uint64_t timestamp_us;
     bool enabled;
+    bool stick_must_remain_neutral;
 } app_torque_control_request_t;
 
 typedef struct

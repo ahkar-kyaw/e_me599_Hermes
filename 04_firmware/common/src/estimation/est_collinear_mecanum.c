@@ -7,6 +7,7 @@
 #define EST_COLLINEAR_MECANUM_PI      3.1415926536f
 #define EST_COLLINEAR_MECANUM_TWO_PI  6.2831853072f
 #define EST_COLLINEAR_MECANUM_MIN_DET 1.0e-8f
+#define EST_COLLINEAR_MECANUM_MIN_SINE 1.0e-4f
 
 static bool est_collinear_mecanum_config_valid(
     const est_collinear_mecanum_config_t *config);
@@ -33,9 +34,12 @@ bool est_collinear_mecanum_init(
          wheel < EST_COLLINEAR_MECANUM_WHEEL_COUNT;
          wheel++)
     {
+        const float sine_angle = sinf(config->roller_angle_rad[wheel]);
+
         wheel_map[wheel][0] = 1.0f;
-        wheel_map[wheel][1] = config->roller_lateral_factor[wheel];
-        wheel_map[wheel][2] = -config->wheel_lateral_m[wheel];
+        wheel_map[wheel][1] =
+            cosf(config->roller_angle_rad[wheel]) / sine_angle;
+        wheel_map[wheel][2] = config->wheel_offset_m[wheel];
 
         for (uint32_t row = 0u; row < 3u; row++)
         {
@@ -170,8 +174,10 @@ static bool est_collinear_mecanum_config_valid(
          wheel < EST_COLLINEAR_MECANUM_WHEEL_COUNT;
          wheel++)
     {
-        if (!isfinite(config->wheel_lateral_m[wheel]) ||
-            !isfinite(config->roller_lateral_factor[wheel]))
+        if (!isfinite(config->wheel_offset_m[wheel]) ||
+            !isfinite(config->roller_angle_rad[wheel]) ||
+            (fabsf(sinf(config->roller_angle_rad[wheel])) <
+             EST_COLLINEAR_MECANUM_MIN_SINE))
         {
             return false;
         }

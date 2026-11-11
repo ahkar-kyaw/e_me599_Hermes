@@ -103,7 +103,9 @@ Confirm or update:
 
 ```text
 APP_BALANCE_MAX_CURRENT_A                  firmware current limit
-APP_BALANCE_MIX_1 ... _4                   per-motor balance scale
+APP_BALANCE_MAX_FORWARD_CURRENT_A          balance/forward authority
+APP_BALANCE_MAX_LATERAL_CURRENT_A          lateral authority
+APP_BALANCE_MAX_YAW_CURRENT_A              yaw authority
 APP_BALANCE_REQUEST_MAX_AGE_US             UI/supervisor request freshness
 APP_BALANCE_STATE_MAX_AGE_US               state freshness
 APP_BALANCE_STOP_HOLD_US                   zero-current stop window
@@ -135,8 +137,13 @@ APP_RC_ACTIVE_CHANNEL_COUNT
 APP_RC_MAX_AGE_US
 APP_RC_*_ENABLE_CHANNEL
 APP_RC_ZERO_LEAN_CHANNEL
+APP_RC_FORWARD_CHANNEL
+APP_RC_LATERAL_CHANNEL
+APP_RC_YAW_CHANNEL
+APP_RC_INPUT_MIN / MID / MAX / DEADBAND
 APP_RC_SWITCH_*_THRESHOLD
 APP_RC_*_ACTIVE_HIGH polarity values
+APP_RC_*_INVERTED motion-axis polarity values
 APP_DISPLAY_ORIENTATION
 ```
 
@@ -182,25 +189,32 @@ disturbance-rejection limits
 closed-loop arm, fall, and recovery thresholds
 ```
 
-The current forward-plane controller exposes these exact settings in
+The current balance and local-body motion controller exposes these settings in
 `config_control.h`:
 
 ```text
-APP_BALANCE_OUTPUT_SIGN
+APP_CONTROL_WHEEL_RADIUS_M
+APP_CONTROL_WHEEL_1 ... _4_OFFSET_M
+APP_CONTROL_WHEEL_1 ... _4_ROLLER_ANGLE_RAD
+APP_CONTROL_YAW_SCALE_M
+
+APP_BALANCE_FORWARD_OUTPUT_SIGN
+APP_BALANCE_LATERAL_OUTPUT_SIGN
+APP_BALANCE_YAW_OUTPUT_SIGN
 APP_BALANCE_INITIAL_LEAN_TRIM_RAD
 APP_BALANCE_LEAN_GAIN_A_PER_RAD
 APP_BALANCE_LEAN_RATE_GAIN_A_PER_RPS
-APP_BALANCE_POSITION_GAIN_A_PER_M
-APP_BALANCE_VELOCITY_GAIN_A_PER_MPS
-APP_BALANCE_POSITION_INTEGRAL_GAIN_A_PER_M_S
-APP_BALANCE_POSITION_INTEGRAL_LIMIT_M_S
-APP_BALANCE_MIX_1 ... APP_BALANCE_MIX_4
+APP_BALANCE_FORWARD_* gains and limits
+APP_BALANCE_LATERAL_* gains and limits
+APP_BALANCE_YAW_* gains and limits
+APP_MOTION_MAX_* velocity and acceleration limits
+APP_BALANCE_MAX_CURRENT_A
 ```
 
-Tune them in the order documented in `balance_control.md`: signs, lean,
-lean-rate damping, velocity, position, then integral. Do not begin with the
-integral term or transfer the example MATLAB gains before updating the physical
-model.
+Tune them in the order documented in `balance_control.md`: geometry and signs,
+lean, lean-rate damping, axis velocity, axis position, motion limits, then
+optional integral action. Do not begin with the integral term or transfer the
+example MATLAB gains before updating the physical model.
 
 Keep these parameters in a portable control configuration structure. Platform
 configuration may select values, but common control code must not include

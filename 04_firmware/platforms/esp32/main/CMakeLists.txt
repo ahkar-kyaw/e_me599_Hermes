@@ -16,6 +16,7 @@ idf_component_register(
         "../../../common/src/app/app_balance_state.c"
         "../../../common/src/app/app_operator_controls.c"
         "../../../common/src/control/ctrl_balance_controller.c"
+        "../../../common/src/control/ctrl_collinear_mecanum_allocator.c"
         "../../../common/src/drivers/drv_ism330dhcx.c"
         "../../../common/src/drivers/drv_st7789.c"
         "../../../common/src/estimation/est_collinear_mecanum.c"

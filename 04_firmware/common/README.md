@@ -25,6 +25,7 @@ estimation/
 
 control/
     ctrl_balance_controller
+    ctrl_collinear_mecanum_allocator
 
 safety/
     safety_rc

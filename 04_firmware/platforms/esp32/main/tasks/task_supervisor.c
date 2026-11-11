@@ -77,6 +77,9 @@ static void task_supervisor_entry(void *argument)
 
         snapshot.timestamp_us = now_us;
         snapshot.mode = APP_SYSTEM_MODE_SAFE_IDLE;
+        snapshot.forward_input = 0.0f;
+        snapshot.lateral_input = 0.0f;
+        snapshot.yaw_input = 0.0f;
 
         if (task_supervisor_request_fresh(&request, now_us))
         {
@@ -86,6 +89,9 @@ static void task_supervisor_entry(void *argument)
             if (request.master_enabled && request.balance_enabled)
             {
                 snapshot.mode = APP_SYSTEM_MODE_BALANCE_CONTROL;
+                snapshot.forward_input = request.forward_input;
+                snapshot.lateral_input = request.lateral_input;
+                snapshot.yaw_input = request.yaw_input;
             }
         }
 

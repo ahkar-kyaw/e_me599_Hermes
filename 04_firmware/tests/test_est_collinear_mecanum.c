@@ -24,8 +24,14 @@ static est_collinear_mecanum_t make_estimator(void)
     const est_collinear_mecanum_config_t config =
     {
         .wheel_radius_m = 0.060f,
-        .wheel_lateral_m = {0.240f, 0.080f, -0.080f, -0.240f},
-        .roller_lateral_factor = {1.0f, -1.0f, 1.0f, -1.0f},
+        .wheel_offset_m = {-0.240f, -0.080f, 0.080f, 0.240f},
+        .roller_angle_rad =
+        {
+             0.7853982f,
+            -0.7853982f,
+             0.7853982f,
+            -0.7853982f,
+        },
         .max_dt_s = 0.020f,
     };
     est_collinear_mecanum_t estimator;

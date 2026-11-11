@@ -5,10 +5,12 @@
 #include "config_control.h"
 #include "config_imu.h"
 #include "control/ctrl_balance_controller.h"
+#include "control/ctrl_collinear_mecanum_allocator.h"
 #include "estimation/est_collinear_mecanum.h"
 #include "safety/safety_imu.h"
 #include "task_imu.h"
 #include "task_motor.h"
+#include "task_safety.h"
 #include "task_supervisor.h"
 
 #include "esp_log.h"
@@ -27,6 +29,8 @@ _Static_assert(APP_ACTUATOR_COUNT == EST_COLLINEAR_MECANUM_WHEEL_COUNT,
                "control estimator requires four actuator slots");
 _Static_assert(APP_ACTUATOR_COUNT == CTRL_BALANCE_ACTUATOR_COUNT,
                "control output requires four actuator slots");
+_Static_assert(APP_ACTUATOR_COUNT == CTRL_COLLINEAR_MECANUM_WHEEL_COUNT,
+               "control allocator requires four actuator slots");
 _Static_assert(configTICK_RATE_HZ >= 200,
                "control task requires an RTOS tick rate of at least 200 Hz");
 
@@ -78,39 +82,90 @@ static void task_control_entry(void *argument)
     const est_collinear_mecanum_config_t odometry_config =
     {
         .wheel_radius_m = APP_CONTROL_WHEEL_RADIUS_M,
-        .wheel_lateral_m =
+        .wheel_offset_m =
         {
-            APP_CONTROL_WHEEL_1_LATERAL_M,
-            APP_CONTROL_WHEEL_2_LATERAL_M,
-            APP_CONTROL_WHEEL_3_LATERAL_M,
-            APP_CONTROL_WHEEL_4_LATERAL_M,
+            APP_CONTROL_WHEEL_1_OFFSET_M,
+            APP_CONTROL_WHEEL_2_OFFSET_M,
+            APP_CONTROL_WHEEL_3_OFFSET_M,
+            APP_CONTROL_WHEEL_4_OFFSET_M,
         },
-        .roller_lateral_factor =
+        .roller_angle_rad =
         {
-            APP_CONTROL_WHEEL_1_ROLLER_FACTOR,
-            APP_CONTROL_WHEEL_2_ROLLER_FACTOR,
-            APP_CONTROL_WHEEL_3_ROLLER_FACTOR,
-            APP_CONTROL_WHEEL_4_ROLLER_FACTOR,
+            APP_CONTROL_WHEEL_1_ROLLER_ANGLE_RAD,
+            APP_CONTROL_WHEEL_2_ROLLER_ANGLE_RAD,
+            APP_CONTROL_WHEEL_3_ROLLER_ANGLE_RAD,
+            APP_CONTROL_WHEEL_4_ROLLER_ANGLE_RAD,
         },
         .max_dt_s = APP_CONTROL_MAX_DT_S,
     };
     safety_imu_config_t imu_safety_config =
         safety_imu_default_config();
     ctrl_balance_controller_t balance_controller;
+    ctrl_collinear_mecanum_allocator_t current_allocator;
     const ctrl_balance_controller_config_t balance_controller_config =
     {
         .lean_gain_a_per_rad = APP_BALANCE_LEAN_GAIN_A_PER_RAD,
         .lean_rate_gain_a_per_rps =
             APP_BALANCE_LEAN_RATE_GAIN_A_PER_RPS,
-        .position_gain_a_per_m = APP_BALANCE_POSITION_GAIN_A_PER_M,
-        .velocity_gain_a_per_mps =
-            APP_BALANCE_VELOCITY_GAIN_A_PER_MPS,
-        .position_integral_gain_a_per_m_s =
-            APP_BALANCE_POSITION_INTEGRAL_GAIN_A_PER_M_S,
-        .position_integral_limit_m_s =
-            APP_BALANCE_POSITION_INTEGRAL_LIMIT_M_S,
-        .max_current_a = APP_BALANCE_MAX_CURRENT_A,
-        .output_sign = APP_BALANCE_OUTPUT_SIGN,
+        .forward_position_gain_a_per_m =
+            APP_BALANCE_FORWARD_POSITION_GAIN_A_PER_M,
+        .forward_velocity_gain_a_per_mps =
+            APP_BALANCE_FORWARD_VELOCITY_GAIN_A_PER_MPS,
+        .forward_integral_gain_a_per_m_s =
+            APP_BALANCE_FORWARD_INTEGRAL_GAIN_A_PER_M_S,
+        .forward_integral_limit_m_s =
+            APP_BALANCE_FORWARD_INTEGRAL_LIMIT_M_S,
+        .lateral_position_gain_a_per_m =
+            APP_BALANCE_LATERAL_POSITION_GAIN_A_PER_M,
+        .lateral_velocity_gain_a_per_mps =
+            APP_BALANCE_LATERAL_VELOCITY_GAIN_A_PER_MPS,
+        .lateral_integral_gain_a_per_m_s =
+            APP_BALANCE_LATERAL_INTEGRAL_GAIN_A_PER_M_S,
+        .lateral_integral_limit_m_s =
+            APP_BALANCE_LATERAL_INTEGRAL_LIMIT_M_S,
+        .yaw_position_gain_a_per_rad =
+            APP_BALANCE_YAW_POSITION_GAIN_A_PER_RAD,
+        .yaw_rate_gain_a_per_rps =
+            APP_BALANCE_YAW_RATE_GAIN_A_PER_RPS,
+        .yaw_integral_gain_a_per_rad_s =
+            APP_BALANCE_YAW_INTEGRAL_GAIN_A_PER_RAD_S,
+        .yaw_integral_limit_rad_s =
+            APP_BALANCE_YAW_INTEGRAL_LIMIT_RAD_S,
+        .max_forward_accel_mps2 =
+            APP_MOTION_MAX_FORWARD_ACCEL_MPS2,
+        .max_lateral_accel_mps2 =
+            APP_MOTION_MAX_LATERAL_ACCEL_MPS2,
+        .max_yaw_accel_rps2 = APP_MOTION_MAX_YAW_ACCEL_RPS2,
+        .max_forward_position_error_m =
+            APP_BALANCE_MAX_FORWARD_POSITION_ERROR_M,
+        .max_lateral_position_error_m =
+            APP_BALANCE_MAX_LATERAL_POSITION_ERROR_M,
+        .max_yaw_error_rad = APP_BALANCE_MAX_YAW_ERROR_RAD,
+        .max_forward_current_a = APP_BALANCE_MAX_FORWARD_CURRENT_A,
+        .max_lateral_current_a = APP_BALANCE_MAX_LATERAL_CURRENT_A,
+        .max_yaw_current_a = APP_BALANCE_MAX_YAW_CURRENT_A,
+        .forward_output_sign = APP_BALANCE_FORWARD_OUTPUT_SIGN,
+        .lateral_output_sign = APP_BALANCE_LATERAL_OUTPUT_SIGN,
+        .yaw_output_sign = APP_BALANCE_YAW_OUTPUT_SIGN,
+    };
+    const ctrl_collinear_mecanum_allocator_config_t allocator_config =
+    {
+        .wheel_offset_m =
+        {
+            APP_CONTROL_WHEEL_1_OFFSET_M,
+            APP_CONTROL_WHEEL_2_OFFSET_M,
+            APP_CONTROL_WHEEL_3_OFFSET_M,
+            APP_CONTROL_WHEEL_4_OFFSET_M,
+        },
+        .roller_angle_rad =
+        {
+            APP_CONTROL_WHEEL_1_ROLLER_ANGLE_RAD,
+            APP_CONTROL_WHEEL_2_ROLLER_ANGLE_RAD,
+            APP_CONTROL_WHEEL_3_ROLLER_ANGLE_RAD,
+            APP_CONTROL_WHEEL_4_ROLLER_ANGLE_RAD,
+        },
+        .yaw_scale_m = APP_CONTROL_YAW_SCALE_M,
+        .max_motor_current_a = APP_BALANCE_MAX_CURRENT_A,
     };
     control_snapshot_t snapshot;
 
@@ -141,6 +196,14 @@ static void task_control_entry(void *argument)
         return;
     }
 
+    if (!ctrl_collinear_mecanum_allocator_init(&current_allocator,
+                                                &allocator_config))
+    {
+        ESP_LOGE(TAG, "invalid current allocator configuration");
+        vTaskDelete(NULL);
+        return;
+    }
+
     ESP_LOGI(TAG, "200 Hz state estimator and controller started");
 
     TickType_t last_wake = xTaskGetTickCount();
@@ -160,6 +223,7 @@ static void task_control_entry(void *argument)
         imu_snapshot_t imu_snapshot;
         actuator_snapshot_t actuator_snapshot;
         app_supervisor_snapshot_t supervisor_snapshot;
+        app_balance_safety_snapshot_t balance_safety_snapshot;
         safety_imu_status_t imu_status;
         est_collinear_mecanum_output_t odometry;
         float raw_lean_rad = 0.0f;
@@ -175,11 +239,16 @@ static void task_control_entry(void *argument)
                sizeof(snapshot.desired_current_a));
         snapshot.state.timestamp_us = loop_start_us;
         snapshot.lean_trim_rad = lean_trim_rad;
-        snapshot.balance_reference_position_x_m = 0.0f;
-        snapshot.balance_position_error_m = 0.0f;
-        snapshot.balance_position_integral_m_s = 0.0f;
+        snapshot.forward_velocity_reference_mps = 0.0f;
+        snapshot.lateral_velocity_reference_mps = 0.0f;
+        snapshot.yaw_rate_reference_rps = 0.0f;
+        snapshot.forward_position_error_m = 0.0f;
+        snapshot.lateral_position_error_m = 0.0f;
+        snapshot.yaw_error_rad = 0.0f;
         snapshot.balance_lean_error_rad = 0.0f;
-        snapshot.balance_common_current_a = 0.0f;
+        snapshot.forward_current_a = 0.0f;
+        snapshot.lateral_current_a = 0.0f;
+        snapshot.yaw_current_a = 0.0f;
         snapshot.zero_lean_applied_count = applied_zero_lean_count;
         snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
         snapshot.balance_command_valid = false;
@@ -188,6 +257,7 @@ static void task_control_entry(void *argument)
         task_imu_get_snapshot(&imu_snapshot);
         task_motor_get_snapshot(&actuator_snapshot);
         task_supervisor_get_snapshot(&supervisor_snapshot);
+        task_safety_get_balance_snapshot(&balance_safety_snapshot);
         (void)safety_imu_check(&imu_snapshot,
                                loop_start_us,
                                &imu_safety_config,
@@ -298,20 +368,26 @@ static void task_control_entry(void *argument)
 
         if (supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL)
         {
-            static const float balance_mix[APP_ACTUATOR_COUNT] =
+            const ctrl_balance_reference_t reference =
             {
-                APP_BALANCE_MIX_1,
-                APP_BALANCE_MIX_2,
-                APP_BALANCE_MIX_3,
-                APP_BALANCE_MIX_4,
+                .forward_velocity_mps =
+                    supervisor_snapshot.forward_input *
+                    APP_MOTION_MAX_FORWARD_VELOCITY_MPS,
+                .lateral_velocity_mps =
+                    supervisor_snapshot.lateral_input *
+                    APP_MOTION_MAX_LATERAL_VELOCITY_MPS,
+                .yaw_rate_rps = supervisor_snapshot.yaw_input *
+                    APP_MOTION_MAX_YAW_RATE_RPS,
             };
             ctrl_balance_controller_output_t balance_output;
 
-            if (snapshot.state.valid && !balance_reference_captured)
+            if (snapshot.state.valid &&
+                (!balance_reference_captured ||
+                 !balance_safety_snapshot.motion_allowed))
             {
                 ctrl_balance_controller_reset(
                     &balance_controller,
-                    snapshot.state.position_x_m);
+                    &snapshot.state);
                 balance_reference_captured = true;
             }
 
@@ -319,32 +395,48 @@ static void task_control_entry(void *argument)
                 ctrl_balance_controller_update(
                     &balance_controller,
                     &snapshot.state,
+                    &reference,
                     dt_s,
                     &balance_output))
             {
-                snapshot.balance_reference_position_x_m =
-                    balance_output.reference_position_x_m;
-                snapshot.balance_position_error_m =
-                    balance_output.position_error_m;
-                snapshot.balance_position_integral_m_s =
-                    balance_output.position_integral_m_s;
+                const float axis_current_a
+                    [CTRL_COLLINEAR_MECANUM_AXIS_COUNT] =
+                {
+                    balance_output.forward_current_a,
+                    balance_output.lateral_current_a,
+                    balance_output.yaw_current_a,
+                };
+                bool allocator_saturated = false;
+
+                snapshot.forward_velocity_reference_mps =
+                    balance_output.forward_velocity_reference_mps;
+                snapshot.lateral_velocity_reference_mps =
+                    balance_output.lateral_velocity_reference_mps;
+                snapshot.yaw_rate_reference_rps =
+                    balance_output.yaw_rate_reference_rps;
+                snapshot.forward_position_error_m =
+                    balance_output.forward_position_error_m;
+                snapshot.lateral_position_error_m =
+                    balance_output.lateral_position_error_m;
+                snapshot.yaw_error_rad = balance_output.yaw_error_rad;
                 snapshot.balance_lean_error_rad =
                     balance_output.lean_error_rad;
-                snapshot.balance_common_current_a =
-                    balance_output.common_current_a;
-                snapshot.balance_output_saturated =
-                    balance_output.saturated;
+                snapshot.forward_current_a =
+                    balance_output.forward_current_a;
+                snapshot.lateral_current_a =
+                    balance_output.lateral_current_a;
+                snapshot.yaw_current_a = balance_output.yaw_current_a;
 
-                for (uint32_t actuator = 0u;
-                     actuator < APP_ACTUATOR_COUNT;
-                     actuator++)
+                if (ctrl_collinear_mecanum_allocator_update(
+                        &current_allocator,
+                        axis_current_a,
+                        snapshot.desired_current_a,
+                        &allocator_saturated))
                 {
-                    snapshot.desired_current_a[actuator] =
-                        balance_output.common_current_a *
-                        balance_mix[actuator];
+                    snapshot.balance_output_saturated =
+                        balance_output.saturated || allocator_saturated;
+                    snapshot.balance_command_valid = true;
                 }
-
-                snapshot.balance_command_valid = true;
             }
         }
         else

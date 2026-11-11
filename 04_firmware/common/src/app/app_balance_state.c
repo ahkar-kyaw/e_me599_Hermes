@@ -81,6 +81,8 @@ bool app_balance_state_compose(
     balance_state->yaw_rad = odometry->yaw_rad;
     balance_state->velocity_x_mps = odometry->velocity_x_mps;
     balance_state->velocity_y_mps = odometry->velocity_y_mps;
+    balance_state->body_forward_mps = odometry->body_forward_mps;
+    balance_state->body_left_mps = odometry->body_left_mps;
     balance_state->yaw_rate_rps = odometry->yaw_rate_rps;
     balance_state->valid = true;
 

@@ -12,6 +12,9 @@ typedef struct
 {
     uint64_t timestamp_us;
     uint32_t zero_lean_request_count;
+    float forward_input;
+    float lateral_input;
+    float yaw_input;
     bool master_enabled;
     bool balance_enabled;
 } app_balance_control_request_t;

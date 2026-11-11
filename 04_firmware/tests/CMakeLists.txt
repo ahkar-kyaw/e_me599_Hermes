@@ -42,6 +42,26 @@ target_link_libraries(test_ctrl_balance_controller PRIVATE m)
 
 add_test(NAME ctrl_balance_controller COMMAND test_ctrl_balance_controller)
 
+add_executable(test_ctrl_collinear_mecanum_allocator
+    test_ctrl_collinear_mecanum_allocator.c
+    ../common/src/control/ctrl_collinear_mecanum_allocator.c
+)
+
+target_include_directories(test_ctrl_collinear_mecanum_allocator PRIVATE
+    ../common/include
+)
+
+target_compile_features(test_ctrl_collinear_mecanum_allocator PRIVATE c_std_11)
+target_compile_options(test_ctrl_collinear_mecanum_allocator PRIVATE
+    -Wall
+    -Wextra
+    -Werror
+)
+target_link_libraries(test_ctrl_collinear_mecanum_allocator PRIVATE m)
+
+add_test(NAME ctrl_collinear_mecanum_allocator
+         COMMAND test_ctrl_collinear_mecanum_allocator)
+
 add_executable(test_safety_balance_control
     test_safety_balance_control.c
     ../common/src/safety/safety_balance_control.c

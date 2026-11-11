@@ -14,7 +14,7 @@ flowchart LR
 
     IMU[ISM330DHCX] --> TI[task_imu]
     CAN[CubeMars CAN] <--> TM[task_motor]
-    TI --> TC[task_control]
+    TI --> TC[task_control<br/>estimate + balance + motion + allocation]
     TM --> TC
     TS --> TC
 
@@ -53,7 +53,7 @@ stateDiagram-v2
 |---|---|---|
 | `READY` | Motors receive no drive current. The display shows lean, trim, RC, IMU, CAN, and motor health. | Keep SA or SD off. With SA on and SD off, press SE while stationary to zero lean. |
 | `WAIT SAFE` | Current remains disabled while a fault exists or the robot has not remained inside the arming limits for 300 ms. | Turn SA on, then SD on. Hold the robot near upright and still. |
-| `LIVE` | The controller sends safety-approved current to all four motors at 200 Hz. | Remain within the 10 degree arming lean limit and rate limit for 300 ms. |
+| `LIVE` | The controller balances at 200 Hz, follows bounded forward/lateral/yaw requests, and holds the last position/yaw reference when sticks center. | Remain within the 10 degree arming lean limit and rate limit for 300 ms. |
 | `STOPPING` | Zero-current CAN commands are sent for 200 ms before transmission stops. | Turn SA or SD off, lose a required input, exceed the fall limit, or encounter a motor/CAN fault. |
 
 ## Source layout
@@ -77,6 +77,9 @@ tests/                   host tests for portable logic
 SA / CH5    master enable
 SD / CH6    balance request
 SE / CH7    zero lean in READY while stationary
+Ele / CH3   forward and reverse velocity in LIVE
+Ail / CH1   left and right velocity in LIVE
+Rud / CH4   yaw-rate request in LIVE
 ```
 
 Channel assignments are configured in
@@ -102,3 +105,6 @@ ctest --test-dir build --output-on-failure
 
 Configuration values that must match the physical robot are listed in
 `docs/robot_configuration_checklist.md`.
+
+The control equation, tuning order, first-motion test, and ACTIVE dashboard
+fields are documented in `docs/balance_control.md`.

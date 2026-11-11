@@ -15,6 +15,26 @@
 #define TASK_OPERATOR_STACK_BYTES 3072u
 #define TASK_OPERATOR_PRIORITY    (tskIDLE_PRIORITY + 2)
 
+_Static_assert((APP_RC_MASTER_ENABLE_CHANNEL >= 1u) &&
+               (APP_RC_MASTER_ENABLE_CHANNEL <=
+                APP_RC_ACTIVE_CHANNEL_COUNT),
+               "master channel is outside the active RC range");
+_Static_assert((APP_RC_BALANCE_ENABLE_CHANNEL >= 1u) &&
+               (APP_RC_BALANCE_ENABLE_CHANNEL <=
+                APP_RC_ACTIVE_CHANNEL_COUNT),
+               "balance channel is outside the active RC range");
+_Static_assert((APP_RC_ZERO_LEAN_CHANNEL >= 1u) &&
+               (APP_RC_ZERO_LEAN_CHANNEL <=
+                APP_RC_ACTIVE_CHANNEL_COUNT),
+               "zero channel is outside the active RC range");
+_Static_assert((APP_RC_FORWARD_CHANNEL >= 1u) &&
+               (APP_RC_FORWARD_CHANNEL <= APP_RC_ACTIVE_CHANNEL_COUNT) &&
+               (APP_RC_LATERAL_CHANNEL >= 1u) &&
+               (APP_RC_LATERAL_CHANNEL <= APP_RC_ACTIVE_CHANNEL_COUNT) &&
+               (APP_RC_YAW_CHANNEL >= 1u) &&
+               (APP_RC_YAW_CHANNEL <= APP_RC_ACTIVE_CHANNEL_COUNT),
+               "motion channel is outside the active RC range");
+
 typedef struct
 {
     app_balance_control_request_t balance_request;
@@ -85,13 +105,26 @@ static void task_operator_entry(void *argument)
             (uint8_t)(APP_RC_BALANCE_ENABLE_CHANNEL - 1u),
         .zero_lean_channel =
             (uint8_t)(APP_RC_ZERO_LEAN_CHANNEL - 1u),
+        .forward_channel =
+            (uint8_t)(APP_RC_FORWARD_CHANNEL - 1u),
+        .lateral_channel =
+            (uint8_t)(APP_RC_LATERAL_CHANNEL - 1u),
+        .yaw_channel =
+            (uint8_t)(APP_RC_YAW_CHANNEL - 1u),
         .channel_min = APP_RC_CHANNEL_MIN,
         .channel_max = APP_RC_CHANNEL_MAX,
+        .input_min = APP_RC_INPUT_MIN,
+        .input_mid = APP_RC_INPUT_MID,
+        .input_max = APP_RC_INPUT_MAX,
+        .input_deadband = APP_RC_INPUT_DEADBAND,
         .switch_off_threshold = APP_RC_SWITCH_OFF_THRESHOLD,
         .switch_on_threshold = APP_RC_SWITCH_ON_THRESHOLD,
         .master_active_high = (APP_RC_MASTER_ACTIVE_HIGH != 0),
         .balance_active_high = (APP_RC_BALANCE_ACTIVE_HIGH != 0),
         .zero_lean_active_high = (APP_RC_ZERO_ACTIVE_HIGH != 0),
+        .forward_inverted = (APP_RC_FORWARD_INVERTED != 0),
+        .lateral_inverted = (APP_RC_LATERAL_INVERTED != 0),
+        .yaw_inverted = (APP_RC_YAW_INVERTED != 0),
     };
     app_operator_controls_t controls;
     safety_rc_config_t rc_safety_config = safety_rc_default_config();
@@ -147,6 +180,12 @@ static void task_operator_entry(void *argument)
         snapshot.balance_request.timestamp_us = now_us;
         snapshot.balance_request.zero_lean_request_count =
             zero_lean_request_count;
+        snapshot.balance_request.forward_input =
+            snapshot.controls.forward_input;
+        snapshot.balance_request.lateral_input =
+            snapshot.controls.lateral_input;
+        snapshot.balance_request.yaw_input =
+            snapshot.controls.yaw_input;
         snapshot.balance_request.master_enabled =
             snapshot.controls.link_usable &&
             snapshot.controls.master_enabled;

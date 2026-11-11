@@ -13,8 +13,8 @@ extern "C" {
 typedef struct
 {
     float wheel_radius_m;
-    float wheel_lateral_m[EST_COLLINEAR_MECANUM_WHEEL_COUNT];
-    float roller_lateral_factor[EST_COLLINEAR_MECANUM_WHEEL_COUNT];
+    float wheel_offset_m[EST_COLLINEAR_MECANUM_WHEEL_COUNT];
+    float roller_angle_rad[EST_COLLINEAR_MECANUM_WHEEL_COUNT];
     float max_dt_s;
 } est_collinear_mecanum_config_t;
 

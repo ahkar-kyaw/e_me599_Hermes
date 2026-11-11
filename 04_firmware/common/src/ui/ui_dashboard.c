@@ -95,7 +95,7 @@ static void ui_dashboard_render_ready(
 {
     const control_snapshot_t *control = model->control_snapshot;
     const actuator_snapshot_t *actuator = model->actuator_snapshot;
-    char line[28];
+    char line[32];
 
     (void)snprintf(line,
                    sizeof(line),
@@ -187,7 +187,7 @@ static void ui_dashboard_render_active(
     const control_snapshot_t *control = model->control_snapshot;
     const app_balance_safety_snapshot_t *balance =
         model->balance_snapshot;
-    char line[28];
+    char line[32];
 
     (void)snprintf(line,
                    sizeof(line),
@@ -209,19 +209,29 @@ static void ui_dashboard_render_active(
 
     (void)snprintf(line,
                    sizeof(line),
-                   "POS %+.3f  VEL %+.3f",
-                   (double)control->balance_position_error_m,
-                   (double)control->state.velocity_x_mps);
+                   "CMD F%+.2f L%+.2f Y%+.2f",
+                   (double)control->forward_velocity_reference_mps,
+                   (double)control->lateral_velocity_reference_mps,
+                   (double)control->yaw_rate_reference_rps);
     ui_canvas_draw_text(canvas, 4u, 57u, line, UI_COLOR_WHITE, 1u);
 
     (void)snprintf(line,
                    sizeof(line),
-                   "CURRENT %+.2f A  %s",
-                   (double)control->balance_common_current_a,
-                   control->balance_output_saturated ? "LIMIT" : "");
+                   "VEL F%+.2f L%+.2f Y%+.2f",
+                   (double)control->state.body_forward_mps,
+                   (double)control->state.body_left_mps,
+                   (double)control->state.yaw_rate_rps);
+    ui_canvas_draw_text(canvas, 4u, 72u, line, UI_COLOR_WHITE, 1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "AMP F%+.2f L%+.2f Y%+.2f",
+                   (double)control->forward_current_a,
+                   (double)control->lateral_current_a,
+                   (double)control->yaw_current_a);
     ui_canvas_draw_text(canvas,
                         4u,
-                        72u,
+                        88u,
                         line,
                         control->balance_output_saturated ?
                             UI_COLOR_RED : UI_COLOR_WHITE,
@@ -229,18 +239,15 @@ static void ui_dashboard_render_active(
 
     (void)snprintf(line,
                    sizeof(line),
-                   "INHIBIT %s",
+                   "INH %s  SD OFF=STOP",
                    ui_dashboard_inhibit(balance->inhibit_flags));
     ui_canvas_draw_text(canvas,
                         4u,
-                        88u,
+                        106u,
                         line,
                         (balance->inhibit_flags == APP_BALANCE_INHIBIT_NONE) ?
                             UI_COLOR_GREEN : UI_COLOR_AMBER,
                         1u);
-
-    ui_canvas_draw_text(canvas, 4u, 106u,
-                        "SD OFF TO STOP", UI_COLOR_MUTED, 1u);
 }
 
 static bool ui_dashboard_motors_ready(

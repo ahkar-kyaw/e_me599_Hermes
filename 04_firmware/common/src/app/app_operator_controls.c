@@ -14,6 +14,10 @@ static bool app_operator_controls_config_valid(
 static bool app_operator_controls_channels_valid(
     const app_operator_controls_t *controls,
     const rc_snapshot_t *snapshot);
+static float app_operator_controls_normalize(
+    uint16_t value,
+    const app_operator_controls_config_t *config,
+    bool inverted);
 
 bool app_operator_controls_init(
     app_operator_controls_t *controls,
@@ -83,6 +87,18 @@ void app_operator_controls_update(
     state->balance_enabled = controls->balance_active;
     state->zero_lean_requested = controls->initialized &&
         !previous_zero_active && controls->zero_lean_active;
+    state->forward_input = app_operator_controls_normalize(
+        snapshot->channel[config->forward_channel],
+        config,
+        config->forward_inverted);
+    state->lateral_input = app_operator_controls_normalize(
+        snapshot->channel[config->lateral_channel],
+        config,
+        config->lateral_inverted);
+    state->yaw_input = app_operator_controls_normalize(
+        snapshot->channel[config->yaw_channel],
+        config,
+        config->yaw_inverted);
     controls->initialized = true;
 }
 
@@ -128,7 +144,18 @@ static bool app_operator_controls_config_valid(
            (config->master_channel < APP_RC_CHANNEL_COUNT) &&
            (config->balance_channel < APP_RC_CHANNEL_COUNT) &&
            (config->zero_lean_channel < APP_RC_CHANNEL_COUNT) &&
+           (config->forward_channel < APP_RC_CHANNEL_COUNT) &&
+           (config->lateral_channel < APP_RC_CHANNEL_COUNT) &&
+           (config->yaw_channel < APP_RC_CHANNEL_COUNT) &&
            (config->channel_min < config->channel_max) &&
+           (config->input_min >= config->channel_min) &&
+           (config->input_min < config->input_mid) &&
+           (config->input_mid < config->input_max) &&
+           (config->input_max <= config->channel_max) &&
+           (config->input_deadband <
+            (config->input_mid - config->input_min)) &&
+           (config->input_deadband <
+            (config->input_max - config->input_mid)) &&
            (config->switch_off_threshold >= config->channel_min) &&
            (config->switch_off_threshold < config->switch_on_threshold) &&
            (config->switch_on_threshold <= config->channel_max);
@@ -143,6 +170,9 @@ static bool app_operator_controls_channels_valid(
         controls->config.master_channel,
         controls->config.balance_channel,
         controls->config.zero_lean_channel,
+        controls->config.forward_channel,
+        controls->config.lateral_channel,
+        controls->config.yaw_channel,
     };
 
     for (size_t i = 0u; i < (sizeof(channel) / sizeof(channel[0])); i++)
@@ -157,4 +187,42 @@ static bool app_operator_controls_channels_valid(
     }
 
     return true;
+}
+
+static float app_operator_controls_normalize(
+    uint16_t value,
+    const app_operator_controls_config_t *config,
+    bool inverted)
+{
+    const int32_t centered = (int32_t)value -
+        (int32_t)config->input_mid;
+    float normalized = 0.0f;
+
+    if (centered > (int32_t)config->input_deadband)
+    {
+        const float numerator = (float)(centered -
+            (int32_t)config->input_deadband);
+        const float denominator = (float)(config->input_max -
+            config->input_mid - config->input_deadband);
+        normalized = numerator / denominator;
+    }
+    else if (centered < -(int32_t)config->input_deadband)
+    {
+        const float numerator = (float)(centered +
+            (int32_t)config->input_deadband);
+        const float denominator = (float)(config->input_mid -
+            config->input_min - config->input_deadband);
+        normalized = numerator / denominator;
+    }
+
+    if (normalized > 1.0f)
+    {
+        normalized = 1.0f;
+    }
+    else if (normalized < -1.0f)
+    {
+        normalized = -1.0f;
+    }
+
+    return inverted ? -normalized : normalized;
 }

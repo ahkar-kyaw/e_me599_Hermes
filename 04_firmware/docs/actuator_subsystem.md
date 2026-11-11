@@ -12,6 +12,15 @@ actuator 3 -> CAN ID 3 -> direction +1
 actuator 4 -> CAN ID 4 -> direction +1
 ```
 
+Physical order, using the paper's right-positive axle coordinate:
+
+```text
+actuator 1 -> +95 mm -> far right
+actuator 2 -> +33 mm -> inner right
+actuator 3 -> -33 mm -> inner left
+actuator 4 -> -95 mm -> far left
+```
+
 Direction signs convert physical actuator mounting into robot coordinates.
 Controller gains and balance mix values should not be made negative to repair a
 single incorrect motor direction.
@@ -54,3 +63,7 @@ again after the stop window once every inhibit is clear.
 Automatic rearming is intentionally simple but means a cleared intermittent
 fault can restore torque without another switch edge. Turn SD or SA off before
 touching the robot or changing wiring.
+
+## Incident records
+
+- [CAN transmit buffer lifetime correction](can_transmit_buffer_lifetime_fix.md)

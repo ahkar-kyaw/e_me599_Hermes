@@ -16,14 +16,22 @@
 #include <string.h>
 
 #define BSP_CAN_ESP32_RX_QUEUE_LENGTH 32u
+#define BSP_CAN_ESP32_TX_SLOT_COUNT    1u
 
 static twai_node_handle_t g_can_node;
 static QueueHandle_t g_can_rx_queue;
+static QueueHandle_t g_can_tx_available_queue;
+static twai_frame_t g_can_tx_frame;
+static uint8_t g_can_tx_data[IF_CAN_CLASSIC_MAX_DATA_LENGTH];
 static volatile uint32_t g_can_rx_queue_overflow_count;
 static uint32_t g_can_recovery_count;
 static bool g_can_initialized;
 static bool g_can_recovery_requested;
 
+static bool
+bsp_can_esp32_tx_callback(twai_node_handle_t handle,
+                          const twai_tx_done_event_data_t *event,
+                          void *user_context);
 static bool
 bsp_can_esp32_rx_callback(twai_node_handle_t handle,
                           const twai_rx_done_event_data_t *event,
@@ -48,6 +56,30 @@ bsp_can_esp32_result_t bsp_can_esp32_init(uint32_t bitrate)
         return BSP_CAN_ESP32_ERROR;
     }
 
+    g_can_tx_available_queue = xQueueCreate(
+        BSP_CAN_ESP32_TX_SLOT_COUNT,
+        sizeof(uint8_t));
+
+    if (g_can_tx_available_queue == NULL)
+    {
+        vQueueDelete(g_can_rx_queue);
+        g_can_rx_queue = NULL;
+        return BSP_CAN_ESP32_ERROR;
+    }
+
+    const uint8_t tx_slot = 0u;
+
+    if (xQueueSend(g_can_tx_available_queue,
+                   &tx_slot,
+                   0u) != pdTRUE)
+    {
+        vQueueDelete(g_can_tx_available_queue);
+        g_can_tx_available_queue = NULL;
+        vQueueDelete(g_can_rx_queue);
+        g_can_rx_queue = NULL;
+        return BSP_CAN_ESP32_ERROR;
+    }
+
     const twai_onchip_node_config_t node_config =
     {
         .io_cfg.tx = BOARD_CAN_TX_GPIO,
@@ -64,6 +96,8 @@ bsp_can_esp32_result_t bsp_can_esp32_init(uint32_t bitrate)
 
     if (error != ESP_OK)
     {
+        vQueueDelete(g_can_tx_available_queue);
+        g_can_tx_available_queue = NULL;
         vQueueDelete(g_can_rx_queue);
         g_can_rx_queue = NULL;
         return BSP_CAN_ESP32_ERROR;
@@ -71,6 +105,7 @@ bsp_can_esp32_result_t bsp_can_esp32_init(uint32_t bitrate)
 
     const twai_event_callbacks_t callbacks =
     {
+        .on_tx_done = bsp_can_esp32_tx_callback,
         .on_rx_done = bsp_can_esp32_rx_callback,
     };
 
@@ -83,6 +118,8 @@ bsp_can_esp32_result_t bsp_can_esp32_init(uint32_t bitrate)
     {
         twai_node_delete(g_can_node);
         g_can_node = NULL;
+        vQueueDelete(g_can_tx_available_queue);
+        g_can_tx_available_queue = NULL;
         vQueueDelete(g_can_rx_queue);
         g_can_rx_queue = NULL;
         return BSP_CAN_ESP32_ERROR;
@@ -94,6 +131,8 @@ bsp_can_esp32_result_t bsp_can_esp32_init(uint32_t bitrate)
     {
         twai_node_delete(g_can_node);
         g_can_node = NULL;
+        vQueueDelete(g_can_tx_available_queue);
+        g_can_tx_available_queue = NULL;
         vQueueDelete(g_can_rx_queue);
         g_can_rx_queue = NULL;
         return BSP_CAN_ESP32_ERROR;
@@ -128,36 +167,49 @@ bsp_can_esp32_receive(if_can_frame_t *frame, uint32_t timeout_ms)
 bsp_can_esp32_result_t
 bsp_can_esp32_transmit(const if_can_frame_t *frame, uint32_t timeout_ms)
 {
-    if (!g_can_initialized || (frame == NULL) ||
+    if (!g_can_initialized || (g_can_tx_available_queue == NULL) ||
+        (frame == NULL) ||
         (frame->data_length > IF_CAN_CLASSIC_MAX_DATA_LENGTH))
     {
         return BSP_CAN_ESP32_ERROR;
     }
 
-    uint8_t data[IF_CAN_CLASSIC_MAX_DATA_LENGTH];
+    uint8_t tx_slot;
 
-    memcpy(data, frame->data, frame->data_length);
-
-    const twai_frame_t twai_frame =
+    if (xQueueReceive(g_can_tx_available_queue,
+                      &tx_slot,
+                      pdMS_TO_TICKS(timeout_ms)) != pdTRUE)
     {
-        .header =
-        {
-            .id = frame->id,
-            .dlc = frame->data_length,
-            .ide = frame->is_extended,
-            .rtr = frame->is_remote,
-        },
-        .buffer = data,
-        .buffer_len = frame->data_length,
-    };
+        return BSP_CAN_ESP32_TIMEOUT;
+    }
+
+    (void)tx_slot;
+    memset(&g_can_tx_frame, 0, sizeof(g_can_tx_frame));
+    memset(g_can_tx_data, 0, sizeof(g_can_tx_data));
+    memcpy(g_can_tx_data, frame->data, frame->data_length);
+
+    g_can_tx_frame.header.id = frame->id;
+    g_can_tx_frame.header.dlc = frame->data_length;
+    g_can_tx_frame.header.ide = frame->is_extended;
+    g_can_tx_frame.header.rtr = frame->is_remote;
+    g_can_tx_frame.buffer = g_can_tx_data;
+    g_can_tx_frame.buffer_len = frame->data_length;
+
     const esp_err_t error = twai_node_transmit(
         g_can_node,
-        &twai_frame,
-        (int)timeout_ms);
+        &g_can_tx_frame,
+        0);
 
     if (error == ESP_OK)
     {
         return BSP_CAN_ESP32_OK;
+    }
+
+    if (xQueueSend(g_can_tx_available_queue,
+                   &tx_slot,
+                   0u) != pdTRUE)
+    {
+        return BSP_CAN_ESP32_ERROR;
     }
 
     return (error == ESP_ERR_TIMEOUT) ?
@@ -227,6 +279,31 @@ bsp_can_esp32_result_t bsp_can_esp32_recover_if_bus_off(void)
     g_can_recovery_count++;
 
     return BSP_CAN_ESP32_OK;
+}
+
+static bool
+bsp_can_esp32_tx_callback(twai_node_handle_t handle,
+                          const twai_tx_done_event_data_t *event,
+                          void *user_context)
+{
+    (void)handle;
+    (void)user_context;
+
+    if ((event == NULL) ||
+        (event->done_tx_frame != &g_can_tx_frame) ||
+        (g_can_tx_available_queue == NULL))
+    {
+        return false;
+    }
+
+    const uint8_t tx_slot = 0u;
+    BaseType_t higher_priority_task_woken = pdFALSE;
+
+    (void)xQueueSendFromISR(g_can_tx_available_queue,
+                            &tx_slot,
+                            &higher_priority_task_woken);
+
+    return higher_priority_task_woken == pdTRUE;
 }
 
 static bool

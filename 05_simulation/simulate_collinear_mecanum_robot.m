@@ -61,9 +61,9 @@ close all;
 p.gravity_mps2 = 9.80665;
 
 % Geometry
-p.wheel_diameter_m = 0.120;
+p.wheel_diameter_m = 0.104;
 p.wheel_radius_m = p.wheel_diameter_m / 2.0;
-p.wheel_offsets_x_m = [-0.240; -0.080; 0.080; 0.240];
+p.wheel_offsets_x_m = [0.095; 0.033; -0.033; -0.095];
 p.roller_angles_deg = [45.0; -45.0; 45.0; -45.0];
 p.roller_angles_rad = deg2rad(p.roller_angles_deg);
 p.body_com_height_m = 0.280;

@@ -1,5 +1,25 @@
 # Balance, motion, and disturbance rejection
 
+## Current commissioning configuration
+
+The checked-in build is an open-loop actuator drive test. Balance, position,
+velocity, lateral, and yaw feedback are bypassed. CH3 directly requests
+forward/reverse current and CH4 requests a stationary turn. Commands remain
+slew-limited, current-limited, and gated by the normal safety path.
+
+Confirmed geometry:
+
+```text
+wheel diameter     104 mm
+wheel 1 position   +95 mm, far right
+wheel 2 position   +33 mm, inner right
+wheel 3 position   -33 mm, inner left
+wheel 4 position   -95 mm, far left
+```
+
+The roller-angle pattern remains the existing `+45, -45, +45, -45` assumption
+and must be verified before lateral and yaw gains are restored.
+
 ## Implemented control path
 
 The 200 Hz controller combines an inner forward-balance loop with bounded
@@ -69,9 +89,9 @@ Paper and reference implementation:
 SA off + SD off   SAFE_IDLE and READY screen
 SA on + SD off    READY; press SE while stationary to zero lean
 SA on + SD on     request balance; WAIT SAFE then LIVE
-CH3 up/down       forward/reverse velocity while LIVE
-CH1 left/right    left/right velocity while LIVE
-CH4 left/right    counterclockwise/clockwise yaw while LIVE
+CH3 up/down       equal forward/reverse wheel current while LIVE
+CH1 left/right    disabled during the drive test
+CH4 left/right    stationary turn current while LIVE
 SD off or SA off  immediate zero-current stop sequence
 ```
 
@@ -98,13 +118,15 @@ Use a fixture or tether and keep a hand on SD.
 1. With SA and SD off, verify READY shows near-zero lean after pressing SE.
 2. Raise SA, center CH1/CH3/CH4, then raise SD. Expect `WAIT SAFE`, followed by
    `LIVE` after 300 ms inside the arm limits.
-3. Apply a very small CH3 command. `CMD F` and `VEL F` should have the same
-   sign. The robot should move in the requested direction without increasing
-   lean divergence.
-4. Repeat with CH1. `CMD L` and `VEL L` should have the same sign.
-5. Repeat with CH4. `CMD Y` and `VEL Y` should have the same sign.
-6. Center all sticks. The velocity commands should slew to zero and the robot
-   should resist a small, brief push without sustained oscillation.
+3. Apply a small CH3 command. `REQ` should contain four equal values. Reverse
+   CH3 and confirm all four values change sign together.
+4. Confirm all four `REQ` values are equal. These are logical currents before
+   the per-actuator mounting direction is applied.
+5. Compare the four direction-normalized `FB` currents. Motor 2 should track
+   the same sign and similar magnitude as the others under comparable load.
+6. Center CH3, then apply a small CH4 command. Motors 1 and 2 should receive
+   the same sign; motors 3 and 4 should receive the opposite sign. Reverse CH4
+   and confirm both pairs reverse.
 7. Lower SD. Expect zero current immediately, `STOPPING` for 200 ms, then
    READY/OFF behavior.
 8. Verify RC loss, IMU loss, CAN loss, feedback loss, motor fault, excessive
@@ -134,19 +156,18 @@ All controller and geometry values are in
    limit. Keep the checked-in 1.0 A global limit until thermal, supply, and
    mechanical tests justify an increase.
 
-The three UI rows on the ACTIVE page mean:
+The commissioning rows on the ACTIVE page mean:
 
 ```text
-CMD   shaped forward velocity, left velocity, yaw-rate references
-VEL   estimated forward velocity, left velocity, yaw rate
-AMP   forward-balance, lateral, and yaw current contributions
+TEST F/T      slew-limited forward and turn current contributions
+REQ           requested logical currents for motors 1, 2, 3, and 4
+FB            measured direction-normalized currents for motors 1, 2, 3, and 4
 ```
 
-`AMP` turning red means an axis or final motor-current allocation is limited.
+`REQ` turning red means the controller or final allocation is limited.
 
 ## Physical values still needed for model-based polishing
 
-- loaded wheel radius and signed wheel locations;
 - measured roller angles/handedness;
 - sprung-body and wheel/rotor masses;
 - center-of-mass height and offset;

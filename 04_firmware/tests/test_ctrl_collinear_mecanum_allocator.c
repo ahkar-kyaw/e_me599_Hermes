@@ -51,7 +51,7 @@ int main(void)
 {
     const ctrl_collinear_mecanum_allocator_config_t config =
     {
-        .wheel_offset_m = {-0.24f, -0.08f, 0.08f, 0.24f},
+        .wheel_offset_m = {0.095f, 0.033f, -0.033f, -0.095f},
         .roller_angle_rad =
         {
              0.7853982f,
@@ -59,7 +59,7 @@ int main(void)
              0.7853982f,
             -0.7853982f,
         },
-        .yaw_scale_m = 0.24f,
+        .yaw_scale_m = 0.095f,
         .max_motor_current_a = 1.0f,
     };
     ctrl_collinear_mecanum_allocator_t allocator;
@@ -91,7 +91,21 @@ int main(void)
     const float yaw[3] = {0.0f, 0.0f, 0.2f};
     (void)ctrl_collinear_mecanum_allocator_update(
         &allocator, yaw, wheel_current, &saturated);
-    const float expected_yaw[3] = {0.0f, 0.0f, 0.4444444f};
+    float yaw_normal = 0.0f;
+
+    for (uint32_t wheel = 0u; wheel < 4u; wheel++)
+    {
+        const float normalized_offset = config.wheel_offset_m[wheel] /
+            config.yaw_scale_m;
+        yaw_normal += normalized_offset * normalized_offset;
+    }
+
+    const float expected_yaw[3] =
+    {
+        0.0f,
+        0.0f,
+        yaw_normal * yaw[2],
+    };
     expect_generalized_current(&config, wheel_current, expected_yaw);
 
     const float combined[3] = {1.0f, 1.0f, 1.0f};

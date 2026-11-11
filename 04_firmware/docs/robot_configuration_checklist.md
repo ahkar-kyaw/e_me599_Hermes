@@ -93,6 +93,14 @@ removing CAN commands while the robot remains restrained.
 
 ### Balance limits, zeroing, and safety envelope
 
+Confirmed wheel geometry:
+
+```text
+wheel diameter 104 mm
+actuator offsets from center: +95, +33, -33, -95 mm
+positive axle direction: robot right
+```
+
 File:
 
 ```text

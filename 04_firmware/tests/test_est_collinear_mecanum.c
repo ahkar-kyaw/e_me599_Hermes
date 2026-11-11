@@ -23,8 +23,8 @@ static est_collinear_mecanum_t make_estimator(void)
 {
     const est_collinear_mecanum_config_t config =
     {
-        .wheel_radius_m = 0.060f,
-        .wheel_offset_m = {-0.240f, -0.080f, 0.080f, 0.240f},
+        .wheel_radius_m = 0.052f,
+        .wheel_offset_m = {0.095f, 0.033f, -0.033f, -0.095f},
         .roller_angle_rad =
         {
              0.7853982f,
@@ -51,10 +51,10 @@ static void test_forward_velocity(void)
     est_collinear_mecanum_output_t output;
     const float wheel_velocity[4] =
     {
-        1.0f / 0.060f,
-        1.0f / 0.060f,
-        1.0f / 0.060f,
-        1.0f / 0.060f,
+        1.0f / 0.052f,
+        1.0f / 0.052f,
+        1.0f / 0.052f,
+        1.0f / 0.052f,
     };
 
     if (!est_collinear_mecanum_update(&estimator,
@@ -77,10 +77,10 @@ static void test_lateral_velocity(void)
     est_collinear_mecanum_output_t output;
     const float wheel_velocity[4] =
     {
-         1.0f / 0.060f,
-        -1.0f / 0.060f,
-         1.0f / 0.060f,
-        -1.0f / 0.060f,
+         1.0f / 0.052f,
+        -1.0f / 0.052f,
+         1.0f / 0.052f,
+        -1.0f / 0.052f,
     };
 
     if (!est_collinear_mecanum_update(&estimator,
@@ -103,10 +103,10 @@ static void test_yaw_rate(void)
     est_collinear_mecanum_output_t output;
     const float wheel_velocity[4] =
     {
-        -0.240f / 0.060f,
-        -0.080f / 0.060f,
-         0.080f / 0.060f,
-         0.240f / 0.060f,
+         0.095f / 0.052f,
+         0.033f / 0.052f,
+        -0.033f / 0.052f,
+        -0.095f / 0.052f,
     };
 
     if (!est_collinear_mecanum_update(&estimator,

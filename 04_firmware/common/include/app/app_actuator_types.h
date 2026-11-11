@@ -45,8 +45,6 @@ typedef struct
     uint32_t recovery_count;
     uint32_t command_tx_count;
     uint32_t command_tx_error_count;
-    float last_command_velocity_erpm;
-    uint8_t command_actuator_index;
     bool bus_initialized;
     bool command_tx_active;
 } actuator_snapshot_t;

@@ -11,7 +11,6 @@ extern "C" {
 
 typedef struct
 {
-    float lean_trim_rad;
     float lean_gain_a_per_rad;
     float lean_rate_gain_a_per_rps;
     float position_gain_a_per_m;

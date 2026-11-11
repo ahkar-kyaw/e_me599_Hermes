@@ -4,14 +4,11 @@
 #include "config_actuator.h"
 #include "config_control.h"
 #include "config_imu.h"
-#include "config_rc.h"
 #include "control/ctrl_balance_controller.h"
-#include "control/ctrl_torque_input.h"
 #include "estimation/est_collinear_mecanum.h"
 #include "safety/safety_imu.h"
 #include "task_imu.h"
 #include "task_motor.h"
-#include "task_rc.h"
 #include "task_supervisor.h"
 
 #include "esp_log.h"
@@ -19,6 +16,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -31,9 +29,6 @@ _Static_assert(APP_ACTUATOR_COUNT == CTRL_BALANCE_ACTUATOR_COUNT,
                "control output requires four actuator slots");
 _Static_assert(configTICK_RATE_HZ >= 200,
                "control task requires an RTOS tick rate of at least 200 Hz");
-_Static_assert((APP_CONTROL_TORQUE_INPUT_CHANNEL >= 1u) &&
-               (APP_CONTROL_TORQUE_INPUT_CHANNEL <= APP_RC_CHANNEL_COUNT),
-               "torque input channel is out of range");
 
 static const char *TAG = "task_control";
 
@@ -104,7 +99,6 @@ static void task_control_entry(void *argument)
     ctrl_balance_controller_t balance_controller;
     const ctrl_balance_controller_config_t balance_controller_config =
     {
-        .lean_trim_rad = APP_BALANCE_LEAN_TRIM_RAD,
         .lean_gain_a_per_rad = APP_BALANCE_LEAN_GAIN_A_PER_RAD,
         .lean_rate_gain_a_per_rps =
             APP_BALANCE_LEAN_RATE_GAIN_A_PER_RPS,
@@ -115,20 +109,8 @@ static void task_control_entry(void *argument)
             APP_BALANCE_POSITION_INTEGRAL_GAIN_A_PER_M_S,
         .position_integral_limit_m_s =
             APP_BALANCE_POSITION_INTEGRAL_LIMIT_M_S,
-        .max_current_a = APP_CONTROL_TORQUE_MAX_CURRENT_A,
+        .max_current_a = APP_BALANCE_MAX_CURRENT_A,
         .output_sign = APP_BALANCE_OUTPUT_SIGN,
-    };
-    ctrl_torque_input_t torque_input;
-    const ctrl_torque_input_config_t torque_input_config =
-    {
-        .channel_min = APP_RC_CHANNEL_MIN,
-        .channel_max = APP_RC_CHANNEL_MAX,
-        .neutral_low = APP_MANUAL_DRIVE_STICK_NEUTRAL_LOW,
-        .neutral_high = APP_MANUAL_DRIVE_STICK_NEUTRAL_HIGH,
-        .max_current_a = APP_CONTROL_TORQUE_MAX_CURRENT_A,
-        .slew_rate_a_per_s = APP_CONTROL_TORQUE_SLEW_RATE_A_PER_S,
-        .positive_high =
-            (APP_CONTROL_TORQUE_INPUT_POSITIVE_HIGH != 0),
     };
     control_snapshot_t snapshot;
 
@@ -151,14 +133,6 @@ static void task_control_entry(void *argument)
         return;
     }
 
-    if (!ctrl_torque_input_init(&torque_input,
-                                &torque_input_config))
-    {
-        ESP_LOGE(TAG, "invalid torque input configuration");
-        vTaskDelete(NULL);
-        return;
-    }
-
     if (!ctrl_balance_controller_init(&balance_controller,
                                       &balance_controller_config))
     {
@@ -171,6 +145,10 @@ static void task_control_entry(void *argument)
 
     TickType_t last_wake = xTaskGetTickCount();
     uint64_t last_loop_us = 0u;
+    uint32_t handled_zero_lean_count = 0u;
+    uint32_t applied_zero_lean_count = 0u;
+    uint32_t rejected_zero_lean_count = 0u;
+    float lean_trim_rad = APP_BALANCE_INITIAL_LEAN_TRIM_RAD;
     bool balance_reference_captured = false;
 
     for (;;)
@@ -182,9 +160,10 @@ static void task_control_entry(void *argument)
         imu_snapshot_t imu_snapshot;
         actuator_snapshot_t actuator_snapshot;
         app_supervisor_snapshot_t supervisor_snapshot;
-        rc_snapshot_t rc_snapshot;
         safety_imu_status_t imu_status;
         est_collinear_mecanum_output_t odometry;
+        float raw_lean_rad = 0.0f;
+        float raw_lean_rate_rps = 0.0f;
 
         last_loop_us = loop_start_us;
         snapshot.timestamp_us = loop_start_us;
@@ -195,24 +174,64 @@ static void task_control_entry(void *argument)
                0,
                sizeof(snapshot.desired_current_a));
         snapshot.state.timestamp_us = loop_start_us;
-        snapshot.requested_current_a = 0.0f;
+        snapshot.lean_trim_rad = lean_trim_rad;
         snapshot.balance_reference_position_x_m = 0.0f;
         snapshot.balance_position_error_m = 0.0f;
         snapshot.balance_position_integral_m_s = 0.0f;
         snapshot.balance_lean_error_rad = 0.0f;
         snapshot.balance_common_current_a = 0.0f;
-        snapshot.command_mode = CTRL_COMMAND_MODE_NONE;
-        snapshot.torque_command_valid = false;
+        snapshot.zero_lean_applied_count = applied_zero_lean_count;
+        snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
+        snapshot.balance_command_valid = false;
         snapshot.balance_output_saturated = false;
 
         task_imu_get_snapshot(&imu_snapshot);
         task_motor_get_snapshot(&actuator_snapshot);
-        task_rc_get_snapshot(&rc_snapshot);
         task_supervisor_get_snapshot(&supervisor_snapshot);
         (void)safety_imu_check(&imu_snapshot,
                                loop_start_us,
                                &imu_safety_config,
                                &imu_status);
+
+        const bool lean_updated = app_balance_state_get_lean(
+            &imu_snapshot,
+            &imu_status,
+            APP_CONTROL_LEAN_AXIS,
+            &raw_lean_rad,
+            &raw_lean_rate_rps);
+
+        if (lean_updated &&
+            (supervisor_snapshot.zero_lean_request_count !=
+             handled_zero_lean_count))
+        {
+            handled_zero_lean_count =
+                supervisor_snapshot.zero_lean_request_count;
+
+            if ((supervisor_snapshot.mode == APP_SYSTEM_MODE_SAFE_IDLE) &&
+                (fabsf(raw_lean_rad) <=
+                 APP_BALANCE_ZERO_MAX_ABS_LEAN_RAD) &&
+                (fabsf(raw_lean_rate_rps) <=
+                 APP_BALANCE_ZERO_MAX_LEAN_RATE_RPS))
+            {
+                lean_trim_rad = raw_lean_rad;
+                applied_zero_lean_count = handled_zero_lean_count;
+                rejected_zero_lean_count = 0u;
+                balance_reference_captured = false;
+            }
+            else
+            {
+                rejected_zero_lean_count++;
+            }
+        }
+
+        if (lean_updated)
+        {
+            snapshot.state.lean_rad = raw_lean_rad - lean_trim_rad;
+            snapshot.state.lean_rate_rps = raw_lean_rate_rps;
+            snapshot.lean_trim_rad = lean_trim_rad;
+            snapshot.zero_lean_applied_count = applied_zero_lean_count;
+            snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
+        }
 
         snapshot.input_fault_flags = task_control_actuator_faults(
             &actuator_snapshot);
@@ -269,45 +288,15 @@ static void task_control_entry(void *argument)
             snapshot.input_fault_flags |= CTRL_STATE_FAULT_ESTIMATOR;
         }
 
-        if (supervisor_snapshot.mode == APP_SYSTEM_MODE_TORQUE_CONTROL)
+        if (snapshot.state.valid)
         {
-            balance_reference_captured = false;
-            const uint8_t channel =
-                (uint8_t)(APP_CONTROL_TORQUE_INPUT_CHANNEL - 1u);
-            float requested_current_a = 0.0f;
-
-            if (snapshot.state.valid && rc_snapshot.valid &&
-                ctrl_torque_input_update(
-                    &torque_input,
-                    rc_snapshot.channel[channel],
-                    dt_s,
-                    &requested_current_a))
-            {
-                static const float torque_mix[APP_ACTUATOR_COUNT] =
-                {
-                    APP_CONTROL_TORQUE_MIX_1,
-                    APP_CONTROL_TORQUE_MIX_2,
-                    APP_CONTROL_TORQUE_MIX_3,
-                    APP_CONTROL_TORQUE_MIX_4,
-                };
-
-                snapshot.requested_current_a = requested_current_a;
-                snapshot.command_mode =
-                    CTRL_COMMAND_MODE_MANUAL_CURRENT;
-
-                for (uint32_t actuator = 0u;
-                     actuator < APP_ACTUATOR_COUNT;
-                     actuator++)
-                {
-                    snapshot.desired_current_a[actuator] =
-                        requested_current_a * torque_mix[actuator];
-                }
-
-                snapshot.torque_command_valid = true;
-            }
+            snapshot.state.lean_rad -= lean_trim_rad;
+            snapshot.lean_trim_rad = lean_trim_rad;
+            snapshot.zero_lean_applied_count = applied_zero_lean_count;
+            snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
         }
-        else if (supervisor_snapshot.mode ==
-                 APP_SYSTEM_MODE_BALANCE_CONTROL)
+
+        if (supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL)
         {
             static const float balance_mix[APP_ACTUATOR_COUNT] =
             {
@@ -317,8 +306,6 @@ static void task_control_entry(void *argument)
                 APP_BALANCE_MIX_4,
             };
             ctrl_balance_controller_output_t balance_output;
-
-            ctrl_torque_input_reset(&torque_input);
 
             if (snapshot.state.valid && !balance_reference_captured)
             {
@@ -347,7 +334,6 @@ static void task_control_entry(void *argument)
                     balance_output.common_current_a;
                 snapshot.balance_output_saturated =
                     balance_output.saturated;
-                snapshot.command_mode = CTRL_COMMAND_MODE_BALANCE;
 
                 for (uint32_t actuator = 0u;
                      actuator < APP_ACTUATOR_COUNT;
@@ -358,12 +344,11 @@ static void task_control_entry(void *argument)
                         balance_mix[actuator];
                 }
 
-                snapshot.torque_command_valid = true;
+                snapshot.balance_command_valid = true;
             }
         }
         else
         {
-            ctrl_torque_input_reset(&torque_input);
             balance_reference_captured = false;
         }
 
@@ -383,6 +368,7 @@ static void task_control_entry(void *argument)
             snapshot.overrun_count++;
             snapshot.input_fault_flags |= CTRL_STATE_FAULT_TIMING;
             snapshot.state.valid = false;
+            snapshot.balance_command_valid = false;
         }
 
         if (!snapshot.state.valid)

@@ -25,18 +25,10 @@
 
 #define APP_CONTROL_LEAN_AXIS CTRL_BALANCE_LEAN_PITCH
 
-#define APP_CONTROL_TORQUE_INPUT_CHANNEL            2u
-#define APP_CONTROL_TORQUE_INPUT_POSITIVE_HIGH       1
-#define APP_CONTROL_TORQUE_MAX_CURRENT_A          1.0f
-#define APP_CONTROL_TORQUE_SLEW_RATE_A_PER_S      4.0f
-
-#define APP_CONTROL_TORQUE_MIX_1                  1.0f
-#define APP_CONTROL_TORQUE_MIX_2                  1.0f
-#define APP_CONTROL_TORQUE_MIX_3                  1.0f
-#define APP_CONTROL_TORQUE_MIX_4                  1.0f
-
 #define APP_BALANCE_OUTPUT_SIGN                  1.0f
-#define APP_BALANCE_LEAN_TRIM_RAD                0.0f
+#define APP_BALANCE_INITIAL_LEAN_TRIM_RAD        0.0f
+#define APP_BALANCE_ZERO_MAX_ABS_LEAN_RAD        0.2617994f
+#define APP_BALANCE_ZERO_MAX_LEAN_RATE_RPS       0.1745329f
 #define APP_BALANCE_LEAN_GAIN_A_PER_RAD          2.0f
 #define APP_BALANCE_LEAN_RATE_GAIN_A_PER_RPS     0.15f
 #define APP_BALANCE_POSITION_GAIN_A_PER_M        0.30f
@@ -49,12 +41,15 @@
 #define APP_BALANCE_MIX_3                        1.0f
 #define APP_BALANCE_MIX_4                        1.0f
 
-#define APP_CONTROL_REQUEST_MAX_AGE_US          100000u
-#define APP_CONTROL_STATE_MAX_AGE_US             20000u
-#define APP_CONTROL_STOP_HOLD_US                200000u
+#define APP_BALANCE_MAX_CURRENT_A                 1.0f
+#define APP_BALANCE_SUPERVISOR_PERIOD_MS           20u
+#define APP_BALANCE_REQUEST_MAX_AGE_US          100000u
+#define APP_BALANCE_STATE_MAX_AGE_US             20000u
+#define APP_BALANCE_ARM_DWELL_US                300000u
+#define APP_BALANCE_STOP_HOLD_US                200000u
 
-#define APP_CONTROL_ARM_LEAN_LIMIT_RAD          0.1745329f
-#define APP_CONTROL_ARM_LEAN_RATE_LIMIT_RPS     1.3962634f
-#define APP_CONTROL_FALL_LEAN_LIMIT_RAD         0.5235988f
+#define APP_BALANCE_ARM_LEAN_LIMIT_RAD          0.1745329f
+#define APP_BALANCE_ARM_LEAN_RATE_LIMIT_RPS     1.3962634f
+#define APP_BALANCE_FALL_LEAN_LIMIT_RAD         0.5235988f
 
 #endif

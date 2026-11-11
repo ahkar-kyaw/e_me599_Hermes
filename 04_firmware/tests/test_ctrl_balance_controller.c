@@ -25,7 +25,6 @@ int main(void)
 {
     const ctrl_balance_controller_config_t config =
     {
-        .lean_trim_rad = 0.0f,
         .lean_gain_a_per_rad = 2.0f,
         .lean_rate_gain_a_per_rps = 0.5f,
         .position_gain_a_per_m = 0.3f,

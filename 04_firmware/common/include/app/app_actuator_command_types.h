@@ -10,17 +10,9 @@
 extern "C" {
 #endif
 
-typedef enum
-{
-    APP_ACTUATOR_COMMAND_DISABLED = 0,
-    APP_ACTUATOR_COMMAND_SERVO_VELOCITY,
-    APP_ACTUATOR_COMMAND_SERVO_CURRENT
-} app_actuator_command_mode_t;
-
 typedef struct
 {
-    float value;
-    app_actuator_command_mode_t mode;
+    float current_a;
     bool enabled;
 } app_actuator_command_entry_t;
 

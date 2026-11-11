@@ -5,7 +5,7 @@ assembled robot. The current MATLAB model is useful for structure and sign
 conventions, but its numerical parameters must not be copied into control gains
 until they are remeasured.
 
-## Required before fixture current testing
+## Required before balance testing
 
 ### IMU mounting and attitude
 
@@ -74,10 +74,24 @@ zero or otherwise deliberately chosen timeout brake current
 motor current and input-current limits appropriate for the fixture and supply
 ```
 
+Current reported drive settings:
+
+```text
+motor current range       -2.7 A to +2.7 A
+absolute motor maximum     4.1 A
+battery source maximum     3.0 A
+battery regeneration min  -1.25 A
+speed Kp / Ki              0.0005 / 0.08
+position Kp / Ki / Kd      0.01 / 0 / 0
+```
+
+The speed and position gains do not tune firmware balance behavior while the
+application uses servo-current mode.
+
 The actuator-side timeout is independent of firmware. Verify its behavior by
 removing CAN commands while the robot remains restrained.
 
-### Fixture current limits and safety envelope
+### Balance limits, zeroing, and safety envelope
 
 File:
 
@@ -88,17 +102,17 @@ File:
 Confirm or update:
 
 ```text
-APP_CONTROL_TORQUE_INPUT_CHANNEL          RC channel used for current
-APP_CONTROL_TORQUE_INPUT_POSITIVE_HIGH    stick polarity
-APP_CONTROL_TORQUE_MAX_CURRENT_A           fixture-tested current limit
-APP_CONTROL_TORQUE_SLEW_RATE_A_PER_S       current ramp limit
-APP_CONTROL_TORQUE_MIX_1 ... _4            per-motor command sign and scale
-APP_CONTROL_REQUEST_MAX_AGE_US             UI/supervisor request freshness
-APP_CONTROL_STATE_MAX_AGE_US               state freshness
-APP_CONTROL_STOP_HOLD_US                   safety zero-current hold
-APP_CONTROL_ARM_LEAN_LIMIT_RAD             maximum lean when arming
-APP_CONTROL_ARM_LEAN_RATE_LIMIT_RPS        maximum lean rate when arming
-APP_CONTROL_FALL_LEAN_LIMIT_RAD            running fall cutoff
+APP_BALANCE_MAX_CURRENT_A                  firmware current limit
+APP_BALANCE_MIX_1 ... _4                   per-motor balance scale
+APP_BALANCE_REQUEST_MAX_AGE_US             UI/supervisor request freshness
+APP_BALANCE_STATE_MAX_AGE_US               state freshness
+APP_BALANCE_STOP_HOLD_US                   zero-current stop window
+APP_BALANCE_ARM_LEAN_LIMIT_RAD             maximum corrected lean when arming
+APP_BALANCE_ARM_LEAN_RATE_LIMIT_RPS        maximum lean rate when arming
+APP_BALANCE_FALL_LEAN_LIMIT_RAD            running fall cutoff
+APP_BALANCE_INITIAL_LEAN_TRIM_RAD          trim restored at reboot
+APP_BALANCE_ZERO_MAX_ABS_LEAN_RAD          maximum raw lean accepted for zero
+APP_BALANCE_ZERO_MAX_LEAN_RATE_RPS         stationary zeroing threshold
 APP_CONTROL_LEAN_AXIS                      roll or pitch balance axis
 ```
 
@@ -119,9 +133,10 @@ Confirm or update:
 ```text
 APP_RC_ACTIVE_CHANNEL_COUNT
 APP_RC_MAX_AGE_US
-APP_UI_RC_*_CHANNEL
-APP_UI_RC_*_THRESHOLD
-APP_UI_RC_*_HIGH polarity values
+APP_RC_*_ENABLE_CHANNEL
+APP_RC_ZERO_LEAN_CHANNEL
+APP_RC_SWITCH_*_THRESHOLD
+APP_RC_*_ACTIVE_HIGH polarity values
 APP_DISPLAY_ORIENTATION
 ```
 
@@ -172,7 +187,7 @@ The current forward-plane controller exposes these exact settings in
 
 ```text
 APP_BALANCE_OUTPUT_SIGN
-APP_BALANCE_LEAN_TRIM_RAD
+APP_BALANCE_INITIAL_LEAN_TRIM_RAD
 APP_BALANCE_LEAN_GAIN_A_PER_RAD
 APP_BALANCE_LEAN_RATE_GAIN_A_PER_RPS
 APP_BALANCE_POSITION_GAIN_A_PER_M

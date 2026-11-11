@@ -22,19 +22,10 @@ Desktop.ini
 !.vscode/settings.json
 
 .idea/
+.cache/
 *.swp
 *.swo
 *~
-
-# STM32CubeIDE / Eclipse local project metadata
-**/.settings/
-**/.project
-**/.cproject
-
-# Keep CubeMX project metadata
-!*.ioc
-!*.mxproject
-
 
 # =======================================================
 # General build outputs
@@ -97,14 +88,6 @@ _deps/
 04_firmware/platforms/esp32/sdkconfig
 04_firmware/platforms/esp32/sdkconfig.*
 !04_firmware/platforms/esp32/sdkconfig.defaults
-
-
-# =======================================================
-# STM32 generated build output
-# =======================================================
-
-04_firmware/platforms/stm32/build/
-04_firmware/build/
 
 
 # =======================================================

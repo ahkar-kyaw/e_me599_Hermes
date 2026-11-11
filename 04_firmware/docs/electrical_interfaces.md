@@ -240,12 +240,3 @@ Document termination and protection components for bus interfaces.
 Avoid routing high motor current through logic or IMU ground paths.
 Keep sensor supply and ground clean where practical.
 ```
-
-## STM32 migration note
-
-The STM32H723ZG display SPI instance, CRSF UART instance, pins, DMA
-channels, connector assignments, and power rails are not assigned yet.
-Do not copy ESP32 GPIO numbers or edit generated CubeMX files by hand.
-Assign the peripherals in CubeMX, regenerate generated code, and add
-STM32 BSP implementations behind the existing portable protocol,
-driver, and snapshot boundaries.

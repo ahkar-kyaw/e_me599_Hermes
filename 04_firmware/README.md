@@ -1,285 +1,104 @@
-# Robot firmware
+# Firmware
 
-This firmware is organized to support an ESP32 bring-up platform and
-an STM32H723ZG target platform while keeping reusable robot logic
-portable. The active ESP32 target includes the IMU pipeline, a
-16-channel CRSF receiver path, an ST7789 status display, and a
-CubeMars feedback path with safety-gated manual velocity control.
-The current milestone also provides safety-gated four-actuator current control
-for restrained fixture commissioning and forward-plane balance control with
-bounded disturbance rejection.
+ESP-IDF firmware for a four-actuator self-balancing mobile robot. Portable
+logic lives in `common`; ESP32 peripheral ownership and FreeRTOS integration
+live in `platforms/esp32`.
 
-## Current targets
+## Runtime architecture
 
-| Target | Purpose | Toolchain |
-| --- | --- | --- |
-| ESP32 NodeMCU | Prototype bring-up and hardware validation | ESP-IDF, CMake, and Ninja |
-| STM32H723ZG Nucleo | Final target platform | STM32CubeMX, CMake, Ninja, Arm GNU Toolchain |
+```mermaid
+flowchart LR
+    RC[CRSF receiver] --> TR[task_rc]
+    TR --> TO[task_operator]
+    TO --> TS[task_supervisor]
 
-## Repository layout
+    IMU[ISM330DHCX] --> TI[task_imu]
+    CAN[CubeMars CAN] <--> TM[task_motor]
+    TI --> TC[task_control]
+    TM --> TC
+    TS --> TC
 
-```text
-04_firmware/
-    common/
-        include/
-        src/
+    TC -->|desired current| SAFE[task_safety]
+    TS --> SAFE
+    TI --> SAFE
+    TR --> SAFE
+    TM --> SAFE
+    SAFE -->|approved current only| TM
 
-    platforms/
-        esp32/
-        stm32/
-
-    docs/
+    TO -. snapshots .-> UI[task_ui]
+    TI -. snapshots .-> UI
+    TM -. snapshots .-> UI
+    TC -. snapshots .-> UI
+    SAFE -. snapshots .-> UI
+    UI --> LCD[ST7789 dashboard]
 ```
 
-## Layer responsibilities
+The dashed UI paths are read-only. The display cannot enable torque or write
+motor commands. `task_safety` is the only owner of motion permission.
+
+## Operating modes
+
+```mermaid
+stateDiagram-v2
+    [*] --> READY: Boot / SA off or SD off
+    READY --> WAIT_SAFE: SA on and SD on
+    WAIT_SAFE --> LIVE: Safe lean and rate for 300 ms
+    LIVE --> STOPPING: SA off, SD off, or fault
+    STOPPING --> READY: Request off
+    STOPPING --> WAIT_SAFE: Request on and stop window complete
+    WAIT_SAFE --> READY: SA off or SD off
+```
+
+| Mode | Expected behavior | How to enter |
+|---|---|---|
+| `READY` | Motors receive no drive current. The display shows lean, trim, RC, IMU, CAN, and motor health. | Keep SA or SD off. With SA on and SD off, press SE while stationary to zero lean. |
+| `WAIT SAFE` | Current remains disabled while a fault exists or the robot has not remained inside the arming limits for 300 ms. | Turn SA on, then SD on. Hold the robot near upright and still. |
+| `LIVE` | The controller sends safety-approved current to all four motors at 200 Hz. | Remain within the 10 degree arming lean limit and rate limit for 300 ms. |
+| `STOPPING` | Zero-current CAN commands are sent for 200 ms before transmission stops. | Turn SA or SD off, lose a required input, exceed the fall limit, or encounter a motor/CAN fault. |
+
+## Source layout
 
 ```text
 common/
-    Portable robot logic.
-    No ESP-IDF headers.
-    No STM32 HAL headers.
-    No FreeRTOS headers.
-    No MCU pin numbers.
-    No board-specific assumptions.
+    include/ and src/    portable drivers, protocols, estimation, control,
+                        safety, UI drawing, and shared types
 
 platforms/esp32/
-    ESP32 startup, build files, board definitions, BSPs, and FreeRTOS tasks.
+    main/bsp/            ESP-IDF peripheral backends
+    main/config/         pin-independent application configuration
+    main/tasks/          FreeRTOS task ownership and subsystem glue
 
-platforms/stm32/
-    STM32CubeMX generated code, user-owned app code, and build files.
-
-docs/
-    Firmware architecture notes, naming rules, subsystem notes, and electrical interface documentation.
+tests/                   host tests for portable logic
 ```
 
-## Active ESP32 firmware flow
+## Operator controls
 
 ```text
-app_main
-    starts task_imu
-    starts task_motor when APP_ENABLE_ACTUATORS is enabled
-    starts task_control when APP_ENABLE_CONTROL_STATE is enabled
-    starts task_rc and task_ui when enabled
-    starts task_supervisor and task_safety for manual commissioning
-
-task_imu
-    owns the IMU hardware
-    initializes ESP32 SPI through the BSP
-    initializes the ISM330DHCX driver
-    applies IMU mounting orientation
-    performs gyro bias calibration
-    runs the attitude estimator
-    publishes imu_snapshot_t
-
-task_rc
-    owns UART2 and receives RadioMaster RP2 CRSF data
-    publishes all 16 raw channels with timestamps and error counters
-
-task_ui
-    owns the ST7789 SPI display
-    shows STATUS, CRSF, IMU, CONTROL, and CAN pages
-    uses a portable locked/browse/interact UI state machine
-    publishes timestamped manual-drive, current, and balance requests
-
-task_supervisor
-    owns SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and BALANCE_CONTROL modes
-
-task_safety
-    validates RC, supervisor mode, state, IMU, CAN, feedback, and limits
-    publishes the only actuator command accepted by task_motor
-
-task_motor
-    owns ESP32 TWAI through bsp_can_esp32
-    monitors four configurable CubeMars actuator slots
-    decodes timestamped servo feedback and driver faults
-    transmits only fresh, safety-approved servo velocity or current commands
-    sends no command automatically at boot
-
-task_control
-    runs the portable state estimator at 200 Hz
-    combines four-wheel odometry with checked IMU lean state
-    publishes timing, validity, state, and desired-current diagnostics
-    maps CH2 to bounded fixture current in TORQUE_CONTROL mode
-    runs portable forward-plane balance and position recovery in BALANCE mode
-    never transmits motor commands directly
-
+SA / CH5    master enable
+SD / CH6    balance request
+SE / CH7    zero lean in READY while stationary
 ```
 
-## Common firmware flow
+Channel assignments are configured in
+`platforms/esp32/main/config/config_rc.h`.
 
-```text
-if_spi
-    generic SPI transfer interface
-
-if_display_io
-    generic command/data/reset display interface
-
-if_can
-    generic classic CAN frame representation
-
-proto_crsf
-    portable CRSF stream parser and 16-channel unpacker
-
-proto_cubemars_ak
-    portable CubeMars servo command packing and feedback decoding
-
-drv_st7789
-    portable ST7789 RGB565 driver with configurable orientation
-
-safety_rc
-    checks RC validity, freshness, and raw channel range
-
-ui_rc_input
-    maps reassignable CRSF channels to semantic UI events
-
-ui_state
-    owns locked/browse/interact behavior, page, and selection
-
-ui_pages
-    renders portable status and manual-drive state through ui_canvas
-
-safety_manual_drive
-    owns the portable manual commissioning gate and arm state machine
-
-safety_torque_control
-    owns portable fixture-current safety gates, stop, and rearm state
-
-ctrl_torque_input
-    maps a raw RC channel to bounded, slew-limited desired current
-
-ctrl_balance_controller
-    stabilizes lean and returns toward a captured forward position
-    includes bounded integral action for constant-disturbance rejection
-
-drv_ism330dhcx
-    portable ISM330DHCX register driver
-
-est_imu_mount
-    maps sensor-frame measurements into robot body frame
-
-est_imu_calibration
-    estimates and removes gyro bias
-
-est_attitude
-    generic attitude estimator API
-    currently uses a complementary filter
-    prepared for Madgwick or Kalman later
-
-safety_imu
-    checks IMU validity, calibration, freshness, tilt, and acceleration magnitude
-
-est_collinear_mecanum
-    converts four wheel speeds into planar position, velocity, and yaw
-
-app_balance_state
-    combines checked IMU lean state with wheel odometry
-
-ctrl_balance_types
-    defines the full eight-state control snapshot and timing diagnostics
-```
-
-## ESP32 build commands
-
-Activate the ESP-IDF environment, then run these from the repository
-root.
+## Build and flash
 
 ```bash
-. ~/esp/esp-idf-v5.5/export.sh
 cd 04_firmware/platforms/esp32
+source ~/esp/esp-idf-v5.5/export.sh
 idf.py build
 idf.py -p /dev/cu.usbserial-XXXX flash monitor
 ```
 
-Run `idf.py set-target esp32` once after cloning the repository or when
-resetting the generated project configuration. Use `idf.py menuconfig`
-to inspect or change ESP-IDF configuration.
-
-## STM32 build commands
-
-Run these from the STM32 platform folder.
+Host tests:
 
 ```bash
-cd 04_firmware/platforms/stm32
-cmake --preset Debug
-cmake --build --preset Debug
+cd 04_firmware/tests
+cmake -S . -B build -G Ninja
+cmake --build build
+ctest --test-dir build --output-on-failure
 ```
 
-## Build-time flags
-
-```text
-APP_ENABLE_RC_RECEIVER
-    Starts the ESP32 CRSF receiver task.
-
-APP_ENABLE_UI
-    Starts the ESP32 UI task.
-
-APP_ENABLE_ACTUATORS
-    Starts the ESP32 actuator task. It always receives feedback and
-    accepts only fresh commands approved by task_safety.
-
-APP_ENABLE_CONTROL_STATE
-    Starts the 200 Hz state-estimation and desired-command task. Motor
-    transmission still requires supervisor and safety approval.
-
-```
-
-## Development rules
-
-```text
-Keep common code portable.
-Keep platform code isolated.
-Keep temporary tests under tests/.
-Keep long-term tasks under tasks/.
-Keep board pin maps in board headers.
-Keep MCU peripheral setup in BSP modules.
-Keep safety checks separate from control calculations.
-Do not let UI, tests, or control write directly to motors.
-```
-
-## Documentation map
-
-```text
-04_firmware/README.md
-    Firmware entry point and build guide.
-
-04_firmware/common/README.md
-    Portable common-layer organization.
-
-04_firmware/platforms/esp32/README.md
-    ESP32 bring-up platform guide.
-
-04_firmware/platforms/stm32/README.md
-    STM32 target platform guide.
-
-04_firmware/docs/firmware_architecture.md
-    Firmware architecture and data flow.
-
-04_firmware/docs/software_guide_and_roadmap.md
-    Comprehensive current-software guide, modification map, limitations,
-    and staged roadmap to the final robot.
-
-04_firmware/docs/naming_conventions.md
-    File, module, task, and macro naming rules.
-
-04_firmware/docs/imu_subsystem.md
-    IMU driver, calibration, mounting, estimator, safety, and balance-state pipeline.
-
-04_firmware/docs/state_estimation_and_control.md
-    Four-wheel odometry, state composition, timing, configuration, and tests.
-
-04_firmware/docs/balance_control.md
-    Balance law, safety flow, UI operation, commissioning tests, and tuning variables.
-
-04_firmware/docs/ui_subsystem.md
-    LCD pages, RC controls, UI state machine, CRSF ranges, and future tuning boundary.
-
-04_firmware/docs/actuator_subsystem.md
-    CubeMars servo CAN, four-motor configuration, feedback snapshots,
-    safety ownership, bring-up, and MIT-mode growth path.
-
-04_firmware/docs/robot_configuration_checklist.md
-    Values to verify from the assembled robot before fixture and balance tests.
-
-04_firmware/docs/electrical_interfaces.md
-    Firmware-facing electrical interface notes and pin maps.
-```
+Configuration values that must match the physical robot are listed in
+`docs/robot_configuration_checklist.md`.

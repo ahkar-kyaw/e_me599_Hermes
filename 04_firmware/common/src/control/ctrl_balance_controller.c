@@ -63,8 +63,7 @@ bool ctrl_balance_controller_update(
 
     const float position_error_m = state->position_x_m -
         controller->reference_position_x_m;
-    const float lean_error_rad = state->lean_rad -
-        controller->config.lean_trim_rad;
+    const float lean_error_rad = state->lean_rad;
     const float integral_candidate = ctrl_balance_clamp(
         controller->position_integral_m_s + (position_error_m * dt_s),
         controller->config.position_integral_limit_m_s);
@@ -144,7 +143,6 @@ static bool ctrl_balance_config_valid(
     const ctrl_balance_controller_config_t *config)
 {
     return (config != NULL) &&
-           isfinite(config->lean_trim_rad) &&
            isfinite(config->lean_gain_a_per_rad) &&
            isfinite(config->lean_rate_gain_a_per_rps) &&
            isfinite(config->position_gain_a_per_m) &&

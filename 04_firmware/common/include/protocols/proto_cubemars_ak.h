@@ -52,24 +52,6 @@ proto_cubemars_ak_encode_servo_current(uint8_t motor_id,
                                        if_can_frame_t *frame);
 
 proto_cubemars_ak_status_t
-proto_cubemars_ak_encode_servo_velocity(uint8_t motor_id,
-                                        float velocity_erpm,
-                                        if_can_frame_t *frame);
-
-proto_cubemars_ak_status_t
-proto_cubemars_ak_encode_servo_position(uint8_t motor_id,
-                                        float position_deg,
-                                        if_can_frame_t *frame);
-
-proto_cubemars_ak_status_t
-proto_cubemars_ak_encode_servo_position_velocity(
-    uint8_t motor_id,
-    float position_deg,
-    float velocity_erpm,
-    float acceleration_erpm_per_s,
-    if_can_frame_t *frame);
-
-proto_cubemars_ak_status_t
 proto_cubemars_ak_decode_servo_feedback(
     const if_can_frame_t *frame,
     uint8_t expected_motor_id,

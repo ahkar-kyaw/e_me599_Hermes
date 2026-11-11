@@ -5,26 +5,15 @@
 #include <stddef.h>
 #include <string.h>
 
-#define PROTO_CUBEMARS_AK_SERVO_MODE_CURRENT           1u
-#define PROTO_CUBEMARS_AK_SERVO_MODE_VELOCITY          3u
-#define PROTO_CUBEMARS_AK_SERVO_MODE_POSITION          4u
-#define PROTO_CUBEMARS_AK_SERVO_MODE_POSITION_VELOCITY 6u
+#define PROTO_CUBEMARS_AK_SERVO_MODE_CURRENT 1u
 
 #define PROTO_CUBEMARS_AK_CURRENT_SCALE_A         1000.0f
-#define PROTO_CUBEMARS_AK_POSITION_SCALE_DEG      10000.0f
 #define PROTO_CUBEMARS_AK_POSITION_FEEDBACK_DEG   0.1f
 #define PROTO_CUBEMARS_AK_VELOCITY_FEEDBACK_ERPM  10.0f
 #define PROTO_CUBEMARS_AK_CURRENT_FEEDBACK_A       0.01f
-#define PROTO_CUBEMARS_AK_PV_VELOCITY_SCALE        0.1f
-#define PROTO_CUBEMARS_AK_PV_ACCELERATION_SCALE    0.1f
 
-#define PROTO_CUBEMARS_AK_CURRENT_MIN_A              -60.0f
-#define PROTO_CUBEMARS_AK_CURRENT_MAX_A               60.0f
-#define PROTO_CUBEMARS_AK_VELOCITY_MIN_ERPM      -100000.0f
-#define PROTO_CUBEMARS_AK_VELOCITY_MAX_ERPM       100000.0f
-#define PROTO_CUBEMARS_AK_POSITION_MIN_DEG         -36000.0f
-#define PROTO_CUBEMARS_AK_POSITION_MAX_DEG          36000.0f
-#define PROTO_CUBEMARS_AK_PV_ACCELERATION_MIN           0.0f
+#define PROTO_CUBEMARS_AK_CURRENT_MIN_A -60.0f
+#define PROTO_CUBEMARS_AK_CURRENT_MAX_A  60.0f
 
 static proto_cubemars_ak_status_t
 proto_cubemars_ak_encode_i32(uint8_t function_id,
@@ -34,9 +23,7 @@ proto_cubemars_ak_encode_i32(uint8_t function_id,
                              if_can_frame_t *frame);
 
 static bool proto_cubemars_ak_float_fits_i32(double value);
-static bool proto_cubemars_ak_float_fits_i16(double value);
 static void proto_cubemars_ak_write_i32_be(uint8_t *data, int32_t value);
-static void proto_cubemars_ak_write_i16_be(uint8_t *data, int16_t value);
 static int16_t proto_cubemars_ak_read_i16_be(const uint8_t *data);
 
 uint32_t proto_cubemars_ak_make_servo_id(uint8_t function_id,
@@ -87,112 +74,6 @@ proto_cubemars_ak_encode_servo_current(uint8_t motor_id,
         current_a,
         PROTO_CUBEMARS_AK_CURRENT_SCALE_A,
         frame);
-}
-
-proto_cubemars_ak_status_t
-proto_cubemars_ak_encode_servo_velocity(uint8_t motor_id,
-                                        float velocity_erpm,
-                                        if_can_frame_t *frame)
-{
-    if (frame == NULL)
-    {
-        return PROTO_CUBEMARS_AK_ERROR_ARGUMENT;
-    }
-
-    if ((velocity_erpm < PROTO_CUBEMARS_AK_VELOCITY_MIN_ERPM) ||
-        (velocity_erpm > PROTO_CUBEMARS_AK_VELOCITY_MAX_ERPM))
-    {
-        return PROTO_CUBEMARS_AK_ERROR_RANGE;
-    }
-
-    return proto_cubemars_ak_encode_i32(
-        PROTO_CUBEMARS_AK_SERVO_MODE_VELOCITY,
-        motor_id,
-        velocity_erpm,
-        1.0f,
-        frame);
-}
-
-proto_cubemars_ak_status_t
-proto_cubemars_ak_encode_servo_position(uint8_t motor_id,
-                                        float position_deg,
-                                        if_can_frame_t *frame)
-{
-    if (frame == NULL)
-    {
-        return PROTO_CUBEMARS_AK_ERROR_ARGUMENT;
-    }
-
-    if ((position_deg < PROTO_CUBEMARS_AK_POSITION_MIN_DEG) ||
-        (position_deg > PROTO_CUBEMARS_AK_POSITION_MAX_DEG))
-    {
-        return PROTO_CUBEMARS_AK_ERROR_RANGE;
-    }
-
-    return proto_cubemars_ak_encode_i32(
-        PROTO_CUBEMARS_AK_SERVO_MODE_POSITION,
-        motor_id,
-        position_deg,
-        PROTO_CUBEMARS_AK_POSITION_SCALE_DEG,
-        frame);
-}
-
-proto_cubemars_ak_status_t
-proto_cubemars_ak_encode_servo_position_velocity(
-    uint8_t motor_id,
-    float position_deg,
-    float velocity_erpm,
-    float acceleration_erpm_per_s,
-    if_can_frame_t *frame)
-{
-    if (frame == NULL)
-    {
-        return PROTO_CUBEMARS_AK_ERROR_ARGUMENT;
-    }
-
-    if ((position_deg < PROTO_CUBEMARS_AK_POSITION_MIN_DEG) ||
-        (position_deg > PROTO_CUBEMARS_AK_POSITION_MAX_DEG) ||
-        (acceleration_erpm_per_s <
-         PROTO_CUBEMARS_AK_PV_ACCELERATION_MIN))
-    {
-        return PROTO_CUBEMARS_AK_ERROR_RANGE;
-    }
-
-    const double position_scaled =
-        (double)position_deg *
-        PROTO_CUBEMARS_AK_POSITION_SCALE_DEG;
-    const double velocity_scaled =
-        (double)velocity_erpm *
-        PROTO_CUBEMARS_AK_PV_VELOCITY_SCALE;
-    const double acceleration_scaled =
-        (double)acceleration_erpm_per_s *
-        PROTO_CUBEMARS_AK_PV_ACCELERATION_SCALE;
-
-    if (!proto_cubemars_ak_float_fits_i32(position_scaled) ||
-        !proto_cubemars_ak_float_fits_i16(velocity_scaled) ||
-        !proto_cubemars_ak_float_fits_i16(acceleration_scaled))
-    {
-        return PROTO_CUBEMARS_AK_ERROR_RANGE;
-    }
-
-    memset(frame, 0, sizeof(*frame));
-    frame->id = proto_cubemars_ak_make_servo_id(
-        PROTO_CUBEMARS_AK_SERVO_MODE_POSITION_VELOCITY,
-        motor_id);
-    frame->data_length = 8u;
-    frame->is_extended = true;
-
-    proto_cubemars_ak_write_i32_be(
-        &frame->data[0],
-        (int32_t)llround(position_scaled));
-    proto_cubemars_ak_write_i16_be(
-        &frame->data[4],
-        (int16_t)llround(velocity_scaled));
-    proto_cubemars_ak_write_i16_be(
-        &frame->data[6],
-        (int16_t)llround(acceleration_scaled));
-
-    return PROTO_CUBEMARS_AK_OK;
 }
 
 proto_cubemars_ak_status_t
@@ -269,13 +150,6 @@ static bool proto_cubemars_ak_float_fits_i32(double value)
            (value <= (double)INT32_MAX);
 }
 
-static bool proto_cubemars_ak_float_fits_i16(double value)
-{
-    return isfinite(value) &&
-           (value >= (double)INT16_MIN) &&
-           (value <= (double)INT16_MAX);
-}
-
 static void proto_cubemars_ak_write_i32_be(uint8_t *data, int32_t value)
 {
     const uint32_t encoded = (uint32_t)value;
@@ -284,14 +158,6 @@ static void proto_cubemars_ak_write_i32_be(uint8_t *data, int32_t value)
     data[1] = (uint8_t)(encoded >> 16u);
     data[2] = (uint8_t)(encoded >> 8u);
     data[3] = (uint8_t)encoded;
-}
-
-static void proto_cubemars_ak_write_i16_be(uint8_t *data, int16_t value)
-{
-    const uint16_t encoded = (uint16_t)value;
-
-    data[0] = (uint8_t)(encoded >> 8u);
-    data[1] = (uint8_t)encoded;
 }
 
 static int16_t proto_cubemars_ak_read_i16_be(const uint8_t *data)

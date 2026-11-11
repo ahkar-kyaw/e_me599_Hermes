@@ -15,6 +15,9 @@
 #define TASK_MOTOR_STACK_BYTES 4096u
 #define TASK_MOTOR_PRIORITY    (tskIDLE_PRIORITY + 3)
 
+_Static_assert(configTICK_RATE_HZ >= 1000,
+               "motor task requires a 1 kHz RTOS tick");
+
 static const char *TAG = "task_motor";
 
 static actuator_snapshot_t g_actuator_snapshot;
@@ -62,10 +65,6 @@ static bool task_motor_approved_command_fresh(
     uint64_t now_us);
 static bool task_motor_command_has_enabled_actuator(
     const app_actuator_command_snapshot_t *command);
-static void task_motor_send_velocity(
-    actuator_snapshot_t *snapshot,
-    uint8_t actuator_index,
-    float velocity_erpm);
 static void task_motor_send_current(
     actuator_snapshot_t *snapshot,
     uint8_t actuator_index,
@@ -145,30 +144,47 @@ static void task_motor_entry(void *argument)
              "CubeMars motor task started at %lu bit/s",
              (unsigned long)APP_ACTUATOR_CAN_BITRATE);
 
+    TickType_t last_wake = xTaskGetTickCount();
+    uint64_t next_status_us = 0u;
+
     for (;;)
     {
-        if_can_frame_t frame;
-        const bsp_can_esp32_result_t result =
-            bsp_can_esp32_receive(
-                &frame,
-                APP_ACTUATOR_CAN_READ_TIMEOUT_MS);
         const uint64_t now_us = (uint64_t)esp_timer_get_time();
 
-        if (result == BSP_CAN_ESP32_OK)
+        for (uint32_t frame_count = 0u;
+             frame_count < APP_ACTUATOR_RX_FRAMES_PER_CYCLE;
+             frame_count++)
         {
+            if_can_frame_t frame;
+
+            if (bsp_can_esp32_receive(&frame, 0u) !=
+                BSP_CAN_ESP32_OK)
+            {
+                break;
+            }
+
             task_motor_process_frame(&snapshot, &frame, now_us);
         }
 
-        task_motor_update_bus_status(&snapshot);
-
-        if (snapshot.bus_state == APP_ACTUATOR_BUS_OFF)
+        if ((next_status_us == 0u) || (now_us >= next_status_us))
         {
-            bsp_can_esp32_recover_if_bus_off();
+            task_motor_update_bus_status(&snapshot);
+
+            if (snapshot.bus_state == APP_ACTUATOR_BUS_OFF)
+            {
+                bsp_can_esp32_recover_if_bus_off();
+            }
+
+            next_status_us = now_us +
+                ((uint64_t)APP_ACTUATOR_STATUS_PERIOD_MS * 1000u);
         }
 
         task_motor_update_freshness(&snapshot, now_us);
         task_motor_update_command_tx(&snapshot, &tx_state, now_us);
         task_motor_publish_snapshot(&snapshot);
+
+        vTaskDelayUntil(&last_wake,
+                        pdMS_TO_TICKS(APP_ACTUATOR_TASK_PERIOD_MS));
     }
 }
 
@@ -398,7 +414,7 @@ static void task_motor_update_command_tx(
              actuator < APP_ACTUATOR_COUNT;
              actuator++)
         {
-            tx_state->actuator[actuator].value = 0.0f;
+            tx_state->actuator[actuator].current_a = 0.0f;
         }
 
         tx_state->next_tx_us = 0u;
@@ -418,8 +434,6 @@ static void task_motor_update_command_tx(
     }
 
     snapshot->command_tx_active = tx_state->session_active;
-    snapshot->last_command_velocity_erpm = 0.0f;
-
     if (!tx_state->session_active ||
         ((tx_state->next_tx_us != 0u) &&
          (now_us < tx_state->next_tx_us)))
@@ -439,21 +453,9 @@ static void task_motor_update_command_tx(
             continue;
         }
 
-        snapshot->command_actuator_index = actuator;
-
-        if (entry->mode == APP_ACTUATOR_COMMAND_SERVO_CURRENT)
-        {
-            task_motor_send_current(snapshot, actuator, entry->value);
-        }
-        else if (entry->mode == APP_ACTUATOR_COMMAND_SERVO_VELOCITY)
-        {
-            snapshot->last_command_velocity_erpm = entry->value;
-            task_motor_send_velocity(snapshot, actuator, entry->value);
-        }
-        else
-        {
-            snapshot->command_tx_error_count++;
-        }
+        task_motor_send_current(snapshot,
+                                actuator,
+                                entry->current_a);
     }
 
     tx_state->next_tx_us = now_us +
@@ -486,36 +488,6 @@ static bool task_motor_command_has_enabled_actuator(
     }
 
     return false;
-}
-
-static void task_motor_send_velocity(
-    actuator_snapshot_t *snapshot,
-    uint8_t actuator_index,
-    float velocity_erpm)
-{
-    if_can_frame_t frame;
-
-    if ((actuator_index >= APP_ACTUATOR_COUNT) ||
-        !APP_ACTUATOR_CONFIG[actuator_index].enabled ||
-        (proto_cubemars_ak_encode_servo_velocity(
-             APP_ACTUATOR_CONFIG[actuator_index].motor_id,
-             velocity_erpm *
-                 (float)APP_ACTUATOR_CONFIG[actuator_index].direction_sign,
-             &frame) != PROTO_CUBEMARS_AK_OK))
-    {
-        snapshot->command_tx_error_count++;
-        return;
-    }
-
-    if (bsp_can_esp32_transmit(
-            &frame,
-            APP_ACTUATOR_CAN_TX_TIMEOUT_MS) != BSP_CAN_ESP32_OK)
-    {
-        snapshot->command_tx_error_count++;
-        return;
-    }
-
-    snapshot->command_tx_count++;
 }
 
 static void task_motor_send_current(

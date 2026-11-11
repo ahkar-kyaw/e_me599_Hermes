@@ -2,8 +2,8 @@
 
 The ESP32 platform is the active bring-up target. It uses native
 ESP-IDF with CMake and Ninja and runs the IMU pipeline, CRSF receiver,
-ST7789 status UI, CubeMars feedback monitor, and a safety-gated manual
-velocity commissioning path.
+ST7789 READY/ACTIVE dashboard, CubeMars feedback, state estimation, and
+safety-gated balance-current control.
 
 ## Structure
 
@@ -40,6 +40,8 @@ platforms/esp32/
             task_imu.h
             task_motor.c
             task_motor.h
+            task_operator.c
+            task_operator.h
             task_rc.c
             task_rc.h
             task_safety.c
@@ -157,28 +159,32 @@ task_rc
     Publishes all 16 channels in rc_snapshot_t with timestamp and
     communication error counters.
 
+task_operator
+    Maps SA, SD, and SE through the portable operator-control module.
+    Runs every 20 ms independently of the display.
+    Publishes the timestamped balance-control request consumed by the
+    supervisor.
+
 task_ui
     Owns the ST7789 and static 160 x 120 / 120 x 160 RGB565 canvas.
     Collects RC, IMU, control, safety, and actuator snapshots.
-    Runs the portable UI input mapper and state machine.
-    Renders STATUS, CRSF, IMU, CONTROL, and CAN pages.
-    Publishes timestamped manual-drive, torque-control, and balance requests.
-    Does not own safety state or motion commands.
+    Renders the READY or ACTIVE dashboard.
+    Is read-only and does not own requests, safety state, or motion commands.
 
 task_supervisor
-    Owns SAFE_IDLE, MANUAL_DRIVE, TORQUE_CONTROL, and BALANCE_CONTROL modes.
+    Owns SAFE_IDLE and BALANCE_CONTROL modes.
 
 task_safety
     Owns permission to move.
     Checks RC, state, IMU, CAN, feedback, faults, command bounds,
-    neutral-stick, and supervisor gates.
+    and supervisor gates.
     Publishes the only approved command accepted by task_motor.
 
 task_motor
     Owns the TWAI BSP.
     Decodes CubeMars periodic servo feedback.
     Publishes timestamped feedback for four configurable actuator slots.
-    Transmits only fresh, safety-approved velocity or current commands.
+    Transmits only fresh, safety-approved current commands.
     Sends no command automatically at boot.
 ```
 
@@ -189,34 +195,30 @@ config_imu.h
     IMU sampling, mounting, estimation, calibration, and safety values.
 
 config_rc.h
-    RC freshness, 10 active channels, raw range, UART timeout, and retry.
+    RC freshness, active channels, raw range, operator switch mapping,
+    operator task period, UART timeout, and retry.
 
 config_ui.h
     ST7789 mounting orientation and UI timing.
-    One-based RC channel assignments, directions, polarities, and
-    input thresholds.
 
 config_actuator.h
     CAN bitrate, freshness, and four actuator enable/ID entries.
-    Manual-drive channel, polarity, 1000 ERPM limit, command freshness,
-    and zero-command hold time.
+    Command freshness and zero-current hold time.
     Motors 1 through 4 are enabled at decimal CAN IDs 1 through 4.
     Per-slot direction signs convert physical mounting to robot signs.
 
 config_control.h
     State geometry and conversion values.
-    Fixture-current channel, polarity, current limit, slew rate, motor mix,
+    Balance gains, lean zero limits, current limit, motor mix,
     freshness, stop hold, and lean safety limits.
 ```
 
 Current UI mapping:
 
 ```text
-CH1 Ail    previous/next page in browse mode
-CH2 Thr    bounded M1 velocity while CAN DRIVE is live
-CH6 SD     interaction off/on; enables drive on CAN
-CH7 SE     Enter; not required for manual drive
-CH10 SC    UI input lock/enable
+CH5 SA     master enable
+CH6 SD     balance off/on
+CH7 SE     zero stationary lean on READY
 ```
 
 See `04_firmware/docs/ui_subsystem.md` for UI behavior, channel

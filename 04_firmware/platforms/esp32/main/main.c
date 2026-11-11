@@ -1,6 +1,7 @@
 #include "task_control.h"
 #include "task_imu.h"
 #include "task_motor.h"
+#include "task_operator.h"
 #include "task_rc.h"
 #include "task_safety.h"
 #include "task_supervisor.h"
@@ -26,13 +27,15 @@ void app_main(void)
 
 #if APP_ENABLE_RC_RECEIVER
     task_rc_start();
+    task_operator_start();
 #endif
 
 #if APP_ENABLE_UI
     task_ui_start();
 #endif
 
-#if APP_ENABLE_ACTUATORS && APP_ENABLE_RC_RECEIVER && APP_ENABLE_UI
+#if APP_ENABLE_ACTUATORS && APP_ENABLE_CONTROL_STATE && \
+    APP_ENABLE_RC_RECEIVER
     task_supervisor_start();
     task_safety_start();
 #endif

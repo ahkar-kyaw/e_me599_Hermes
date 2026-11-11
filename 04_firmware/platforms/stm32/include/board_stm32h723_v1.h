@@ -1,8 +1,0 @@
-#ifndef BOARD_STM32H723_V1_H
-#define BOARD_STM32H723_V1_H
-
-#define BOARD_NAME          "NUCLEO-H723ZG"
-#define BOARD_MCU_NAME      "STM32H723ZG"
-#define BOARD_PLATFORM_NAME "stm32"
-
-#endif

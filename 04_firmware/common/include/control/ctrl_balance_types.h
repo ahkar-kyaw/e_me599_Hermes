@@ -18,13 +18,6 @@ typedef enum
 
 typedef enum
 {
-    CTRL_COMMAND_MODE_NONE = 0,
-    CTRL_COMMAND_MODE_MANUAL_CURRENT,
-    CTRL_COMMAND_MODE_BALANCE
-} ctrl_command_mode_t;
-
-typedef enum
-{
     CTRL_STATE_FAULT_NONE      = 0u,
     CTRL_STATE_FAULT_IMU       = 1u << 0,
     CTRL_STATE_FAULT_ACTUATOR  = 1u << 1,
@@ -52,8 +45,8 @@ typedef struct
 {
     balance_state_t state;
 
-    float requested_current_a;
     float desired_current_a[CTRL_BALANCE_ACTUATOR_COUNT];
+    float lean_trim_rad;
     float balance_reference_position_x_m;
     float balance_position_error_m;
     float balance_position_integral_m_s;
@@ -66,9 +59,10 @@ typedef struct
     uint32_t overrun_count;
     uint32_t execution_time_us;
     uint32_t max_execution_time_us;
+    uint32_t zero_lean_applied_count;
+    uint32_t zero_lean_rejected_count;
     uint32_t input_fault_flags;
-    ctrl_command_mode_t command_mode;
-    bool torque_command_valid;
+    bool balance_command_valid;
     bool balance_output_saturated;
 } control_snapshot_t;
 

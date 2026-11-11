@@ -1,6 +1,7 @@
 # IMU subsystem
 
-The IMU subsystem currently targets the ISM330DHCX over SPI on the ESP32 prototype. The common logic is portable and can be reused on STM32 by adding the appropriate SPI BSP.
+The IMU subsystem uses the ISM330DHCX over SPI. Device logic remains portable;
+the ESP32 BSP owns the physical SPI bus.
 
 ## Current hardware path
 

@@ -211,16 +211,22 @@ int drv_st7789_update(drv_st7789_t *display)
             (size_t)display->width * DRV_ST7789_PIXEL_SCALE *
             DRV_ST7789_BYTES_PER_PIXEL;
 
-        for (uint32_t repeat = 0u;
+        for (uint32_t repeat = 1u;
              repeat < DRV_ST7789_PIXEL_SCALE;
              repeat++)
         {
-            if (display->io.write_data(display->io.context,
-                                       display->transfer_line,
-                                       line_size) != IF_DISPLAY_IO_OK)
-            {
-                return DRV_ST7789_ERR;
-            }
+            memcpy(&display->transfer_line[repeat * line_size],
+                   display->transfer_line,
+                   line_size);
+        }
+
+        if (display->io.write_data(
+                display->io.context,
+                display->transfer_line,
+                line_size * DRV_ST7789_PIXEL_SCALE) !=
+            IF_DISPLAY_IO_OK)
+        {
+            return DRV_ST7789_ERR;
         }
     }
 

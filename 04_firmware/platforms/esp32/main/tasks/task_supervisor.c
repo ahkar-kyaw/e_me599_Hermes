@@ -1,8 +1,7 @@
 #include "task_supervisor.h"
 
-#include "config_actuator.h"
 #include "config_control.h"
-#include "task_ui.h"
+#include "task_operator.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -25,12 +24,6 @@ static void task_supervisor_entry(void *argument);
 static void task_supervisor_publish_snapshot(
     const app_supervisor_snapshot_t *snapshot);
 static bool task_supervisor_request_fresh(
-    const app_manual_drive_request_t *request,
-    uint64_t now_us);
-static bool task_supervisor_torque_request_fresh(
-    const app_torque_control_request_t *request,
-    uint64_t now_us);
-static bool task_supervisor_balance_request_fresh(
     const app_balance_control_request_t *request,
     uint64_t now_us);
 
@@ -77,45 +70,30 @@ static void task_supervisor_entry(void *argument)
 
     for (;;)
     {
-        app_manual_drive_request_t request;
-        app_torque_control_request_t torque_request;
-        app_balance_control_request_t balance_request;
+        app_balance_control_request_t request;
         const uint64_t now_us = (uint64_t)esp_timer_get_time();
 
-        task_ui_get_manual_drive_request(&request);
-        task_ui_get_torque_control_request(&torque_request);
-        task_ui_get_balance_control_request(&balance_request);
+        task_operator_get_balance_control_request(&request);
 
         snapshot.timestamp_us = now_us;
         snapshot.mode = APP_SYSTEM_MODE_SAFE_IDLE;
-        snapshot.manual_drive_actuator_index = 0u;
 
-        if (task_supervisor_balance_request_fresh(&balance_request,
-                                                  now_us) &&
-            balance_request.enabled)
+        if (task_supervisor_request_fresh(&request, now_us))
         {
-            snapshot.mode = APP_SYSTEM_MODE_BALANCE_CONTROL;
-        }
-        else if (task_supervisor_torque_request_fresh(&torque_request,
-                                                      now_us) &&
-            torque_request.enabled)
-        {
-            snapshot.mode = APP_SYSTEM_MODE_TORQUE_CONTROL;
-        }
-        else if (task_supervisor_request_fresh(&request, now_us) &&
-            request.enabled &&
-            (request.actuator_index < APP_ACTUATOR_COUNT))
-        {
-            snapshot.mode = APP_SYSTEM_MODE_MANUAL_DRIVE;
-            snapshot.manual_drive_actuator_index =
-                request.actuator_index;
+            snapshot.zero_lean_request_count =
+                request.zero_lean_request_count;
+
+            if (request.master_enabled && request.balance_enabled)
+            {
+                snapshot.mode = APP_SYSTEM_MODE_BALANCE_CONTROL;
+            }
         }
 
         task_supervisor_publish_snapshot(&snapshot);
 
         vTaskDelayUntil(
             &last_wake,
-            pdMS_TO_TICKS(APP_MANUAL_DRIVE_TASK_PERIOD_MS));
+            pdMS_TO_TICKS(APP_BALANCE_SUPERVISOR_PERIOD_MS));
     }
 }
 
@@ -128,31 +106,11 @@ static void task_supervisor_publish_snapshot(
 }
 
 static bool task_supervisor_request_fresh(
-    const app_manual_drive_request_t *request,
-    uint64_t now_us)
-{
-    return (request->timestamp_us != 0u) &&
-           (now_us >= request->timestamp_us) &&
-           ((now_us - request->timestamp_us) <=
-            APP_MANUAL_DRIVE_REQUEST_MAX_AGE_US);
-}
-
-static bool task_supervisor_torque_request_fresh(
-    const app_torque_control_request_t *request,
-    uint64_t now_us)
-{
-    return (request->timestamp_us != 0u) &&
-           (now_us >= request->timestamp_us) &&
-           ((now_us - request->timestamp_us) <=
-            APP_CONTROL_REQUEST_MAX_AGE_US);
-}
-
-static bool task_supervisor_balance_request_fresh(
     const app_balance_control_request_t *request,
     uint64_t now_us)
 {
     return (request->timestamp_us != 0u) &&
            (now_us >= request->timestamp_us) &&
            ((now_us - request->timestamp_us) <=
-            APP_CONTROL_REQUEST_MAX_AGE_US);
+            APP_BALANCE_REQUEST_MAX_AGE_US);
 }

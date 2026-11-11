@@ -13,6 +13,13 @@ extern "C" {
 bool app_balance_state_imu_ready(
     const safety_imu_status_t *imu_status);
 
+bool app_balance_state_get_lean(
+    const imu_snapshot_t *imu,
+    const safety_imu_status_t *imu_status,
+    ctrl_balance_lean_axis_t lean_axis,
+    float *lean_rad,
+    float *lean_rate_rps);
+
 bool app_balance_state_compose(
     const imu_snapshot_t *imu,
     const safety_imu_status_t *imu_status,

@@ -119,6 +119,7 @@ APP_BALANCE_STATE_MAX_AGE_US               state freshness
 APP_BALANCE_STOP_HOLD_US                   zero-current stop window
 APP_BALANCE_ARM_LEAN_LIMIT_RAD             maximum corrected lean when arming
 APP_BALANCE_ARM_LEAN_RATE_LIMIT_RPS        maximum lean rate when arming
+APP_BALANCE_ARM_INPUT_LIMIT                maximum normalized stick input when arming
 APP_BALANCE_FALL_LEAN_LIMIT_RAD            running fall cutoff
 APP_BALANCE_INITIAL_LEAN_TRIM_RAD          trim restored at reboot
 APP_BALANCE_ZERO_MAX_ABS_LEAN_RAD          maximum raw lean accepted for zero

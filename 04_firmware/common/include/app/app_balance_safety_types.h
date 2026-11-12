@@ -15,7 +15,8 @@ typedef enum
     APP_BALANCE_SAFETY_DISABLED = 0,
     APP_BALANCE_SAFETY_WAIT_SAFE,
     APP_BALANCE_SAFETY_ARMED,
-    APP_BALANCE_SAFETY_STOPPING
+    APP_BALANCE_SAFETY_STOPPING,
+    APP_BALANCE_SAFETY_LOCKOUT
 } app_balance_safety_state_t;
 
 typedef enum
@@ -29,13 +30,16 @@ typedef enum
     APP_BALANCE_INHIBIT_BUS           = 1u << 5,
     APP_BALANCE_INHIBIT_FEEDBACK      = 1u << 6,
     APP_BALANCE_INHIBIT_MOTOR_FAULT   = 1u << 7,
-    APP_BALANCE_INHIBIT_CURRENT       = 1u << 8
+    APP_BALANCE_INHIBIT_CURRENT       = 1u << 8,
+    APP_BALANCE_INHIBIT_OPERATOR      = 1u << 9,
+    APP_BALANCE_INHIBIT_REARM         = 1u << 10
 } app_balance_inhibit_t;
 
 typedef struct
 {
     uint64_t timestamp_us;
     bool enabled;
+    bool motion_neutral;
 } app_balance_safety_request_t;
 
 typedef struct

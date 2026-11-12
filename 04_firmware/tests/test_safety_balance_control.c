@@ -28,6 +28,7 @@ int main(void)
     {
         .timestamp_us = 1000u,
         .enabled = true,
+        .motion_neutral = true,
     };
     control_snapshot_t control;
     rc_snapshot_t rc;
@@ -128,14 +129,15 @@ int main(void)
                                   502001u,
                                   &snapshot);
 
-    if ((snapshot.state != APP_BALANCE_SAFETY_WAIT_SAFE) ||
+    if ((snapshot.state != APP_BALANCE_SAFETY_LOCKOUT) ||
         snapshot.motion_allowed)
     {
-        fail("cleared fault bypassed rearm dwell");
+        fail("cleared running fault did not require operator rearm");
     }
 
-    request.timestamp_us = 802001u;
-    control.timestamp_us = 802001u;
+    request.enabled = false;
+    request.timestamp_us = 503000u;
+    control.timestamp_us = 503000u;
     safety_balance_control_update(&safety,
                                   &request,
                                   &control,
@@ -143,18 +145,68 @@ int main(void)
                                   &rc_status,
                                   &imu_status,
                                   &actuator,
-                                  802001u,
+                                  503000u,
+                                  &snapshot);
+
+    if (snapshot.state != APP_BALANCE_SAFETY_DISABLED)
+    {
+        fail("off request did not clear running-fault lockout");
+    }
+
+    request.enabled = true;
+    request.motion_neutral = false;
+    request.timestamp_us = 504000u;
+    control.timestamp_us = 504000u;
+    safety_balance_control_update(&safety,
+                                  &request,
+                                  &control,
+                                  &rc,
+                                  &rc_status,
+                                  &imu_status,
+                                  &actuator,
+                                  504000u,
+                                  &snapshot);
+
+    if ((snapshot.state != APP_BALANCE_SAFETY_WAIT_SAFE) ||
+        ((snapshot.inhibit_flags & APP_BALANCE_INHIBIT_OPERATOR) == 0u))
+    {
+        fail("non-neutral motion input did not inhibit arming");
+    }
+
+    request.motion_neutral = true;
+    request.timestamp_us = 505000u;
+    control.timestamp_us = 505000u;
+    safety_balance_control_update(&safety,
+                                  &request,
+                                  &control,
+                                  &rc,
+                                  &rc_status,
+                                  &imu_status,
+                                  &actuator,
+                                  505000u,
+                                  &snapshot);
+
+    request.timestamp_us = 805000u;
+    control.timestamp_us = 805000u;
+    safety_balance_control_update(&safety,
+                                  &request,
+                                  &control,
+                                  &rc,
+                                  &rc_status,
+                                  &imu_status,
+                                  &actuator,
+                                  805000u,
                                   &snapshot);
 
     if ((snapshot.state != APP_BALANCE_SAFETY_ARMED) ||
         !snapshot.motion_allowed)
     {
-        fail("cleared fault did not rearm after dwell");
+        fail("operator rearm did not restore motion after dwell");
     }
 
     request.enabled = false;
-    request.timestamp_us = 803000u;
-    control.timestamp_us = 803000u;
+    request.timestamp_us = 806000u;
+    control.timestamp_us = 806000u;
     safety_balance_control_update(&safety,
                                   &request,
                                   &control,
@@ -162,7 +214,7 @@ int main(void)
                                   &rc_status,
                                   &imu_status,
                                   &actuator,
-                                  803000u,
+                                  806000u,
                                   &snapshot);
 
     if (snapshot.state != APP_BALANCE_SAFETY_STOPPING)

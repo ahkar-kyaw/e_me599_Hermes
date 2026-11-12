@@ -41,20 +41,22 @@ motor commands. `task_safety` is the only owner of motion permission.
 ```mermaid
 stateDiagram-v2
     [*] --> READY: Boot / SA off or SD off
-    READY --> WAIT_SAFE: SA on and SD on
-    WAIT_SAFE --> LIVE: Safe lean and rate for 300 ms
-    LIVE --> STOPPING: SA off, SD off, or fault
-    STOPPING --> READY: Request off
-    STOPPING --> WAIT_SAFE: Request on and stop window complete
+    READY --> WAIT_SAFE: SA + SD on, sticks centered
+    WAIT_SAFE --> LIVE: Inputs safe for 300 ms
+    LIVE --> STOPPING: SA off, SD off, or inhibit
+    STOPPING --> READY: Deliberate switch off
+    STOPPING --> LOCKOUT: Running fault
+    LOCKOUT --> READY: SD or SA off
     WAIT_SAFE --> READY: SA off or SD off
 ```
 
 | Mode | Expected behavior | How to enter |
 |---|---|---|
 | `READY` | Motors receive no drive current. The display shows lean, trim, RC, IMU, CAN, and motor health. | Keep SA or SD off. With SA on and SD off, press SE while stationary to zero lean. |
-| `WAIT SAFE` | Current remains disabled while a fault exists or the robot has not remained inside the arming limits for 300 ms. | Turn SA on, then SD on. Hold the robot near upright and still. |
-| `LIVE` | The commissioning build sends slew-limited open-loop forward/turn currents through the normal safety gate and displays requested/measured current for all four motors. Balance feedback is suppressed. | Remain within the 10 degree arming lean limit and rate limit for 300 ms. |
+| `WAIT SAFE` | Current remains disabled until the robot and centered motion inputs remain inside all arming limits for 300 ms. | Turn SA on, then SD on. Hold the robot near upright and still with CH1, CH3, and CH4 centered. |
+| `LIVE` | Closed-loop balance, forward, lateral, yaw, and bounded position recovery are active. | Complete `WAIT SAFE` with no inhibit. |
 | `STOPPING` | Zero-current CAN commands are sent for 200 ms before transmission stops. | Turn SA or SD off, lose a required input, exceed the fall limit, or encounter a motor/CAN fault. |
+| `LOCKOUT` | Torque cannot automatically return after a running fault. | Turn SD or SA off to acknowledge the stop, correct the cause, then arm again. |
 
 ## Source layout
 
@@ -77,9 +79,9 @@ tests/                   host tests for portable logic
 SA / CH5    master enable
 SD / CH6    balance request
 SE / CH7    zero lean in READY while stationary
-Ele / CH3   open-loop forward and reverse current in LIVE
-Ail / CH1   assigned to lateral, disabled during the drive test
-Rud / CH4   open-loop stationary turn current in LIVE
+Ele / CH3   forward and reverse velocity in LIVE
+Ail / CH1   lateral velocity in LIVE
+Rud / CH4   yaw rate in LIVE
 ```
 
 Channel assignments are configured in

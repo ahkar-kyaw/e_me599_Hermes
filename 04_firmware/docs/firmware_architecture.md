@@ -45,6 +45,11 @@ Every boundary uses a timestamped snapshot. Control state is invalidated by
 stale IMU data, stale actuator feedback, CAN degradation, estimator failure, or
 control-loop timing failure.
 
+A deliberate SA/SD shutdown sends zero current during the stop window and
+returns to `READY`. A fault while running sends the same zero-current sequence
+but enters `LOCKOUT`. The operator must turn SD or SA off before another arm;
+this prevents torque from returning automatically after an intermittent fault.
+
 ## Lean zero path
 
 ```text

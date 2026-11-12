@@ -12,7 +12,6 @@
 #include "task_motor.h"
 #include "task_safety.h"
 #include "task_supervisor.h"
-#include "test_actuator_drive.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -103,7 +102,6 @@ static void task_control_entry(void *argument)
         safety_imu_default_config();
     ctrl_balance_controller_t balance_controller;
     ctrl_collinear_mecanum_allocator_t current_allocator;
-    test_actuator_drive_t actuator_drive_test;
     const ctrl_balance_controller_config_t balance_controller_config =
     {
         .lean_gain_a_per_rad = APP_BALANCE_LEAN_GAIN_A_PER_RAD,
@@ -169,13 +167,6 @@ static void task_control_entry(void *argument)
         .yaw_scale_m = APP_CONTROL_YAW_SCALE_M,
         .max_motor_current_a = APP_BALANCE_MAX_CURRENT_A,
     };
-    const test_actuator_drive_config_t drive_test_config =
-    {
-        .max_motor_current_a =
-            APP_CONTROL_DRIVE_TEST_MAX_MOTOR_CURRENT_A,
-        .current_slew_rate_a_per_s =
-            APP_CONTROL_DRIVE_TEST_SLEW_RATE_A_PER_S,
-    };
     control_snapshot_t snapshot;
 
     memset(&snapshot, 0, sizeof(snapshot));
@@ -209,16 +200,6 @@ static void task_control_entry(void *argument)
                                                 &allocator_config))
     {
         ESP_LOGE(TAG, "invalid current allocator configuration");
-        vTaskDelete(NULL);
-        return;
-    }
-
-    if (!test_actuator_drive_init(&actuator_drive_test,
-                                  &drive_test_config) ||
-        (APP_CONTROL_DRIVE_TEST_MAX_MOTOR_CURRENT_A >
-         APP_BALANCE_MAX_CURRENT_A))
-    {
-        ESP_LOGE(TAG, "invalid actuator drive test configuration");
         vTaskDelete(NULL);
         return;
     }
@@ -400,107 +381,66 @@ static void task_control_entry(void *argument)
             };
             ctrl_balance_controller_output_t balance_output;
 
-            if (APP_CONTROL_DRIVE_TEST_ENABLED != 0)
+            if (snapshot.state.valid &&
+                (!balance_reference_captured ||
+                 !balance_safety_snapshot.motion_allowed))
             {
-                test_actuator_drive_output_t test_output;
-
-                balance_reference_captured = false;
-
-                if (snapshot.state.valid)
-                {
-                    if (!balance_safety_snapshot.motion_allowed)
-                    {
-                        test_actuator_drive_reset(&actuator_drive_test);
-                    }
-
-                    if (test_actuator_drive_update(
-                            &actuator_drive_test,
-                            supervisor_snapshot.forward_input,
-                            supervisor_snapshot.yaw_input,
-                            dt_s,
-                            &test_output))
-                    {
-                        memcpy(snapshot.desired_current_a,
-                               test_output.motor_current_a,
-                               sizeof(snapshot.desired_current_a));
-                        snapshot.forward_current_a =
-                            test_output.forward_current_a;
-                        snapshot.yaw_current_a =
-                            test_output.turn_current_a;
-                        snapshot.balance_output_saturated =
-                            test_output.saturated;
-                        snapshot.balance_command_valid = true;
-                    }
-                }
-                else
-                {
-                    test_actuator_drive_reset(&actuator_drive_test);
-                }
+                ctrl_balance_controller_reset(
+                    &balance_controller,
+                    &snapshot.state);
+                balance_reference_captured = true;
             }
-            else
+
+            if (balance_reference_captured &&
+                ctrl_balance_controller_update(
+                    &balance_controller,
+                    &snapshot.state,
+                    &reference,
+                    dt_s,
+                    &balance_output))
             {
-                if (snapshot.state.valid &&
-                    (!balance_reference_captured ||
-                     !balance_safety_snapshot.motion_allowed))
+                const float axis_current_a
+                    [CTRL_COLLINEAR_MECANUM_AXIS_COUNT] =
                 {
-                    ctrl_balance_controller_reset(
-                        &balance_controller,
-                        &snapshot.state);
-                    balance_reference_captured = true;
-                }
+                    balance_output.forward_current_a,
+                    balance_output.lateral_current_a,
+                    balance_output.yaw_current_a,
+                };
+                bool allocator_saturated = false;
 
-                if (balance_reference_captured &&
-                    ctrl_balance_controller_update(
-                        &balance_controller,
-                        &snapshot.state,
-                        &reference,
-                        dt_s,
-                        &balance_output))
+                snapshot.forward_velocity_reference_mps =
+                    balance_output.forward_velocity_reference_mps;
+                snapshot.lateral_velocity_reference_mps =
+                    balance_output.lateral_velocity_reference_mps;
+                snapshot.yaw_rate_reference_rps =
+                    balance_output.yaw_rate_reference_rps;
+                snapshot.forward_position_error_m =
+                    balance_output.forward_position_error_m;
+                snapshot.lateral_position_error_m =
+                    balance_output.lateral_position_error_m;
+                snapshot.yaw_error_rad = balance_output.yaw_error_rad;
+                snapshot.balance_lean_error_rad =
+                    balance_output.lean_error_rad;
+                snapshot.forward_current_a =
+                    balance_output.forward_current_a;
+                snapshot.lateral_current_a =
+                    balance_output.lateral_current_a;
+                snapshot.yaw_current_a = balance_output.yaw_current_a;
+
+                if (ctrl_collinear_mecanum_allocator_update(
+                        &current_allocator,
+                        axis_current_a,
+                        snapshot.desired_current_a,
+                        &allocator_saturated))
                 {
-                    const float axis_current_a
-                        [CTRL_COLLINEAR_MECANUM_AXIS_COUNT] =
-                    {
-                        balance_output.forward_current_a,
-                        balance_output.lateral_current_a,
-                        balance_output.yaw_current_a,
-                    };
-                    bool allocator_saturated = false;
-
-                    snapshot.forward_velocity_reference_mps =
-                        balance_output.forward_velocity_reference_mps;
-                    snapshot.lateral_velocity_reference_mps =
-                        balance_output.lateral_velocity_reference_mps;
-                    snapshot.yaw_rate_reference_rps =
-                        balance_output.yaw_rate_reference_rps;
-                    snapshot.forward_position_error_m =
-                        balance_output.forward_position_error_m;
-                    snapshot.lateral_position_error_m =
-                        balance_output.lateral_position_error_m;
-                    snapshot.yaw_error_rad = balance_output.yaw_error_rad;
-                    snapshot.balance_lean_error_rad =
-                        balance_output.lean_error_rad;
-                    snapshot.forward_current_a =
-                        balance_output.forward_current_a;
-                    snapshot.lateral_current_a =
-                        balance_output.lateral_current_a;
-                    snapshot.yaw_current_a = balance_output.yaw_current_a;
-
-                    if (ctrl_collinear_mecanum_allocator_update(
-                            &current_allocator,
-                            axis_current_a,
-                            snapshot.desired_current_a,
-                            &allocator_saturated))
-                    {
-                        snapshot.balance_output_saturated =
-                            balance_output.saturated || allocator_saturated;
-                        snapshot.balance_command_valid = true;
-                    }
+                    snapshot.balance_output_saturated =
+                        balance_output.saturated || allocator_saturated;
+                    snapshot.balance_command_valid = true;
                 }
             }
         }
         else
         {
-            test_actuator_drive_reset(&actuator_drive_test);
             balance_reference_captured = false;
         }
 

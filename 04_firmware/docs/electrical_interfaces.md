@@ -2,7 +2,7 @@
 
 This document records firmware-facing electrical assumptions. It should be updated whenever wiring, connectors, pin assignments, or target boards change.
 
-## ESP32 bring-up pin map
+## ESP32 pin map
 
 ### ISM330DHCX IMU over SPI
 

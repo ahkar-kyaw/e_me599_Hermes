@@ -17,6 +17,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -131,6 +132,13 @@ static void task_safety_entry(void *argument)
         request.timestamp_us = supervisor_snapshot.timestamp_us;
         request.enabled =
             supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL;
+        request.motion_neutral =
+            (fabsf(supervisor_snapshot.forward_input) <=
+             APP_BALANCE_ARM_INPUT_LIMIT) &&
+            (fabsf(supervisor_snapshot.lateral_input) <=
+             APP_BALANCE_ARM_INPUT_LIMIT) &&
+            (fabsf(supervisor_snapshot.yaw_input) <=
+             APP_BALANCE_ARM_INPUT_LIMIT);
 
         safety_rc_check(&rc_snapshot,
                         now_us,

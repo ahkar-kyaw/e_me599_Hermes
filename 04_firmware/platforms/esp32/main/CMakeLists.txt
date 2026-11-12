@@ -13,7 +13,6 @@ idf_component_register(
         "tasks/task_safety.c"
         "tasks/task_supervisor.c"
         "tasks/task_ui.c"
-        "tests/test_actuator_drive.c"
         "../../../common/src/app/app_balance_state.c"
         "../../../common/src/app/app_operator_controls.c"
         "../../../common/src/control/ctrl_balance_controller.c"
@@ -37,7 +36,6 @@ idf_component_register(
         "bsp"
         "config"
         "tasks"
-        "tests"
     PRIV_REQUIRES
         esp_common
         esp_driver_gpio

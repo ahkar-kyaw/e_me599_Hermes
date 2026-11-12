@@ -1,6 +1,6 @@
 # ESP32 platform firmware
 
-The ESP32 platform is the active bring-up target. It uses native
+The ESP32 platform is the active firmware target. It uses native
 ESP-IDF with CMake and Ninja and runs the IMU pipeline, CRSF receiver,
 ST7789 READY/ACTIVE dashboard, CubeMars feedback, state estimation, and
 safety-gated balance-current control.
@@ -31,11 +31,14 @@ platforms/esp32/
 
         config/
             config_actuator.h
+            config_control.h
             config_imu.h
             config_rc.h
             config_ui.h
 
         tasks/
+            task_control.c
+            task_control.h
             task_imu.c
             task_imu.h
             task_motor.c
@@ -88,12 +91,15 @@ Exit the serial monitor with `Ctrl+]`.
 APP_PLATFORM_ESP32
 BOARD_ESP32_NODEMCU_V1
 APP_ENABLE_ACTUATORS
+APP_ENABLE_CONTROL_STATE
 APP_ENABLE_RC_RECEIVER
 APP_ENABLE_UI
 ```
 
 `APP_ENABLE_ACTUATORS` starts the motor feedback and safety-approved
 command task. No command is transmitted automatically at boot.
+`APP_ENABLE_CONTROL_STATE` starts state estimation and control when actuators
+are enabled.
 `APP_ENABLE_RC_RECEIVER` starts the receiver task.
 `APP_ENABLE_UI` starts the display task.
 The current values are defined in `main/CMakeLists.txt`.
@@ -122,8 +128,7 @@ CAN RX          GPIO32, connected to CAN Pal RX
 ```
 
 INT1 and INT2 are defined for future use. The IMU is currently polled.
-The full electrical pin map and power notes are in
-`03_electrical/docs/pin_map_esp32_bringup.md`.
+The source schematic and PCB are in `03_electrical/esp32_nodemcu/`.
 
 ## BSP layer
 
@@ -171,6 +176,10 @@ task_ui
     Renders the READY or ACTIVE dashboard.
     Is read-only and does not own requests, safety state, or motion commands.
 
+task_control
+    Runs the 200 Hz state estimator and closed-loop balance/motion controller.
+    Produces desired current but does not own permission to move.
+
 task_supervisor
     Owns SAFE_IDLE and BALANCE_CONTROL modes.
 
@@ -209,7 +218,7 @@ config_actuator.h
 
 config_control.h
     State geometry and conversion values.
-    Balance gains, lean zero limits, current limit, motor mix,
+    Balance and motion gains, limits, lean zero settings, mecanum geometry,
     freshness, stop hold, and lean safety limits.
 ```
 
@@ -219,6 +228,9 @@ Current UI mapping:
 CH5 SA     master enable
 CH6 SD     balance off/on
 CH7 SE     zero stationary lean on READY
+CH3 Ele    forward/reverse velocity on ACTIVE
+CH1 Ail    lateral velocity on ACTIVE
+CH4 Rud    yaw rate on ACTIVE
 ```
 
 See `04_firmware/docs/ui_subsystem.md` for UI behavior, channel

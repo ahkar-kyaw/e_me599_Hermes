@@ -48,21 +48,17 @@ position controller Ki     0
 position controller Kd     0
 ```
 
-The firmware balance limit remains `APP_BALANCE_MAX_CURRENT_A = 1.0 A` during
-commissioning. It must remain below the configured 2.7 A driver limit. The
+The initial firmware balance limit is `APP_BALANCE_MAX_CURRENT_A = 1.0 A`.
+It must remain below the configured 2.7 A driver limit. The
 speed and position gains are internal drive settings and are not used by the
 firmware while servo-current mode is active.
 
 ## Safety behavior
 
 Motion requires an active CAN bus and fresh, configured, fault-free feedback
-from every actuator. A fault or stale command starts a zero-current stop window.
-If SA and SD remain on, the simplified safety state machine automatically arms
-again after the stop window once every inhibit is clear.
-
-Automatic rearming is intentionally simple but means a cleared intermittent
-fault can restore torque without another switch edge. Turn SD or SA off before
-touching the robot or changing wiring.
+from every actuator. A fault or stale command starts a zero-current stop
+window and enters `LOCKOUT`. Torque cannot return until the operator turns SD
+or SA off, clears the fault, centers the motion sticks, and arms again.
 
 ## Incident records
 

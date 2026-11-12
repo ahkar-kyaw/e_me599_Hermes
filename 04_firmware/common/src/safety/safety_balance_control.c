@@ -29,7 +29,8 @@ static uint32_t safety_balance_inhibits(
     const actuator_snapshot_t *actuator_snapshot);
 static void safety_balance_begin_stop(
     safety_balance_control_t *safety,
-    uint64_t now_us);
+    uint64_t now_us,
+    bool rearm_required);
 
 bool safety_balance_control_init(
     safety_balance_control_t *safety,
@@ -92,22 +93,63 @@ void safety_balance_control_update(
         imu_status,
         actuator_snapshot);
 
-    if (!request_fresh || !request->enabled)
+    const bool controlled_stop = request_fresh && !request->enabled &&
+        rc_snapshot->valid && rc_status->safe_for_control;
+
+    if (safety->state == APP_BALANCE_SAFETY_STOPPING)
+    {
+        safety->safe_since_us = 0u;
+
+        if (controlled_stop)
+        {
+            safety->rearm_required = false;
+        }
+
+        if (now_us >= safety->stop_until_us)
+        {
+            safety->state = safety->rearm_required ?
+                APP_BALANCE_SAFETY_LOCKOUT :
+                APP_BALANCE_SAFETY_DISABLED;
+        }
+    }
+    else if (safety->state == APP_BALANCE_SAFETY_LOCKOUT)
+    {
+        safety->safe_since_us = 0u;
+
+        if (controlled_stop)
+        {
+            safety->state = APP_BALANCE_SAFETY_DISABLED;
+            safety->rearm_required = false;
+        }
+    }
+    else if (!request_fresh)
     {
         safety->safe_since_us = 0u;
 
         if (safety->state == APP_BALANCE_SAFETY_ARMED)
         {
-            safety_balance_begin_stop(safety, now_us);
+            safety_balance_begin_stop(safety, now_us, true);
         }
-        else if ((safety->state == APP_BALANCE_SAFETY_STOPPING) &&
-                 (now_us < safety->stop_until_us))
+        else
         {
-            /* Continue transmitting zero current during the stop window. */
+            safety->state = APP_BALANCE_SAFETY_LOCKOUT;
+            safety->rearm_required = true;
+        }
+    }
+    else if (!request->enabled)
+    {
+        safety->safe_since_us = 0u;
+
+        if (safety->state == APP_BALANCE_SAFETY_ARMED)
+        {
+            safety_balance_begin_stop(safety,
+                                      now_us,
+                                      !controlled_stop);
         }
         else
         {
             safety->state = APP_BALANCE_SAFETY_DISABLED;
+            safety->rearm_required = false;
         }
     }
     else if (inhibits != APP_BALANCE_INHIBIT_NONE)
@@ -116,22 +158,12 @@ void safety_balance_control_update(
 
         if (safety->state == APP_BALANCE_SAFETY_ARMED)
         {
-            safety_balance_begin_stop(safety, now_us);
-        }
-        else if ((safety->state == APP_BALANCE_SAFETY_STOPPING) &&
-                 (now_us < safety->stop_until_us))
-        {
-            /* Continue transmitting zero current during the stop window. */
+            safety_balance_begin_stop(safety, now_us, true);
         }
         else
         {
             safety->state = APP_BALANCE_SAFETY_WAIT_SAFE;
         }
-    }
-    else if ((safety->state == APP_BALANCE_SAFETY_STOPPING) &&
-             (now_us < safety->stop_until_us))
-    {
-        safety->safe_since_us = 0u;
     }
     else if (safety->state != APP_BALANCE_SAFETY_ARMED)
     {
@@ -153,6 +185,11 @@ void safety_balance_control_update(
 
     snapshot->state = safety->state;
     snapshot->inhibit_flags = inhibits;
+
+    if (safety->state == APP_BALANCE_SAFETY_LOCKOUT)
+    {
+        snapshot->inhibit_flags |= APP_BALANCE_INHIBIT_REARM;
+    }
 
     if (safety->state == APP_BALANCE_SAFETY_ARMED)
     {
@@ -235,6 +272,12 @@ static uint32_t safety_balance_inhibits(
         flags |= APP_BALANCE_INHIBIT_RC;
     }
 
+    if ((safety->state != APP_BALANCE_SAFETY_ARMED) &&
+        !request->motion_neutral)
+    {
+        flags |= APP_BALANCE_INHIBIT_OPERATOR;
+    }
+
     if (!state_fresh || !control_snapshot->state.valid ||
         !control_snapshot->balance_command_valid ||
         (control_snapshot->input_fault_flags != CTRL_STATE_FAULT_NONE))
@@ -297,9 +340,11 @@ static uint32_t safety_balance_inhibits(
 
 static void safety_balance_begin_stop(
     safety_balance_control_t *safety,
-    uint64_t now_us)
+    uint64_t now_us,
+    bool rearm_required)
 {
     safety->state = APP_BALANCE_SAFETY_STOPPING;
     safety->safe_since_us = 0u;
     safety->stop_until_us = now_us + safety->config.stop_hold_us;
+    safety->rearm_required = rearm_required;
 }

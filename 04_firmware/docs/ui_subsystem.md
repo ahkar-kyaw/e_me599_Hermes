@@ -12,8 +12,8 @@ READY
 
 ACTIVE
     shown when SA and SD are on
-    displays balance safety state, lean, rate, position, velocity,
-    current command, current saturation, and primary inhibit cause
+    displays safety state/inhibit, lean/rate, commanded body velocity,
+    estimated body velocity, and forward/lateral/yaw current contributions
 ```
 
 ## RC assignments
@@ -22,6 +22,9 @@ ACTIVE
 SA / CH5    master enable
 SD / CH6    balance enable
 SE / CH7    zero lean request
+Ele / CH3   forward/reverse velocity
+Ail / CH1   lateral velocity
+Rud / CH4   yaw rate
 ```
 
 Assignments and switch polarities are in
@@ -33,8 +36,14 @@ keeping both switches off before applying power.
 
 SE is edge-triggered so holding the momentary switch does not repeatedly zero
 lean. Zeroing is accepted only while the supervisor is in `SAFE_IDLE`, the
-mounted IMU attitude is calibrated, valid, and fresh, raw lean is within the configured zeroing window, and
-lean rate is small.
+mounted IMU attitude is calibrated, valid, and fresh, raw lean is within the
+configured zeroing window, and lean rate is small.
+
+The ACTIVE screen uses `CMD` for the slew-limited reference, `VEL` for the
+estimated motion, and `OUT` for the three controller current contributions.
+The `OUT` row turns red when an axis or final motor allocation is saturated.
+`LOCKOUT / SD OFF` means a running fault was latched; lower SD or SA before
+attempting another arm.
 
 ## Module ownership
 

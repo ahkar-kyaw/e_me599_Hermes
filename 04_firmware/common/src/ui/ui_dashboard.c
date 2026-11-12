@@ -185,7 +185,6 @@ static void ui_dashboard_render_active(
     const ui_dashboard_model_t *model)
 {
     const control_snapshot_t *control = model->control_snapshot;
-    const actuator_snapshot_t *actuator = model->actuator_snapshot;
     const app_balance_safety_snapshot_t *balance =
         model->balance_snapshot;
     char line[36];
@@ -211,42 +210,41 @@ static void ui_dashboard_render_active(
 
     (void)snprintf(line,
                    sizeof(line),
-                   "TEST F%+.2f  TURN%+.2f",
-                   (double)control->forward_current_a,
-                   (double)control->yaw_current_a);
+                   "CMD F%+.2f L%+.2f Y%+.2f",
+                   (double)control->forward_velocity_reference_mps,
+                   (double)control->lateral_velocity_reference_mps,
+                   (double)control->yaw_rate_reference_rps);
     ui_canvas_draw_text(canvas, 4u, 57u, line, UI_COLOR_WHITE, 1u);
 
     (void)snprintf(line,
                    sizeof(line),
-                   "REQ %+.2f %+.2f %+.2f %+.2f",
-                   (double)control->desired_current_a[0],
-                   (double)control->desired_current_a[1],
-                   (double)control->desired_current_a[2],
-                   (double)control->desired_current_a[3]);
+                   "VEL F%+.2f L%+.2f Y%+.2f",
+                   (double)control->state.body_forward_mps,
+                   (double)control->state.body_left_mps,
+                   (double)control->state.yaw_rate_rps);
     ui_canvas_draw_text(canvas,
                         4u,
                         72u,
+                        line,
+                        UI_COLOR_WHITE,
+                        1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "OUT F%+.2f L%+.2f Y%+.2f",
+                   (double)control->forward_current_a,
+                   (double)control->lateral_current_a,
+                   (double)control->yaw_current_a);
+    ui_canvas_draw_text(canvas,
+                        4u,
+                        88u,
                         line,
                         control->balance_output_saturated ?
                             UI_COLOR_RED : UI_COLOR_WHITE,
                         1u);
 
-    (void)snprintf(line,
-                   sizeof(line),
-                   "FB  %+.2f %+.2f %+.2f %+.2f",
-                   (double)actuator->actuator[0].current_a,
-                   (double)actuator->actuator[1].current_a,
-                   (double)actuator->actuator[2].current_a,
-                   (double)actuator->actuator[3].current_a);
-    ui_canvas_draw_text(canvas,
-                        4u,
-                        88u,
-                        line,
-                        UI_COLOR_WHITE,
-                        1u);
-
     ui_canvas_draw_text(canvas, 4u, 106u,
-                        "DRIVE TEST  SD OFF=STOP",
+                        "CH3 FWD CH1 LEFT CH4 YAW",
                         UI_COLOR_MUTED, 1u);
 }
 
@@ -282,6 +280,9 @@ static const char *ui_dashboard_balance_state(
         case APP_BALANCE_SAFETY_STOPPING:
             return "STOPPING";
 
+        case APP_BALANCE_SAFETY_LOCKOUT:
+            return "LOCKOUT";
+
         case APP_BALANCE_SAFETY_DISABLED:
         default:
             return "OFF";
@@ -300,6 +301,9 @@ static ui_color_t ui_dashboard_balance_color(
         case APP_BALANCE_SAFETY_STOPPING:
             return UI_COLOR_AMBER;
 
+        case APP_BALANCE_SAFETY_LOCKOUT:
+            return UI_COLOR_RED;
+
         case APP_BALANCE_SAFETY_DISABLED:
         default:
             return UI_COLOR_MUTED;
@@ -311,6 +315,11 @@ static const char *ui_dashboard_inhibit(uint32_t flags)
     if (flags == APP_BALANCE_INHIBIT_NONE)
     {
         return "NONE";
+    }
+
+    if ((flags & APP_BALANCE_INHIBIT_REARM) != 0u)
+    {
+        return "SD OFF";
     }
 
     if ((flags & APP_BALANCE_INHIBIT_RC) != 0u)
@@ -346,6 +355,11 @@ static const char *ui_dashboard_inhibit(uint32_t flags)
     if ((flags & APP_BALANCE_INHIBIT_STATE) != 0u)
     {
         return "STATE";
+    }
+
+    if ((flags & APP_BALANCE_INHIBIT_OPERATOR) != 0u)
+    {
+        return "STICKS";
     }
 
     if ((flags & APP_BALANCE_INHIBIT_REQUEST_STALE) != 0u)

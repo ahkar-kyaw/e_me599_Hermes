@@ -52,8 +52,11 @@ current = output_sign * (
     - Ki    * integral(position_error))
 ```
 
-The position reference is captured when balance mode starts. Integral is
-bounded and disabled by default until the faster loops are stable.
+Forward, lateral, and yaw references are generated from CH3, CH1, and CH4 and
+limited in both speed and acceleration. Position and yaw references are
+captured again whenever motion is not safety-approved, preventing stored error
+during an arm or stop. Integral action is bounded and disabled by default until
+the proportional and damping loops are stable.
 
 The controller produces desired current only. `safety_balance_control` decides
 whether that current may reach the actuator task.

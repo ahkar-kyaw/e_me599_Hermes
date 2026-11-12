@@ -33,6 +33,7 @@ typedef struct
     app_balance_safety_state_t state;
     uint64_t safe_since_us;
     uint64_t stop_until_us;
+    bool rearm_required;
     bool initialized;
 } safety_balance_control_t;
 

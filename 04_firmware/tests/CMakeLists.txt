@@ -98,23 +98,3 @@ target_compile_options(test_app_operator_controls PRIVATE
 )
 
 add_test(NAME app_operator_controls COMMAND test_app_operator_controls)
-
-add_executable(test_actuator_drive_module
-    test_actuator_drive_module.c
-    ../platforms/esp32/main/tests/test_actuator_drive.c
-)
-
-target_include_directories(test_actuator_drive_module PRIVATE
-    ../common/include
-    ../platforms/esp32/main/tests
-)
-
-target_compile_features(test_actuator_drive_module PRIVATE c_std_11)
-target_compile_options(test_actuator_drive_module PRIVATE
-    -Wall
-    -Wextra
-    -Werror
-)
-target_link_libraries(test_actuator_drive_module PRIVATE m)
-
-add_test(NAME actuator_drive_module COMMAND test_actuator_drive_module)

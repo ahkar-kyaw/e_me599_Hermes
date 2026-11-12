@@ -1,11 +1,17 @@
 # Balance, motion, and disturbance rejection
 
-## Current commissioning configuration
+## Current configuration
 
-The checked-in build is an open-loop actuator drive test. Balance, position,
-velocity, lateral, and yaw feedback are bypassed. CH3 directly requests
-forward/reverse current and CH4 requests a stationary turn. Commands remain
-slew-limited, current-limited, and gated by the normal safety path.
+The checked-in build runs the closed-loop balance and body-motion controller.
+CH3 requests forward velocity, CH1 requests lateral velocity, and CH4 requests
+yaw rate. Each reference is slew-limited. Returning a stick to center holds a
+bounded local position or yaw reference so the robot can reject small external
+disturbances instead of continuing to drift.
+
+The checked-in gains are bounded starting values chosen for the current 1.0 A
+firmware limit. They are not a substitute for tuning on the assembled robot;
+mass, center of mass, actuator response, friction, and delay determine the
+final stable values.
 
 Confirmed geometry:
 
@@ -17,8 +23,8 @@ wheel 3 position   -33 mm, inner left
 wheel 4 position   -95 mm, far left
 ```
 
-The roller-angle pattern remains the existing `+45, -45, +45, -45` assumption
-and must be verified before lateral and yaw gains are restored.
+The roller-angle pattern is the `+45, -45, +45, -45` model assumption. Verify
+the installed roller handedness and motion signs before increasing authority.
 
 ## Implemented control path
 
@@ -89,9 +95,9 @@ Paper and reference implementation:
 SA off + SD off   SAFE_IDLE and READY screen
 SA on + SD off    READY; press SE while stationary to zero lean
 SA on + SD on     request balance; WAIT SAFE then LIVE
-CH3 up/down       equal forward/reverse wheel current while LIVE
-CH1 left/right    disabled during the drive test
-CH4 left/right    stationary turn current while LIVE
+CH3 up/down       forward/reverse velocity while LIVE
+CH1 left/right    lateral velocity while LIVE
+CH4 left/right    yaw rate while LIVE
 SD off or SA off  immediate zero-current stop sequence
 ```
 
@@ -107,9 +113,9 @@ the configured limit.
 
 Before motion permission becomes active, the controller continuously captures
 the current position and yaw. This prevents reference error from accumulating
-during the arming dwell. A running inhibit starts a zero-current stop window.
-With SA and SD still on, the controller can arm again after the stop window and
-all inhibits clear.
+during the arming dwell. The motion sticks must be centered to arm. A running
+inhibit starts a zero-current stop window and then enters `LOCKOUT`; torque
+cannot return until SD or SA is turned off and a new safe arm is completed.
 
 ## First-motion test sequence
 
@@ -118,19 +124,18 @@ Use a fixture or tether and keep a hand on SD.
 1. With SA and SD off, verify READY shows near-zero lean after pressing SE.
 2. Raise SA, center CH1/CH3/CH4, then raise SD. Expect `WAIT SAFE`, followed by
    `LIVE` after 300 ms inside the arm limits.
-3. Apply a small CH3 command. `REQ` should contain four equal values. Reverse
-   CH3 and confirm all four values change sign together.
-4. Confirm all four `REQ` values are equal. These are logical currents before
-   the per-actuator mounting direction is applied.
-5. Compare the four direction-normalized `FB` currents. Motor 2 should track
-   the same sign and similar magnitude as the others under comparable load.
-6. Center CH3, then apply a small CH4 command. Motors 1 and 2 should receive
-   the same sign; motors 3 and 4 should receive the opposite sign. Reverse CH4
-   and confirm both pairs reverse.
+3. Apply a small CH3 command. `CMD F` should ramp smoothly and `VEL F` should
+   follow with the same sign. Reverse CH3 and repeat.
+4. Center CH3. The forward reference stops and the position loop should oppose
+   a small displacement without sustained oscillation.
+5. Apply small CH1 and CH4 commands separately. Confirm `VEL L` and `VEL Y`
+   follow their corresponding `CMD` signs.
+6. Check `OUT F/L/Y`; a red row means an axis or motor allocation is limiting.
 7. Lower SD. Expect zero current immediately, `STOPPING` for 200 ms, then
    READY/OFF behavior.
 8. Verify RC loss, IMU loss, CAN loss, feedback loss, motor fault, excessive
-   lean, and excessive requested current all remove motion permission.
+   lean, and excessive requested current all remove motion permission and lead
+   to `LOCKOUT`. Lower SD to acknowledge before rearming.
 
 If an axis runs backward, change only its corresponding `*_OUTPUT_SIGN` after
 first confirming the displayed command and measured velocity signs. Do not
@@ -156,15 +161,15 @@ All controller and geometry values are in
    limit. Keep the checked-in 1.0 A global limit until thermal, supply, and
    mechanical tests justify an increase.
 
-The commissioning rows on the ACTIVE page mean:
+The ACTIVE page rows mean:
 
 ```text
-TEST F/T      slew-limited forward and turn current contributions
-REQ           requested logical currents for motors 1, 2, 3, and 4
-FB            measured direction-normalized currents for motors 1, 2, 3, and 4
+CMD F/L/Y     slew-limited forward/lateral velocity and yaw-rate references
+VEL F/L/Y     estimated forward/lateral velocity and yaw rate
+OUT F/L/Y     controller forward/lateral/yaw current contributions
 ```
 
-`REQ` turning red means the controller or final allocation is limited.
+`OUT` turning red means the controller or final allocation is limited.
 
 ## Physical values still needed for model-based polishing
 

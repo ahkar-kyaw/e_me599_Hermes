@@ -1,18 +1,6 @@
-# Software guide and roadmap
+# Final validation checklist
 
-## Current application
-
-The current ESP32 application provides:
-
-- ISM330DHCX sampling, gyro calibration, mounting correction, and attitude;
-- CRSF reception and safety validation;
-- four-actuator CubeMars CAN feedback and servo-current transmission;
-- 200 Hz planar state estimation, balance, motion, and position recovery;
-- safety-gated current with freshness, tilt, feedback, fault, and CAN checks;
-- a two-screen READY/ACTIVE ST7789 dashboard; and
-- runtime lean zeroing from the READY screen.
-
-## Current operating sequence
+## Operating check
 
 1. Power the transmitter with SA and SD off.
 2. Power the robot while it is supported and keep it stationary for IMU gyro
@@ -26,7 +14,7 @@ The current ESP32 application provides:
 8. Use CH3 for forward/reverse, CH1 for lateral motion, and CH4 for yaw.
 9. Turn SD or SA off to stop.
 
-## Important behavior
+## Required behavior
 
 - SA and SD are direct switch levels; no startup edge is required.
 - A running fault causes zero-current stopping and then `LOCKOUT`; torque does
@@ -34,8 +22,9 @@ The current ESP32 application provides:
 - Motion sticks must be centered during the 300 ms arming dwell.
 - The lean trim is not persisted across reboot.
 - The current limit remains 1.0 A until balance tuning justifies an increase.
+- OTA requires SA and SD off and a deliberate SC low-to-high transition.
 
-## Remaining validation and tuning
+## Before thesis sign-off
 
 1. Validate geometry, body-axis signs, zeroing, every stop path, and task timing.
 2. Tune lean and lean-rate feedback, then forward velocity and position.

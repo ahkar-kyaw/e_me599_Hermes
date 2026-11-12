@@ -11,6 +11,7 @@ flowchart LR
     RC[CRSF receiver] --> TR[task_rc]
     TR --> TO[task_operator]
     TO --> TS[task_supervisor]
+    TO --> OTA[task_ota]
 
     IMU[ISM330DHCX] --> TI[task_imu]
     CAN[CubeMars CAN] <--> TM[task_motor]
@@ -24,6 +25,9 @@ flowchart LR
     TR --> SAFE
     TM --> SAFE
     SAFE -->|approved current only| TM
+    MAC[Mac OTA server] <-->|Phone hotspot LAN| OTA
+    OTA --> FLASH[Inactive OTA slot]
+    OTA --> TS
 
     TO -. snapshots .-> UI[task_ui]
     TI -. snapshots .-> UI
@@ -48,6 +52,9 @@ stateDiagram-v2
     STOPPING --> LOCKOUT: Running fault
     LOCKOUT --> READY: SD or SA off
     WAIT_SAFE --> READY: SA off or SD off
+    READY --> UPDATE: SA + SD off, SC low then high
+    UPDATE --> READY: Failed update, SC low
+    UPDATE --> [*]: Successful update reboots
 ```
 
 | Mode | Expected behavior | How to enter |
@@ -57,6 +64,7 @@ stateDiagram-v2
 | `LIVE` | Closed-loop balance, forward, lateral, yaw, and bounded position recovery are active. | Complete `WAIT SAFE` with no inhibit. |
 | `STOPPING` | Zero-current CAN commands are sent for 200 ms before transmission stops. | Turn SA or SD off, lose a required input, exceed the fall limit, or encounter a motor/CAN fault. |
 | `LOCKOUT` | Torque cannot automatically return after a running fault. | Turn SD or SA off to acknowledge the stop, correct the cause, then arm again. |
+| `UPDATE` | Wi-Fi connects, the Mac is discovered, and motion remains blocked while the image is installed. | With SA and SD off, move SC low and high. |
 
 ## Source layout
 
@@ -82,10 +90,12 @@ SE / CH7    zero lean in READY while stationary
 Ele / CH3   forward and reverse velocity in LIVE
 Ail / CH1   lateral velocity in LIVE
 Rud / CH4   yaw rate in LIVE
+SC / CH10   OTA trigger while SA and SD are off
 ```
 
-Channel assignments are configured in
-`platforms/esp32/main/config/config_rc.h`.
+Motion and safety channels are configured in
+`platforms/esp32/main/config/config_rc.h`. The OTA channel is configured with
+`idf.py menuconfig`.
 
 ## Build and flash
 
@@ -105,8 +115,4 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-Configuration values that must match the physical robot are listed in
-`docs/robot_configuration_checklist.md`.
-
-The control equation, tuning order, first-motion test, and ACTIVE dashboard
-fields are documented in `docs/balance_control.md`.
+Documentation is indexed in [`docs/README.md`](docs/README.md).

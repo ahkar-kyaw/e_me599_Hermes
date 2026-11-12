@@ -5,10 +5,12 @@ idf_component_register(
         "bsp/bsp_crsf_uart_esp32.c"
         "bsp/bsp_display_spi_esp32.c"
         "bsp/bsp_imu_spi_esp32.c"
+        "services/svc_ota_esp32.c"
         "tasks/task_control.c"
         "tasks/task_imu.c"
         "tasks/task_motor.c"
         "tasks/task_operator.c"
+        "tasks/task_ota.c"
         "tasks/task_rc.c"
         "tasks/task_safety.c"
         "tasks/task_supervisor.c"
@@ -35,9 +37,15 @@ idf_component_register(
         "../../../common/include"
         "bsp"
         "config"
+        "services"
         "tasks"
     PRIV_REQUIRES
+        app_update
         esp_common
+        esp_event
+        esp_https_ota
+        esp_netif
+        esp_wifi
         esp_driver_gpio
         esp_driver_spi
         esp_driver_twai
@@ -45,6 +53,8 @@ idf_component_register(
         esp_timer
         freertos
         log
+        lwip
+        nvs_flash
 )
 
 target_link_libraries(${COMPONENT_LIB} PRIVATE m)

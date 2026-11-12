@@ -9,6 +9,7 @@
 #include "task_control.h"
 #include "task_imu.h"
 #include "task_motor.h"
+#include "task_ota.h"
 #include "task_rc.h"
 #include "task_supervisor.h"
 
@@ -131,7 +132,8 @@ static void task_safety_entry(void *argument)
 
         request.timestamp_us = supervisor_snapshot.timestamp_us;
         request.enabled =
-            supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL;
+            (supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL) &&
+            !task_ota_is_active();
         request.motion_neutral =
             (fabsf(supervisor_snapshot.forward_input) <=
              APP_BALANCE_ARM_INPUT_LIMIT) &&

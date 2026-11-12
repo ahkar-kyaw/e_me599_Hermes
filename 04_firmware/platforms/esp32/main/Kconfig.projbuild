@@ -1,0 +1,27 @@
+menu "Application OTA update"
+
+    config APP_OTA_ENABLE
+        bool "Enable RC-triggered local OTA"
+        default n
+        help
+            Connect to Wi-Fi and discover the local OTA server when the
+            configured RC trigger is switched from low to high while the robot
+            is disarmed.
+
+    config APP_OTA_WIFI_SSID
+        string "Wi-Fi SSID"
+        default ""
+        depends on APP_OTA_ENABLE
+
+    config APP_OTA_WIFI_PASSWORD
+        string "Wi-Fi password"
+        default ""
+        depends on APP_OTA_ENABLE
+
+    config APP_OTA_TRIGGER_CHANNEL
+        int "RC trigger channel"
+        range 1 16
+        default 10
+        depends on APP_OTA_ENABLE
+
+endmenu

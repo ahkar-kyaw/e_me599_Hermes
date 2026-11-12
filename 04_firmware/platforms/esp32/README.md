@@ -10,6 +10,7 @@ safety-gated balance-current control.
 ```text
 platforms/esp32/
     CMakeLists.txt
+    partitions.csv
     sdkconfig.defaults
 
     include/
@@ -17,6 +18,7 @@ platforms/esp32/
 
     main/
         CMakeLists.txt
+        Kconfig.projbuild
         main.c
 
         bsp/
@@ -33,8 +35,13 @@ platforms/esp32/
             config_actuator.h
             config_control.h
             config_imu.h
+            config_ota.h
             config_rc.h
             config_ui.h
+
+        services/
+            svc_ota_esp32.c
+            svc_ota_esp32.h
 
         tasks/
             task_control.c
@@ -45,6 +52,8 @@ platforms/esp32/
             task_motor.h
             task_operator.c
             task_operator.h
+            task_ota.c
+            task_ota.h
             task_rc.c
             task_rc.h
             task_safety.c
@@ -180,8 +189,16 @@ task_control
     Runs the 200 Hz state estimator and closed-loop balance/motion controller.
     Produces desired current but does not own permission to move.
 
+task_ota
+    Requires a disarmed robot and an SC low-to-high transition.
+    Publishes progress and blocks balance through UPDATE mode.
+
+svc_ota_esp32
+    Owns on-demand Wi-Fi, local server discovery, HTTP download, and
+    installation.
+
 task_supervisor
-    Owns SAFE_IDLE and BALANCE_CONTROL modes.
+    Owns SAFE_IDLE, BALANCE_CONTROL, and UPDATE modes.
 
 task_safety
     Owns permission to move.
@@ -220,6 +237,11 @@ config_control.h
     State geometry and conversion values.
     Balance and motion gains, limits, lean zero settings, mecanum geometry,
     freshness, stop hold, and lean safety limits.
+
+config_ota.h
+    OTA discovery/server ports, image path, timing, and trigger thresholds.
+    Wi-Fi credentials are configured in `idf.py menuconfig` and remain in the
+    ignored `sdkconfig`.
 ```
 
 Current UI mapping:
@@ -231,12 +253,10 @@ CH7 SE     zero stationary lean on READY
 CH3 Ele    forward/reverse velocity on ACTIVE
 CH1 Ail    lateral velocity on ACTIVE
 CH4 Rud    yaw rate on ACTIVE
+CH10 SC    OTA trigger while SA and SD are off
 ```
 
-See `04_firmware/docs/ui_subsystem.md` for UI behavior, channel
-reassignment, CRSF raw ranges, and the future tuning boundary.
-See `04_firmware/docs/actuator_subsystem.md` for CubeMars protocol,
-wiring, configuration, safety ownership, and the MIT-mode growth path.
+See `04_firmware/docs/README.md` for the documentation index.
 
 Body frame convention:
 

@@ -4,6 +4,7 @@
 #include "app/app_actuator_types.h"
 #include "app/app_balance_safety_types.h"
 #include "app/app_operator_controls.h"
+#include "app/app_ota_types.h"
 #include "control/ctrl_balance_types.h"
 #include "safety/safety_imu.h"
 #include "safety/safety_rc.h"
@@ -21,6 +22,7 @@ typedef struct
     const actuator_snapshot_t *actuator_snapshot;
     const control_snapshot_t *control_snapshot;
     const app_balance_safety_snapshot_t *balance_snapshot;
+    const app_ota_snapshot_t *ota_snapshot;
 } ui_dashboard_model_t;
 
 void ui_dashboard_render(

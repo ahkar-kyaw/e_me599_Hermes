@@ -12,6 +12,9 @@ task_rc
 task_operator
     maps SA, SD, and SE and publishes fresh operator intent
 
+task_ota
+    owns OTA trigger policy and update progress
+
 task_motor
     owns CAN, actuator feedback, freshness, and frame transmission
 
@@ -19,7 +22,7 @@ task_ui
     owns the display and renders read-only snapshots
 
 task_supervisor
-    owns whole-system mode: SAFE_IDLE or BALANCE_CONTROL
+    owns whole-system mode: SAFE_IDLE, BALANCE_CONTROL, or UPDATE
 
 task_control
     owns the 200 Hz state estimator and desired current calculation
@@ -72,3 +75,7 @@ ESP32 tasks and BSPs provide scheduling and peripheral access.
 `task_operator` is intentionally separate from `task_ui`. Full-frame ST7789
 transfers are blocking, but display latency cannot delay the operator request
 or force the supervisor back to `SAFE_IDLE`.
+
+OTA networking is ESP32-only. `task_ota` owns policy; `svc_ota_esp32` owns
+on-demand Wi-Fi, local server discovery, and HTTP transport. Portable control
+code has no networking dependency.

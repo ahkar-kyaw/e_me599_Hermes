@@ -16,7 +16,6 @@
 
 static void ui_dashboard_draw_header(
     ui_canvas_t *canvas,
-    const app_operator_controls_state_t *controls,
     bool active_page);
 static void ui_dashboard_render_ready(
     ui_canvas_t *canvas,
@@ -24,6 +23,9 @@ static void ui_dashboard_render_ready(
 static void ui_dashboard_render_active(
     ui_canvas_t *canvas,
     const ui_dashboard_model_t *model);
+static void ui_dashboard_render_update(
+    ui_canvas_t *canvas,
+    const app_ota_snapshot_t *snapshot);
 static bool ui_dashboard_motors_ready(
     const actuator_snapshot_t *snapshot);
 static const char *ui_dashboard_balance_state(
@@ -31,6 +33,10 @@ static const char *ui_dashboard_balance_state(
 static ui_color_t ui_dashboard_balance_color(
     app_balance_safety_state_t state);
 static const char *ui_dashboard_inhibit(uint32_t flags);
+static void ui_dashboard_draw_ota_status(
+    ui_canvas_t *canvas,
+    const app_ota_snapshot_t *snapshot);
+static const char *ui_dashboard_ota_error(app_ota_error_t error);
 
 void ui_dashboard_render(
     ui_canvas_t *canvas,
@@ -41,7 +47,8 @@ void ui_dashboard_render(
         (model->imu_status == NULL) ||
         (model->actuator_snapshot == NULL) ||
         (model->control_snapshot == NULL) ||
-        (model->balance_snapshot == NULL))
+        (model->balance_snapshot == NULL) ||
+        (model->ota_snapshot == NULL))
     {
         return;
     }
@@ -51,7 +58,15 @@ void ui_dashboard_render(
         model->controls->balance_enabled;
 
     ui_canvas_clear(canvas, UI_COLOR_BLACK);
-    ui_dashboard_draw_header(canvas, model->controls, active_page);
+
+    if (app_ota_state_active(model->ota_snapshot->state) ||
+        (model->ota_snapshot->state == APP_OTA_STATE_FAILED))
+    {
+        ui_dashboard_render_update(canvas, model->ota_snapshot);
+        return;
+    }
+
+    ui_dashboard_draw_header(canvas, active_page);
 
     if (active_page)
     {
@@ -65,11 +80,8 @@ void ui_dashboard_render(
 
 static void ui_dashboard_draw_header(
     ui_canvas_t *canvas,
-    const app_operator_controls_state_t *controls,
     bool active_page)
 {
-    char switches[20];
-
     ui_canvas_fill(canvas, 0u, 0u, canvas->width, 20u, UI_COLOR_PANEL);
     ui_canvas_draw_text(canvas,
                         4u,
@@ -77,16 +89,6 @@ static void ui_dashboard_draw_header(
                         active_page ? "ACTIVE" : "READY",
                         active_page ? UI_COLOR_GREEN : UI_COLOR_CYAN,
                         1u);
-
-    (void)snprintf(switches,
-                   sizeof(switches),
-                   "SA %s SD %s",
-                   controls->master_enabled ? "ON" : "OFF",
-                   controls->balance_enabled ? "ON" : "OFF");
-    const uint16_t width = ui_canvas_text_width(switches, 1u);
-    const uint16_t x = (width < canvas->width) ?
-        (uint16_t)(canvas->width - width - 4u) : 4u;
-    ui_canvas_draw_text(canvas, x, 6u, switches, UI_COLOR_WHITE, 1u);
 }
 
 static void ui_dashboard_render_ready(
@@ -109,7 +111,6 @@ static void ui_dashboard_render_ready(
                    "TRIM %+.2f deg",
                    (double)(control->lean_trim_rad * UI_RAD_TO_DEG));
     ui_canvas_draw_text(canvas, 4u, 42u, line, UI_COLOR_WHITE, 1u);
-    ui_canvas_draw_text(canvas, 104u, 42u, "SE ZERO", UI_COLOR_CYAN, 1u);
 
     (void)snprintf(line,
                    sizeof(line),
@@ -150,15 +151,10 @@ static void ui_dashboard_render_ready(
         ui_canvas_draw_text(canvas, 4u, 88u,
                             "RC LINK LOST", UI_COLOR_RED, 1u);
     }
-    else if (!model->controls->master_enabled)
-    {
-        ui_canvas_draw_text(canvas, 4u, 88u,
-                            "SA ON TO ENABLE", UI_COLOR_MUTED, 1u);
-    }
     else if (control->zero_lean_rejected_count > 0u)
     {
         ui_canvas_draw_text(canvas, 4u, 88u,
-                            "ZERO REJECTED: HOLD STILL", UI_COLOR_RED, 1u);
+                            "ZERO REJECTED: MOTION", UI_COLOR_RED, 1u);
     }
     else if (model->rc_status->safe_for_control &&
              model->imu_status->safe_for_balance &&
@@ -168,16 +164,15 @@ static void ui_dashboard_render_ready(
              ui_dashboard_motors_ready(actuator))
     {
         ui_canvas_draw_text(canvas, 4u, 88u,
-                            "READY - SD ON TO BALANCE", UI_COLOR_GREEN, 1u);
+                            "SYSTEM READY", UI_COLOR_GREEN, 1u);
     }
     else
     {
         ui_canvas_draw_text(canvas, 4u, 88u,
-                            "NOT READY - CHECK ABOVE", UI_COLOR_AMBER, 1u);
+                            "SYSTEM NOT READY", UI_COLOR_AMBER, 1u);
     }
 
-    ui_canvas_draw_text(canvas, 4u, 106u,
-                        "SA MASTER   SD BALANCE", UI_COLOR_MUTED, 1u);
+    ui_dashboard_draw_ota_status(canvas, model->ota_snapshot);
 }
 
 static void ui_dashboard_render_active(
@@ -229,23 +224,107 @@ static void ui_dashboard_render_active(
                         UI_COLOR_WHITE,
                         1u);
 
-    (void)snprintf(line,
-                   sizeof(line),
-                   "OUT F%+.2f L%+.2f Y%+.2f",
-                   (double)control->forward_current_a,
-                   (double)control->lateral_current_a,
-                   (double)control->yaw_current_a);
+    if (control->balance_output_saturated)
+    {
+        ui_canvas_draw_text(canvas, 4u, 88u,
+                            "OUTPUT LIMITED", UI_COLOR_RED, 1u);
+    }
+
+}
+
+static void ui_dashboard_render_update(
+    ui_canvas_t *canvas,
+    const app_ota_snapshot_t *snapshot)
+{
+    char line[28];
+
+    ui_canvas_fill(canvas, 0u, 0u, canvas->width, 20u, UI_COLOR_PANEL);
+    ui_canvas_draw_text(canvas, 4u, 6u, "FIRMWARE UPDATE",
+                        UI_COLOR_CYAN, 1u);
+
+    if (snapshot->state == APP_OTA_STATE_WIFI_CONNECTING)
+    {
+        ui_canvas_draw_text(canvas, 4u, 36u,
+                            "CONNECTING TO WIFI", UI_COLOR_WHITE, 1u);
+    }
+    else if (snapshot->state == APP_OTA_STATE_DISCOVERING)
+    {
+        ui_canvas_draw_text(canvas, 4u, 36u,
+                            "FINDING MAC SERVER", UI_COLOR_WHITE, 1u);
+        (void)snprintf(line,
+                       sizeof(line),
+                       "WIFI %s",
+                       snapshot->wifi_ipv4);
+        ui_canvas_draw_text(canvas, 4u, 56u, line,
+                            UI_COLOR_GREEN, 1u);
+    }
+    else if (snapshot->state == APP_OTA_STATE_DOWNLOADING)
+    {
+        (void)snprintf(line, sizeof(line),
+                       "DOWNLOADING %u%%",
+                       (unsigned int)snapshot->progress_percent);
+        ui_canvas_draw_text(canvas, 4u, 36u, line,
+                            UI_COLOR_WHITE, 1u);
+        ui_canvas_draw_text(canvas, 4u, 56u,
+                            "WIFI CONNECTED", UI_COLOR_GREEN, 1u);
+    }
+    else if (snapshot->state == APP_OTA_STATE_SUCCESS)
+    {
+        ui_canvas_draw_text(canvas, 4u, 36u,
+                            "UPDATE COMPLETE", UI_COLOR_GREEN, 1u);
+        ui_canvas_draw_text(canvas, 4u, 56u,
+                            "RESTARTING", UI_COLOR_WHITE, 1u);
+    }
+    else
+    {
+        (void)snprintf(line,
+                       sizeof(line),
+                       "UPDATE FAILED %ld",
+                       (long)snapshot->error);
+        ui_canvas_draw_text(canvas, 4u, 36u, line,
+                            UI_COLOR_RED, 1u);
+        ui_canvas_draw_text(canvas,
+                            4u,
+                            56u,
+                            ui_dashboard_ota_error(snapshot->error),
+                            UI_COLOR_AMBER,
+                            1u);
+    }
+}
+
+static void ui_dashboard_draw_ota_status(
+    ui_canvas_t *canvas,
+    const app_ota_snapshot_t *snapshot)
+{
     ui_canvas_draw_text(canvas,
                         4u,
-                        88u,
-                        line,
-                        control->balance_output_saturated ?
-                            UI_COLOR_RED : UI_COLOR_WHITE,
+                        106u,
+                        snapshot->enabled ? "OTA ENABLED" : "OTA OFF",
+                        UI_COLOR_MUTED,
                         1u);
+}
 
-    ui_canvas_draw_text(canvas, 4u, 106u,
-                        "CH3 FWD CH1 LEFT CH4 YAW",
-                        UI_COLOR_MUTED, 1u);
+static const char *ui_dashboard_ota_error(app_ota_error_t error)
+{
+    switch (error)
+    {
+        case APP_OTA_ERROR_WIFI:
+            return "WIFI FAILED";
+
+        case APP_OTA_ERROR_DISCOVERY:
+            return "MAC NOT FOUND";
+
+        case APP_OTA_ERROR_DOWNLOAD:
+            return "DOWNLOAD FAILED";
+
+        case APP_OTA_ERROR_IMAGE:
+            return "IMAGE INVALID";
+
+        case APP_OTA_ERROR_INIT:
+        case APP_OTA_ERROR_NONE:
+        default:
+            return "OTA INITIALIZATION";
+    }
 }
 
 static bool ui_dashboard_motors_ready(

@@ -159,6 +159,22 @@ APP_DISPLAY_ORIENTATION
 If EdgeTX endpoints change, record the observed raw low, center, and high
 values before adjusting neutral bands or activation thresholds.
 
+### OTA update
+
+Configure with `idf.py menuconfig` under `Application OTA update`:
+
+```text
+CONFIG_APP_OTA_ENABLE
+CONFIG_APP_OTA_WIFI_SSID
+CONFIG_APP_OTA_WIFI_PASSWORD
+CONFIG_APP_OTA_TRIGGER_CHANNEL
+```
+
+Keep credentials in the ignored `sdkconfig`. Confirm the trigger channel does
+not overlap a safety or motion input. Discovery/server ports and the firmware
+path are in `config_ota.h`; `tools/serve_ota.py` provides the matching Mac
+service. See `ota_update.md` for the update flow.
+
 ## Required before closed-loop balance control
 
 Measure and record these values on the completed robot:

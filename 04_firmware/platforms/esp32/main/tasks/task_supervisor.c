@@ -2,6 +2,7 @@
 
 #include "config_control.h"
 #include "task_operator.h"
+#include "task_ota.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -81,7 +82,11 @@ static void task_supervisor_entry(void *argument)
         snapshot.lateral_input = 0.0f;
         snapshot.yaw_input = 0.0f;
 
-        if (task_supervisor_request_fresh(&request, now_us))
+        if (task_ota_is_active())
+        {
+            snapshot.mode = APP_SYSTEM_MODE_UPDATE;
+        }
+        else if (task_supervisor_request_fresh(&request, now_us))
         {
             snapshot.zero_lean_request_count =
                 request.zero_lean_request_count;

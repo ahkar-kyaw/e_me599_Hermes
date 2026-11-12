@@ -11,6 +11,7 @@
 #include "task_imu.h"
 #include "task_motor.h"
 #include "task_operator.h"
+#include "task_ota.h"
 #include "task_rc.h"
 #include "task_safety.h"
 #include "ui/ui_canvas.h"
@@ -125,6 +126,7 @@ static void task_ui_entry(void *argument)
         actuator_snapshot_t actuator_snapshot;
         control_snapshot_t control_snapshot;
         app_balance_safety_snapshot_t balance_snapshot;
+        app_ota_snapshot_t ota_snapshot;
         safety_rc_status_t rc_status;
         safety_imu_status_t imu_status;
         app_operator_controls_state_t controls_state;
@@ -136,6 +138,7 @@ static void task_ui_entry(void *argument)
         task_control_get_snapshot(&control_snapshot);
         task_safety_get_balance_snapshot(&balance_snapshot);
         task_operator_get_controls_state(&controls_state);
+        task_ota_get_snapshot(&ota_snapshot);
 
         safety_rc_check(&rc_snapshot,
                         now_us,
@@ -159,6 +162,7 @@ static void task_ui_entry(void *argument)
                 .actuator_snapshot = &actuator_snapshot,
                 .control_snapshot = &control_snapshot,
                 .balance_snapshot = &balance_snapshot,
+                .ota_snapshot = &ota_snapshot,
             };
 
             ui_dashboard_render(&canvas, &model);

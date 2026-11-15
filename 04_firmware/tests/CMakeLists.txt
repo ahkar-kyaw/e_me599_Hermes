@@ -117,3 +117,24 @@ target_compile_options(test_app_balance_state PRIVATE
 target_link_libraries(test_app_balance_state PRIVATE m)
 
 add_test(NAME app_balance_state COMMAND test_app_balance_state)
+
+add_executable(test_actuator_current_sequence
+    test_actuator_current_sequence.c
+    ../platforms/esp32/main/tests/test_actuator_current.c
+)
+
+target_include_directories(test_actuator_current_sequence PRIVATE
+    ../common/include
+    ../platforms/esp32/main/tests
+)
+
+target_compile_features(test_actuator_current_sequence PRIVATE c_std_11)
+target_compile_options(test_actuator_current_sequence PRIVATE
+    -Wall
+    -Wextra
+    -Werror
+)
+target_link_libraries(test_actuator_current_sequence PRIVATE m)
+
+add_test(NAME actuator_current_sequence
+         COMMAND test_actuator_current_sequence)

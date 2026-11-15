@@ -29,6 +29,7 @@ int main(void)
         .timestamp_us = 1000u,
         .enabled = true,
         .motion_neutral = true,
+        .balance_required = true,
     };
     control_snapshot_t control;
     rc_snapshot_t rc;
@@ -220,6 +221,71 @@ int main(void)
     if (snapshot.state != APP_BALANCE_SAFETY_STOPPING)
     {
         fail("off request did not stop armed balance");
+    }
+
+    if (!safety_balance_control_init(&safety, &config))
+    {
+        fail("actuator test safety initialization failed");
+    }
+
+    request.enabled = true;
+    request.motion_neutral = true;
+    request.balance_required = false;
+    request.timestamp_us = 900000u;
+    control.timestamp_us = 900000u;
+    control.state.valid = false;
+    control.state.lean_rad = 1.0f;
+    control.input_fault_flags =
+        CTRL_STATE_FAULT_IMU | CTRL_STATE_FAULT_ESTIMATOR;
+    control.balance_command_valid = true;
+    imu_status.safe_for_balance = false;
+
+    safety_balance_control_update(&safety,
+                                  &request,
+                                  &control,
+                                  &rc,
+                                  &rc_status,
+                                  &imu_status,
+                                  &actuator,
+                                  900000u,
+                                  &snapshot);
+
+    request.timestamp_us = 1200000u;
+    control.timestamp_us = 1200000u;
+    safety_balance_control_update(&safety,
+                                  &request,
+                                  &control,
+                                  &rc,
+                                  &rc_status,
+                                  &imu_status,
+                                  &actuator,
+                                  1200000u,
+                                  &snapshot);
+
+    if ((snapshot.state != APP_BALANCE_SAFETY_ARMED) ||
+        !snapshot.motion_allowed ||
+        ((snapshot.inhibit_flags & APP_BALANCE_INHIBIT_IMU) != 0u))
+    {
+        fail("fixture test was incorrectly blocked by balance state");
+    }
+
+    control.desired_current_a[0] = 1.1f;
+    request.timestamp_us = 1201000u;
+    control.timestamp_us = 1201000u;
+    safety_balance_control_update(&safety,
+                                  &request,
+                                  &control,
+                                  &rc,
+                                  &rc_status,
+                                  &imu_status,
+                                  &actuator,
+                                  1201000u,
+                                  &snapshot);
+
+    if ((snapshot.state != APP_BALANCE_SAFETY_STOPPING) ||
+        ((snapshot.inhibit_flags & APP_BALANCE_INHIBIT_CURRENT) == 0u))
+    {
+        fail("fixture test current limit was not enforced");
     }
 
     return EXIT_SUCCESS;

@@ -10,6 +10,7 @@ extern "C" {
 typedef enum
 {
     APP_SYSTEM_MODE_SAFE_IDLE = 0,
+    APP_SYSTEM_MODE_ACTUATOR_TEST,
     APP_SYSTEM_MODE_BALANCE_CONTROL,
     APP_SYSTEM_MODE_UPDATE
 } app_system_mode_t;
@@ -18,6 +19,7 @@ typedef struct
 {
     uint64_t timestamp_us;
     uint32_t zero_lean_request_count;
+    uint32_t actuator_test_request_count;
     float forward_input;
     float lateral_input;
     float yaw_input;

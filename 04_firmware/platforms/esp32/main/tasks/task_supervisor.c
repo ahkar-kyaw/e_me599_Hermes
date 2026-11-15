@@ -1,5 +1,6 @@
 #include "task_supervisor.h"
 
+#include "config_actuator_test.h"
 #include "config_control.h"
 #include "task_operator.h"
 #include "task_ota.h"
@@ -90,6 +91,8 @@ static void task_supervisor_entry(void *argument)
         {
             snapshot.zero_lean_request_count =
                 request.zero_lean_request_count;
+            snapshot.actuator_test_request_count =
+                request.actuator_test_request_count;
 
             if (request.master_enabled && request.balance_enabled)
             {
@@ -97,6 +100,12 @@ static void task_supervisor_entry(void *argument)
                 snapshot.forward_input = request.forward_input;
                 snapshot.lateral_input = request.lateral_input;
                 snapshot.yaw_input = request.yaw_input;
+            }
+            else if ((APP_ACTUATOR_TEST_ENABLED != 0) &&
+                     !request.master_enabled &&
+                     request.balance_enabled)
+            {
+                snapshot.mode = APP_SYSTEM_MODE_ACTUATOR_TEST;
             }
         }
 

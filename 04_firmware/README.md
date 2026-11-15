@@ -15,7 +15,7 @@ flowchart TD
 
     IMU[ISM330DHCX] --> TI[task_imu]
     CAN[CubeMars CAN] <--> TM[task_motor]
-    TI --> TC[task_control<br/>estimate + balance + motion + allocation]
+    TI --> TC[task_control<br/>estimate + balance + actuator test]
     TM --> TC
     TS --> TC
 
@@ -55,6 +55,9 @@ stateDiagram-v2
     READY --> UPDATE: SA + SD off, SC low then high
     UPDATE --> READY: Failed update, SC low
     UPDATE --> [*]: Successful update reboots
+    READY --> ACTUATOR_TEST: SA off, SD on
+    ACTUATOR_TEST --> ACTUATOR_TEST: SE restarts sequence
+    ACTUATOR_TEST --> READY: SD off
 ```
 
 | Mode | Expected behavior | How to enter |
@@ -64,6 +67,7 @@ stateDiagram-v2
 | `LIVE` | Closed-loop balance, forward, lateral, yaw, and bounded position recovery are active. | Complete `WAIT SAFE` with no inhibit. |
 | `STOPPING` | Zero-current CAN commands are sent for the configured stop interval before transmission stops. | Turn SA or SD off, lose a required input, exceed the fall limit, or encounter a motor/CAN fault. |
 | `LOCKOUT` | Torque cannot automatically return after a running fault. | Turn SD or SA off to acknowledge the stop, correct the cause, then arm again. |
+| `ACTUATOR TEST` | Balance is suppressed. A safety-gated sequence applies zero, positive current, zero, and negative current while recording wheel-speed changes. | Keep SA off, turn SD on, then press SE. Press SE again to restart. Turn SD off to stop. |
 | `UPDATE` | Wi-Fi connects, the Mac is discovered, and motion remains blocked while the image is installed. | With SA and SD off, move SC low and high. |
 
 ## Source layout
@@ -76,6 +80,7 @@ common/
 platforms/esp32/
     main/bsp/            ESP-IDF peripheral backends
     main/services/       ESP32 services
+    main/tests/          explicitly armed hardware diagnostics
     main/config/         pin-independent application configuration
     main/tasks/          FreeRTOS task ownership and subsystem glue
 
@@ -88,7 +93,8 @@ tools/                   host-side development tools
 ```text
 SA     master enable
 SD     balance request
-SE     zero lean in READY while stationary
+SE     zero lean with SA on and SD off; start/restart actuator test with
+       SA off and SD on
 Ele    forward and reverse velocity in LIVE
 Ail    lateral velocity in LIVE
 Rud    yaw rate in LIVE
@@ -97,7 +103,8 @@ SC     OTA trigger while SA and SD are off
 
 Motion and safety channels are configured in
 `platforms/esp32/main/config/config_rc.h`. The OTA channel is configured with
-`idf.py menuconfig`.
+`idf.py menuconfig`. Actuator-test current, timing, and enable state are in
+`platforms/esp32/main/config/config_actuator_test.h`.
 
 ## Build and flash
 

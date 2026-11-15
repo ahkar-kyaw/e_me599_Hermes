@@ -278,14 +278,25 @@ static uint32_t safety_balance_inhibits(
         flags |= APP_BALANCE_INHIBIT_OPERATOR;
     }
 
-    if (!state_fresh || !control_snapshot->state.valid ||
-        !control_snapshot->balance_command_valid ||
-        (control_snapshot->input_fault_flags != CTRL_STATE_FAULT_NONE))
+    if (!state_fresh || !control_snapshot->balance_command_valid)
     {
         flags |= APP_BALANCE_INHIBIT_STATE;
     }
 
-    if (!imu_status->safe_for_balance)
+    if (request->balance_required &&
+        (!control_snapshot->state.valid ||
+         (control_snapshot->input_fault_flags != CTRL_STATE_FAULT_NONE)))
+    {
+        flags |= APP_BALANCE_INHIBIT_STATE;
+    }
+    else if (!request->balance_required &&
+             ((control_snapshot->input_fault_flags &
+               (CTRL_STATE_FAULT_ACTUATOR | CTRL_STATE_FAULT_TIMING)) != 0u))
+    {
+        flags |= APP_BALANCE_INHIBIT_STATE;
+    }
+
+    if (request->balance_required && !imu_status->safe_for_balance)
     {
         flags |= APP_BALANCE_INHIBIT_IMU;
     }
@@ -295,10 +306,11 @@ static uint32_t safety_balance_inhibits(
         safety->config.fall_lean_limit_rad :
         safety->config.arm_lean_limit_rad;
 
-    if (fabsf(control_snapshot->state.lean_rad) > lean_limit ||
-        ((safety->state != APP_BALANCE_SAFETY_ARMED) &&
-         (fabsf(control_snapshot->state.lean_rate_rps) >
-          safety->config.arm_lean_rate_limit_rps)))
+    if (request->balance_required &&
+        ((fabsf(control_snapshot->state.lean_rad) > lean_limit) ||
+         ((safety->state != APP_BALANCE_SAFETY_ARMED) &&
+          (fabsf(control_snapshot->state.lean_rate_rps) >
+           safety->config.arm_lean_rate_limit_rps))))
     {
         flags |= APP_BALANCE_INHIBIT_STATE;
     }

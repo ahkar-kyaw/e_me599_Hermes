@@ -130,6 +130,7 @@ static void task_operator_entry(void *argument)
     const safety_rc_config_t rc_safety_config = config_rc_safety();
     task_operator_snapshot_t snapshot;
     uint32_t zero_lean_request_count = 0u;
+    uint32_t actuator_test_request_count = 0u;
 
     memset(&snapshot, 0, sizeof(snapshot));
     task_operator_publish_snapshot(&snapshot);
@@ -165,16 +166,25 @@ static void task_operator_entry(void *argument)
                                      rc_status.safe_for_control,
                                      &snapshot.controls);
 
-        if (snapshot.controls.zero_lean_requested &&
-            snapshot.controls.master_enabled &&
-            !snapshot.controls.balance_enabled)
+        if (snapshot.controls.zero_lean_requested)
         {
-            zero_lean_request_count++;
+            if (snapshot.controls.master_enabled &&
+                !snapshot.controls.balance_enabled)
+            {
+                zero_lean_request_count++;
+            }
+            else if (!snapshot.controls.master_enabled &&
+                     snapshot.controls.balance_enabled)
+            {
+                actuator_test_request_count++;
+            }
         }
 
         snapshot.balance_request.timestamp_us = now_us;
         snapshot.balance_request.zero_lean_request_count =
             zero_lean_request_count;
+        snapshot.balance_request.actuator_test_request_count =
+            actuator_test_request_count;
         snapshot.balance_request.forward_input =
             snapshot.controls.forward_input;
         snapshot.balance_request.lateral_input =

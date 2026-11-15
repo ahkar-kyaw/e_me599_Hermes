@@ -40,6 +40,7 @@ typedef struct
     uint64_t timestamp_us;
     bool enabled;
     bool motion_neutral;
+    bool balance_required;
 } app_balance_safety_request_t;
 
 typedef struct

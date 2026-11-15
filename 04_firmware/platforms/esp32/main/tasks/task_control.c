@@ -2,6 +2,7 @@
 
 #include "app/app_balance_state.h"
 #include "config_actuator.h"
+#include "config_actuator_test.h"
 #include "config_control.h"
 #include "config_imu.h"
 #include "control/ctrl_balance_controller.h"
@@ -12,6 +13,7 @@
 #include "task_motor.h"
 #include "task_safety.h"
 #include "task_supervisor.h"
+#include "test_actuator_current.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -39,10 +41,15 @@ static const char *TAG = "task_control";
 static control_snapshot_t g_control_snapshot;
 static portMUX_TYPE g_control_snapshot_lock =
     portMUX_INITIALIZER_UNLOCKED;
+static app_actuator_test_snapshot_t g_actuator_test_snapshot;
+static portMUX_TYPE g_actuator_test_snapshot_lock =
+    portMUX_INITIALIZER_UNLOCKED;
 
 static void task_control_entry(void *argument);
 static void task_control_publish_snapshot(
     const control_snapshot_t *snapshot);
+static void task_control_publish_actuator_test_snapshot(
+    const app_actuator_test_snapshot_t *snapshot);
 static uint32_t task_control_actuator_faults(
     const actuator_snapshot_t *actuator_snapshot);
 
@@ -74,6 +81,19 @@ void task_control_get_snapshot(control_snapshot_t *snapshot)
     portEXIT_CRITICAL(&g_control_snapshot_lock);
 }
 
+void task_control_get_actuator_test_snapshot(
+    app_actuator_test_snapshot_t *snapshot)
+{
+    if (snapshot == NULL)
+    {
+        return;
+    }
+
+    portENTER_CRITICAL(&g_actuator_test_snapshot_lock);
+    *snapshot = g_actuator_test_snapshot;
+    portEXIT_CRITICAL(&g_actuator_test_snapshot_lock);
+}
+
 static void task_control_entry(void *argument)
 {
     (void)argument;
@@ -101,6 +121,15 @@ static void task_control_entry(void *argument)
     const safety_imu_config_t imu_safety_config = config_imu_safety();
     ctrl_balance_controller_t balance_controller;
     ctrl_collinear_mecanum_allocator_t current_allocator;
+    test_actuator_current_t actuator_test;
+    const test_actuator_current_config_t actuator_test_config =
+    {
+        .current_a = APP_ACTUATOR_TEST_CURRENT_A,
+        .prepare_ms = APP_ACTUATOR_TEST_PREPARE_MS,
+        .positive_ms = APP_ACTUATOR_TEST_POSITIVE_MS,
+        .neutral_ms = APP_ACTUATOR_TEST_NEUTRAL_MS,
+        .negative_ms = APP_ACTUATOR_TEST_NEGATIVE_MS,
+    };
     const ctrl_balance_controller_config_t balance_controller_config =
     {
         .lean_gain_a_per_rad = APP_BALANCE_LEAN_GAIN_A_PER_RAD,
@@ -171,6 +200,10 @@ static void task_control_entry(void *argument)
     memset(&snapshot, 0, sizeof(snapshot));
     task_control_publish_snapshot(&snapshot);
 
+    app_actuator_test_snapshot_t actuator_test_snapshot;
+    memset(&actuator_test_snapshot, 0, sizeof(actuator_test_snapshot));
+    task_control_publish_actuator_test_snapshot(&actuator_test_snapshot);
+
     if (!est_collinear_mecanum_init(&odometry_estimator,
                                      &odometry_config))
     {
@@ -191,6 +224,14 @@ static void task_control_entry(void *argument)
                                                 &allocator_config))
     {
         ESP_LOGE(TAG, "invalid current allocator configuration");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    if (!test_actuator_current_init(&actuator_test,
+                                    &actuator_test_config))
+    {
+        ESP_LOGE(TAG, "invalid actuator test configuration");
         vTaskDelete(NULL);
         return;
     }
@@ -249,6 +290,15 @@ static void task_control_entry(void *argument)
         task_motor_get_snapshot(&actuator_snapshot);
         task_supervisor_get_snapshot(&supervisor_snapshot);
         task_safety_get_balance_snapshot(&balance_safety_snapshot);
+        test_actuator_current_update(
+            &actuator_test,
+            (APP_ACTUATOR_TEST_ENABLED != 0) &&
+                (supervisor_snapshot.mode == APP_SYSTEM_MODE_ACTUATOR_TEST),
+            balance_safety_snapshot.motion_allowed,
+            supervisor_snapshot.actuator_test_request_count,
+            &actuator_snapshot,
+            loop_start_us,
+            &actuator_test_snapshot);
         (void)safety_imu_check(&imu_snapshot,
                                loop_start_us,
                                &imu_safety_config,
@@ -359,7 +409,24 @@ static void task_control_entry(void *argument)
             snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
         }
 
-        if (supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL)
+        if (supervisor_snapshot.mode == APP_SYSTEM_MODE_ACTUATOR_TEST)
+        {
+            if (actuator_test_snapshot.active)
+            {
+                for (uint32_t actuator = 0u;
+                     actuator < APP_ACTUATOR_COUNT;
+                     actuator++)
+                {
+                    snapshot.desired_current_a[actuator] =
+                        actuator_test_snapshot.command_current_a;
+                }
+
+                snapshot.balance_command_valid = true;
+            }
+
+            balance_reference_captured = false;
+        }
+        else if (supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL)
         {
             const ctrl_balance_reference_t reference =
             {
@@ -462,6 +529,8 @@ static void task_control_entry(void *argument)
         }
 
         task_control_publish_snapshot(&snapshot);
+        task_control_publish_actuator_test_snapshot(
+            &actuator_test_snapshot);
 
         vTaskDelayUntil(&last_wake,
                         pdMS_TO_TICKS(APP_CONTROL_TASK_PERIOD_MS));
@@ -474,6 +543,14 @@ static void task_control_publish_snapshot(
     portENTER_CRITICAL(&g_control_snapshot_lock);
     g_control_snapshot = *snapshot;
     portEXIT_CRITICAL(&g_control_snapshot_lock);
+}
+
+static void task_control_publish_actuator_test_snapshot(
+    const app_actuator_test_snapshot_t *snapshot)
+{
+    portENTER_CRITICAL(&g_actuator_test_snapshot_lock);
+    g_actuator_test_snapshot = *snapshot;
+    portEXIT_CRITICAL(&g_actuator_test_snapshot_lock);
 }
 
 static uint32_t task_control_actuator_faults(

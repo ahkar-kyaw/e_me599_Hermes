@@ -112,6 +112,7 @@ static void task_ui_entry(void *argument)
         rc_snapshot_t rc_snapshot;
         imu_snapshot_t imu_snapshot;
         actuator_snapshot_t actuator_snapshot;
+        app_actuator_test_snapshot_t actuator_test_snapshot;
         control_snapshot_t control_snapshot;
         app_balance_safety_snapshot_t balance_snapshot;
         app_ota_snapshot_t ota_snapshot;
@@ -124,6 +125,7 @@ static void task_ui_entry(void *argument)
         task_imu_get_snapshot(&imu_snapshot);
         task_motor_get_snapshot(&actuator_snapshot);
         task_control_get_snapshot(&control_snapshot);
+        task_control_get_actuator_test_snapshot(&actuator_test_snapshot);
         task_safety_get_balance_snapshot(&balance_snapshot);
         task_operator_get_controls_state(&controls_state);
         task_ota_get_snapshot(&ota_snapshot);
@@ -148,6 +150,7 @@ static void task_ui_entry(void *argument)
                 .rc_status = &rc_status,
                 .imu_status = &imu_status,
                 .actuator_snapshot = &actuator_snapshot,
+                .actuator_test_snapshot = &actuator_test_snapshot,
                 .control_snapshot = &control_snapshot,
                 .balance_snapshot = &balance_snapshot,
                 .ota_snapshot = &ota_snapshot,

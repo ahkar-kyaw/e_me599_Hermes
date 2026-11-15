@@ -2,6 +2,7 @@
 #define UI_DASHBOARD_H
 
 #include "app/app_actuator_types.h"
+#include "app/app_actuator_test_types.h"
 #include "app/app_balance_safety_types.h"
 #include "app/app_operator_controls.h"
 #include "app/app_ota_types.h"
@@ -20,6 +21,7 @@ typedef struct
     const safety_rc_status_t *rc_status;
     const safety_imu_status_t *imu_status;
     const actuator_snapshot_t *actuator_snapshot;
+    const app_actuator_test_snapshot_t *actuator_test_snapshot;
     const control_snapshot_t *control_snapshot;
     const app_balance_safety_snapshot_t *balance_snapshot;
     const app_ota_snapshot_t *ota_snapshot;

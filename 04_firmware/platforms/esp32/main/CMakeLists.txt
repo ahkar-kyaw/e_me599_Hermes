@@ -6,6 +6,7 @@ idf_component_register(
         "bsp/bsp_display_spi_esp32.c"
         "bsp/bsp_imu_spi_esp32.c"
         "services/svc_ota_esp32.c"
+        "tests/test_actuator_current.c"
         "tasks/task_control.c"
         "tasks/task_imu.c"
         "tasks/task_motor.c"
@@ -39,6 +40,7 @@ idf_component_register(
         "config"
         "services"
         "tasks"
+        "tests"
     PRIV_REQUIRES
         app_update
         esp_common

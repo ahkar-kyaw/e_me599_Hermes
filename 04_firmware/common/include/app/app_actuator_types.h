@@ -35,7 +35,15 @@ typedef struct
 
 typedef struct
 {
+    uint64_t timestamp_us;
+    float current_a;
+    bool valid;
+} actuator_command_tx_snapshot_t;
+
+typedef struct
+{
     actuator_feedback_snapshot_t actuator[APP_ACTUATOR_COUNT];
+    actuator_command_tx_snapshot_t command_tx[APP_ACTUATOR_COUNT];
     app_actuator_bus_state_t bus_state;
     uint32_t bus_error_count;
     uint32_t rx_queue_overflow_count;

@@ -16,11 +16,15 @@
 
 static void ui_dashboard_draw_header(
     ui_canvas_t *canvas,
-    bool active_page);
+    const char *title,
+    ui_color_t color);
 static void ui_dashboard_render_ready(
     ui_canvas_t *canvas,
     const ui_dashboard_model_t *model);
 static void ui_dashboard_render_active(
+    ui_canvas_t *canvas,
+    const ui_dashboard_model_t *model);
+static void ui_dashboard_render_test(
     ui_canvas_t *canvas,
     const ui_dashboard_model_t *model);
 static void ui_dashboard_render_update(
@@ -46,6 +50,7 @@ void ui_dashboard_render(
         (model->controls == NULL) || (model->rc_status == NULL) ||
         (model->imu_status == NULL) ||
         (model->actuator_snapshot == NULL) ||
+        (model->actuator_test_snapshot == NULL) ||
         (model->control_snapshot == NULL) ||
         (model->balance_snapshot == NULL) ||
         (model->ota_snapshot == NULL))
@@ -53,7 +58,9 @@ void ui_dashboard_render(
         return;
     }
 
-    const bool active_page = model->controls->link_usable &&
+    const bool test_page =
+        model->actuator_test_snapshot->state != APP_ACTUATOR_TEST_DISABLED;
+    const bool active_page = !test_page && model->controls->link_usable &&
         model->controls->master_enabled &&
         model->controls->balance_enabled;
 
@@ -66,28 +73,34 @@ void ui_dashboard_render(
         return;
     }
 
-    ui_dashboard_draw_header(canvas, active_page);
-
-    if (active_page)
+    if (test_page)
     {
+        ui_dashboard_draw_header(canvas, "ACTUATOR TEST", UI_COLOR_AMBER);
+        ui_dashboard_render_test(canvas, model);
+    }
+    else if (active_page)
+    {
+        ui_dashboard_draw_header(canvas, "ACTIVE", UI_COLOR_GREEN);
         ui_dashboard_render_active(canvas, model);
     }
     else
     {
+        ui_dashboard_draw_header(canvas, "READY", UI_COLOR_CYAN);
         ui_dashboard_render_ready(canvas, model);
     }
 }
 
 static void ui_dashboard_draw_header(
     ui_canvas_t *canvas,
-    bool active_page)
+    const char *title,
+    ui_color_t color)
 {
     ui_canvas_fill(canvas, 0u, 0u, canvas->width, 20u, UI_COLOR_PANEL);
     ui_canvas_draw_text(canvas,
                         4u,
                         6u,
-                        active_page ? "ACTIVE" : "READY",
-                        active_page ? UI_COLOR_GREEN : UI_COLOR_CYAN,
+                        title,
+                        color,
                         1u);
 }
 
@@ -215,6 +228,20 @@ static void ui_dashboard_render_active(
 
     (void)snprintf(line,
                    sizeof(line),
+                   "TX %+.2f %+.2f %+.2f %+.2f",
+                   (double)actuator->command_tx[0].current_a,
+                   (double)actuator->command_tx[1].current_a,
+                   (double)actuator->command_tx[2].current_a,
+                   (double)actuator->command_tx[3].current_a);
+    ui_canvas_draw_text(canvas,
+                        4u,
+                        72u,
+                        line,
+                        UI_COLOR_GREEN,
+                        1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
                    "CUR%+.2f %+.2f %+.2f %+.2f",
                    (double)actuator->actuator[0].current_a,
                    (double)actuator->actuator[1].current_a,
@@ -222,7 +249,7 @@ static void ui_dashboard_render_active(
                    (double)actuator->actuator[3].current_a);
     ui_canvas_draw_text(canvas,
                         4u,
-                        72u,
+                        87u,
                         line,
                         UI_COLOR_CYAN,
                         1u);
@@ -236,17 +263,91 @@ static void ui_dashboard_render_active(
                    (double)(actuator->actuator[3].velocity_erpm * 0.001f));
     ui_canvas_draw_text(canvas,
                         4u,
-                        87u,
+                        102u,
                         line,
                         UI_COLOR_WHITE,
                         1u);
 
     if (control->balance_output_saturated)
     {
-        ui_canvas_draw_text(canvas, 4u, 102u,
+        ui_canvas_draw_text(canvas, 4u, 117u,
                             "OUTPUT LIMITED", UI_COLOR_RED, 1u);
     }
 
+}
+
+static void ui_dashboard_render_test(
+    ui_canvas_t *canvas,
+    const ui_dashboard_model_t *model)
+{
+    const actuator_snapshot_t *actuator = model->actuator_snapshot;
+    const app_actuator_test_snapshot_t *test =
+        model->actuator_test_snapshot;
+    const app_balance_safety_snapshot_t *safety =
+        model->balance_snapshot;
+    char line[40];
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "CMD %+.2f  REM %lu ms",
+                   (double)test->command_current_a,
+                   (unsigned long)test->remaining_ms);
+    ui_canvas_draw_text(canvas, 4u, 27u, line, UI_COLOR_WHITE, 1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "TX %+.2f %+.2f %+.2f %+.2f",
+                   (double)actuator->command_tx[0].current_a,
+                   (double)actuator->command_tx[1].current_a,
+                   (double)actuator->command_tx[2].current_a,
+                   (double)actuator->command_tx[3].current_a);
+    ui_canvas_draw_text(canvas, 4u, 42u, line, UI_COLOR_GREEN, 1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "CUR%+.2f %+.2f %+.2f %+.2f",
+                   (double)actuator->actuator[0].current_a,
+                   (double)actuator->actuator[1].current_a,
+                   (double)actuator->actuator[2].current_a,
+                   (double)actuator->actuator[3].current_a);
+    ui_canvas_draw_text(canvas, 4u, 57u, line, UI_COLOR_CYAN, 1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "VEL%+.1f %+.1f %+.1f %+.1f",
+                   (double)(actuator->actuator[0].velocity_erpm * 0.001f),
+                   (double)(actuator->actuator[1].velocity_erpm * 0.001f),
+                   (double)(actuator->actuator[2].velocity_erpm * 0.001f),
+                   (double)(actuator->actuator[3].velocity_erpm * 0.001f));
+    ui_canvas_draw_text(canvas, 4u, 72u, line, UI_COLOR_WHITE, 1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "D+ %+.1f %+.1f %+.1f %+.1f",
+                   (double)(test->positive_velocity_delta_erpm[0] * 0.001f),
+                   (double)(test->positive_velocity_delta_erpm[1] * 0.001f),
+                   (double)(test->positive_velocity_delta_erpm[2] * 0.001f),
+                   (double)(test->positive_velocity_delta_erpm[3] * 0.001f));
+    ui_canvas_draw_text(canvas, 4u, 87u, line, UI_COLOR_GREEN, 1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "D- %+.1f %+.1f %+.1f %+.1f",
+                   (double)(test->negative_velocity_delta_erpm[0] * 0.001f),
+                   (double)(test->negative_velocity_delta_erpm[1] * 0.001f),
+                   (double)(test->negative_velocity_delta_erpm[2] * 0.001f),
+                   (double)(test->negative_velocity_delta_erpm[3] * 0.001f));
+    ui_canvas_draw_text(canvas, 4u, 102u, line, UI_COLOR_AMBER, 1u);
+
+    if (test->active &&
+        (safety->inhibit_flags != APP_BALANCE_INHIBIT_NONE))
+    {
+        (void)snprintf(line,
+                       sizeof(line),
+                       "INH %s",
+                       ui_dashboard_inhibit(safety->inhibit_flags));
+        ui_canvas_draw_text(canvas, 4u, 117u, line, UI_COLOR_RED, 1u);
+    }
 }
 
 static void ui_dashboard_render_update(

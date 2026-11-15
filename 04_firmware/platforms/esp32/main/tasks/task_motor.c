@@ -68,6 +68,7 @@ static bool task_motor_command_has_enabled_actuator(
 static void task_motor_send_current(
     actuator_snapshot_t *snapshot,
     uint8_t actuator_index,
+    uint64_t timestamp_us,
     float current_a);
 
 void task_motor_start(void)
@@ -455,6 +456,7 @@ static void task_motor_update_command_tx(
 
         task_motor_send_current(snapshot,
                                 actuator,
+                                now_us,
                                 entry->current_a);
     }
 
@@ -493,6 +495,7 @@ static bool task_motor_command_has_enabled_actuator(
 static void task_motor_send_current(
     actuator_snapshot_t *snapshot,
     uint8_t actuator_index,
+    uint64_t timestamp_us,
     float current_a)
 {
     if_can_frame_t frame;
@@ -518,4 +521,7 @@ static void task_motor_send_current(
     }
 
     snapshot->command_tx_count++;
+    snapshot->command_tx[actuator_index].timestamp_us = timestamp_us;
+    snapshot->command_tx[actuator_index].current_a = current_a;
+    snapshot->command_tx[actuator_index].valid = true;
 }

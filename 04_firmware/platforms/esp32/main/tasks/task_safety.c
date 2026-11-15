@@ -102,6 +102,7 @@ static void task_safety_entry(void *argument)
     {
         app_balance_safety_request_t request;
         app_balance_safety_snapshot_t balance_snapshot;
+        app_actuator_test_snapshot_t actuator_test_snapshot;
         app_actuator_command_snapshot_t actuator_command;
         app_supervisor_snapshot_t supervisor_snapshot;
         actuator_snapshot_t actuator_snapshot;
@@ -116,19 +117,23 @@ static void task_safety_entry(void *argument)
         task_rc_get_snapshot(&rc_snapshot);
         task_motor_get_snapshot(&actuator_snapshot);
         task_control_get_snapshot(&control_snapshot);
+        task_control_get_actuator_test_snapshot(&actuator_test_snapshot);
         task_imu_get_snapshot(&imu_snapshot);
 
         request.timestamp_us = supervisor_snapshot.timestamp_us;
-        request.enabled =
-            (supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL) &&
-            !task_ota_is_active();
-        request.motion_neutral =
-            (fabsf(supervisor_snapshot.forward_input) <=
-             APP_BALANCE_ARM_INPUT_LIMIT) &&
-            (fabsf(supervisor_snapshot.lateral_input) <=
-             APP_BALANCE_ARM_INPUT_LIMIT) &&
-            (fabsf(supervisor_snapshot.yaw_input) <=
-             APP_BALANCE_ARM_INPUT_LIMIT);
+        request.balance_required =
+            supervisor_snapshot.mode == APP_SYSTEM_MODE_BALANCE_CONTROL;
+        request.enabled = !task_ota_is_active() &&
+            (request.balance_required ||
+             ((supervisor_snapshot.mode == APP_SYSTEM_MODE_ACTUATOR_TEST) &&
+              actuator_test_snapshot.active));
+        request.motion_neutral = !request.balance_required ||
+            ((fabsf(supervisor_snapshot.forward_input) <=
+              APP_BALANCE_ARM_INPUT_LIMIT) &&
+             (fabsf(supervisor_snapshot.lateral_input) <=
+              APP_BALANCE_ARM_INPUT_LIMIT) &&
+             (fabsf(supervisor_snapshot.yaw_input) <=
+              APP_BALANCE_ARM_INPUT_LIMIT));
 
         safety_rc_check(&rc_snapshot,
                         now_us,

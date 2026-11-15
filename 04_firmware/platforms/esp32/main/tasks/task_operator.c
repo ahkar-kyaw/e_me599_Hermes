@@ -127,17 +127,12 @@ static void task_operator_entry(void *argument)
         .yaw_inverted = (APP_RC_YAW_INVERTED != 0),
     };
     app_operator_controls_t controls;
-    safety_rc_config_t rc_safety_config = safety_rc_default_config();
+    const safety_rc_config_t rc_safety_config = config_rc_safety();
     task_operator_snapshot_t snapshot;
     uint32_t zero_lean_request_count = 0u;
 
     memset(&snapshot, 0, sizeof(snapshot));
     task_operator_publish_snapshot(&snapshot);
-
-    rc_safety_config.max_age_us = APP_RC_MAX_AGE_US;
-    rc_safety_config.channel_min = APP_RC_CHANNEL_MIN;
-    rc_safety_config.channel_max = APP_RC_CHANNEL_MAX;
-    rc_safety_config.channel_count = APP_RC_ACTIVE_CHANNEL_COUNT;
 
     if (!app_operator_controls_init(&controls, &controls_config))
     {

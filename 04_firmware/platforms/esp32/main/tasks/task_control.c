@@ -98,8 +98,7 @@ static void task_control_entry(void *argument)
         },
         .max_dt_s = APP_CONTROL_MAX_DT_S,
     };
-    safety_imu_config_t imu_safety_config =
-        safety_imu_default_config();
+    const safety_imu_config_t imu_safety_config = config_imu_safety();
     ctrl_balance_controller_t balance_controller;
     ctrl_collinear_mecanum_allocator_t current_allocator;
     const ctrl_balance_controller_config_t balance_controller_config =
@@ -171,14 +170,6 @@ static void task_control_entry(void *argument)
 
     memset(&snapshot, 0, sizeof(snapshot));
     task_control_publish_snapshot(&snapshot);
-
-    imu_safety_config.max_age_us = APP_IMU_MAX_AGE_US;
-    imu_safety_config.max_abs_roll_rad = APP_IMU_MAX_ABS_ROLL_RAD;
-    imu_safety_config.max_abs_pitch_rad = APP_IMU_MAX_ABS_PITCH_RAD;
-    imu_safety_config.min_accel_norm_mps2 =
-        APP_IMU_MIN_ACCEL_NORM_MPS2;
-    imu_safety_config.max_accel_norm_mps2 =
-        APP_IMU_MAX_ACCEL_NORM_MPS2;
 
     if (!est_collinear_mecanum_init(&odometry_estimator,
                                      &odometry_config))
@@ -267,6 +258,7 @@ static void task_control_entry(void *argument)
             &imu_snapshot,
             &imu_status,
             APP_CONTROL_LEAN_AXIS,
+            APP_CONTROL_LEAN_SIGN,
             &raw_lean_rad,
             &raw_lean_rate_rps);
 
@@ -352,6 +344,7 @@ static void task_control_entry(void *argument)
                 &imu_status,
                 &odometry,
                 APP_CONTROL_LEAN_AXIS,
+                APP_CONTROL_LEAN_SIGN,
                 loop_start_us,
                 &snapshot.state))
         {

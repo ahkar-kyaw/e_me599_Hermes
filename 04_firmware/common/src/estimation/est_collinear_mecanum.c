@@ -9,6 +9,13 @@
 #define EST_COLLINEAR_MECANUM_MIN_DET 1.0e-8f
 #define EST_COLLINEAR_MECANUM_MIN_SINE 1.0e-4f
 
+typedef enum
+{
+    EST_COLLINEAR_BODY_X = 0,
+    EST_COLLINEAR_BODY_Y,
+    EST_COLLINEAR_BODY_YAW
+} est_collinear_body_axis_t;
+
 static bool est_collinear_mecanum_config_valid(
     const est_collinear_mecanum_config_t *config);
 static bool est_collinear_mecanum_invert_3x3(
@@ -36,10 +43,12 @@ bool est_collinear_mecanum_init(
     {
         const float sine_angle = sinf(config->roller_angle_rad[wheel]);
 
-        wheel_map[wheel][0] = 1.0f;
-        wheel_map[wheel][1] =
-            cosf(config->roller_angle_rad[wheel]) / sine_angle;
-        wheel_map[wheel][2] = config->wheel_offset_m[wheel];
+        /* Eq. (8) */
+        wheel_map[wheel][EST_COLLINEAR_BODY_X] =
+            -cosf(config->roller_angle_rad[wheel]) / sine_angle;
+        wheel_map[wheel][EST_COLLINEAR_BODY_Y] = 1.0f;
+        wheel_map[wheel][EST_COLLINEAR_BODY_YAW] =
+            config->wheel_offset_m[wheel];
 
         for (uint32_t row = 0u; row < 3u; row++)
         {
@@ -111,7 +120,7 @@ bool est_collinear_mecanum_update(
         return false;
     }
 
-    float body_velocity[3] = {0.0f};
+    float paper_body_velocity[3] = {0.0f};
 
     for (uint32_t wheel = 0u;
          wheel < EST_COLLINEAR_MECANUM_WHEEL_COUNT;
@@ -124,27 +133,34 @@ bool est_collinear_mecanum_update(
 
         for (uint32_t body_axis = 0u; body_axis < 3u; body_axis++)
         {
-            body_velocity[body_axis] +=
+            paper_body_velocity[body_axis] +=
                 estimator->wheel_to_body[body_axis][wheel] *
                 wheel_velocity_radps[wheel];
         }
     }
 
     const float yaw_midpoint = estimator->yaw_rad +
-        (0.5f * body_velocity[2] * dt_s);
+        (0.5f * paper_body_velocity[EST_COLLINEAR_BODY_YAW] * dt_s);
     const float cosine_yaw = cosf(yaw_midpoint);
     const float sine_yaw = sinf(yaw_midpoint);
+    const float body_x_mps =
+        paper_body_velocity[EST_COLLINEAR_BODY_X];
+    const float body_y_mps =
+        paper_body_velocity[EST_COLLINEAR_BODY_Y];
+
+    /* Eq. (4) */
     const float velocity_x_mps =
-        (cosine_yaw * body_velocity[0]) -
-        (sine_yaw * body_velocity[1]);
+        (cosine_yaw * body_x_mps) -
+        (sine_yaw * body_y_mps);
     const float velocity_y_mps =
-        (sine_yaw * body_velocity[0]) +
-        (cosine_yaw * body_velocity[1]);
+        (sine_yaw * body_x_mps) +
+        (cosine_yaw * body_y_mps);
 
     estimator->position_x_m += velocity_x_mps * dt_s;
     estimator->position_y_m += velocity_y_mps * dt_s;
     estimator->yaw_rad = est_collinear_mecanum_wrap_pi(
-        estimator->yaw_rad + (body_velocity[2] * dt_s));
+        estimator->yaw_rad +
+        (paper_body_velocity[EST_COLLINEAR_BODY_YAW] * dt_s));
 
     output->valid = true;
     output->position_x_m = estimator->position_x_m;
@@ -152,9 +168,10 @@ bool est_collinear_mecanum_update(
     output->yaw_rad = estimator->yaw_rad;
     output->velocity_x_mps = velocity_x_mps;
     output->velocity_y_mps = velocity_y_mps;
-    output->yaw_rate_rps = body_velocity[2];
-    output->body_forward_mps = body_velocity[0];
-    output->body_left_mps = body_velocity[1];
+    output->yaw_rate_rps =
+        paper_body_velocity[EST_COLLINEAR_BODY_YAW];
+    output->body_forward_mps = body_y_mps;
+    output->body_left_mps = -body_x_mps;
 
     return true;
 }

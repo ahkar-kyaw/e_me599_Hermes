@@ -4,6 +4,7 @@
 #include "drivers/drv_ism330dhcx.h"
 #include "estimation/est_attitude.h"
 #include "estimation/est_imu_mount.h"
+#include "safety/safety_imu.h"
 
 #define APP_IMU_TASK_PERIOD_MS              5u
 #define APP_IMU_CALIBRATION_SAMPLES        200u
@@ -26,5 +27,17 @@
 #define APP_IMU_MAX_ABS_PITCH_RAD          1.0471976f
 #define APP_IMU_MIN_ACCEL_NORM_MPS2        3.0f
 #define APP_IMU_MAX_ACCEL_NORM_MPS2        20.0f
+
+static inline safety_imu_config_t config_imu_safety(void)
+{
+    safety_imu_config_t config = safety_imu_default_config();
+
+    config.max_age_us = APP_IMU_MAX_AGE_US;
+    config.max_abs_roll_rad = APP_IMU_MAX_ABS_ROLL_RAD;
+    config.max_abs_pitch_rad = APP_IMU_MAX_ABS_PITCH_RAD;
+    config.min_accel_norm_mps2 = APP_IMU_MIN_ACCEL_NORM_MPS2;
+    config.max_accel_norm_mps2 = APP_IMU_MAX_ACCEL_NORM_MPS2;
+    return config;
+}
 
 #endif

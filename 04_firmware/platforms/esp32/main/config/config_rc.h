@@ -2,6 +2,7 @@
 #define CONFIG_RC_H
 
 #include "protocols/proto_crsf.h"
+#include "safety/safety_rc.h"
 
 #define APP_RC_MAX_AGE_US              100000u
 #define APP_RC_ACTIVE_CHANNEL_COUNT         10u
@@ -28,10 +29,21 @@
 #define APP_RC_MASTER_ACTIVE_HIGH      1
 #define APP_RC_BALANCE_ACTIVE_HIGH     1
 #define APP_RC_ZERO_ACTIVE_HIGH        1
-#define APP_RC_FORWARD_INVERTED        0
+#define APP_RC_FORWARD_INVERTED        1
 #define APP_RC_LATERAL_INVERTED        0
 #define APP_RC_YAW_INVERTED            0
 
 #define APP_OPERATOR_TASK_PERIOD_MS   20u
+
+static inline safety_rc_config_t config_rc_safety(void)
+{
+    safety_rc_config_t config = safety_rc_default_config();
+
+    config.max_age_us = APP_RC_MAX_AGE_US;
+    config.channel_min = APP_RC_CHANNEL_MIN;
+    config.channel_max = APP_RC_CHANNEL_MAX;
+    config.channel_count = APP_RC_ACTIVE_CHANNEL_COUNT;
+    return config;
+}
 
 #endif

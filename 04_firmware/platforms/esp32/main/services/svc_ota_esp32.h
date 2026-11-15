@@ -31,6 +31,8 @@ svc_ota_esp32_result_t svc_ota_esp32_connect(
 svc_ota_esp32_result_t svc_ota_esp32_discover_server(
     uint16_t discovery_port,
     uint32_t timeout_ms,
+    const char *request,
+    const char *expected_response,
     char *server_address,
     size_t address_capacity);
 

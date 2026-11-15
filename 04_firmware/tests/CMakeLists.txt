@@ -98,3 +98,22 @@ target_compile_options(test_app_operator_controls PRIVATE
 )
 
 add_test(NAME app_operator_controls COMMAND test_app_operator_controls)
+
+add_executable(test_app_balance_state
+    test_app_balance_state.c
+    ../common/src/app/app_balance_state.c
+)
+
+target_include_directories(test_app_balance_state PRIVATE
+    ../common/include
+)
+
+target_compile_features(test_app_balance_state PRIVATE c_std_11)
+target_compile_options(test_app_balance_state PRIVATE
+    -Wall
+    -Wextra
+    -Werror
+)
+target_link_libraries(test_app_balance_state PRIVATE m)
+
+add_test(NAME app_balance_state COMMAND test_app_balance_state)

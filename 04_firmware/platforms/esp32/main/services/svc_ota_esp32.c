@@ -20,9 +20,8 @@
 
 #define SVC_OTA_WIFI_CONNECTED_BIT BIT0
 #define SVC_OTA_URL_CAPACITY       96u
-#define SVC_OTA_DISCOVERY_REQUEST  "APP_OTA_DISCOVER_V1"
-#define SVC_OTA_DISCOVERY_RESPONSE "APP_OTA_SERVER_V1"
 #define SVC_OTA_DISCOVERY_ATTEMPTS 3u
+#define SVC_OTA_DISCOVERY_MESSAGE_CAPACITY 32u
 
 static const char *TAG = "svc_ota";
 
@@ -110,11 +109,15 @@ svc_ota_esp32_result_t svc_ota_esp32_connect(
 svc_ota_esp32_result_t svc_ota_esp32_discover_server(
     uint16_t discovery_port,
     uint32_t timeout_ms,
+    const char *request,
+    const char *expected_response,
     char *server_address,
     size_t address_capacity)
 {
     if (!svc_ota_esp32_is_connected() || (discovery_port == 0u) ||
-        (timeout_ms == 0u) || (server_address == NULL) ||
+        (timeout_ms == 0u) || (request == NULL) ||
+        (expected_response == NULL) || (request[0] == '\0') ||
+        (expected_response[0] == '\0') || (server_address == NULL) ||
         (address_capacity == 0u))
     {
         return SVC_OTA_ESP32_ERROR_INIT;
@@ -169,8 +172,15 @@ svc_ota_esp32_result_t svc_ota_esp32_discover_server(
         .sin_addr.s_addr = (ip_info.ip.addr & ip_info.netmask.addr) |
                             ~ip_info.netmask.addr,
     };
-    const char request[] = SVC_OTA_DISCOVERY_REQUEST;
-    const size_t expected_length = strlen(SVC_OTA_DISCOVERY_RESPONSE);
+    const size_t request_length = strlen(request);
+    const size_t expected_length = strlen(expected_response);
+
+    if ((request_length >= SVC_OTA_DISCOVERY_MESSAGE_CAPACITY) ||
+        (expected_length >= SVC_OTA_DISCOVERY_MESSAGE_CAPACITY))
+    {
+        close(socket_fd);
+        return SVC_OTA_ESP32_ERROR_INIT;
+    }
 
     for (uint32_t attempt = 0u;
          attempt < SVC_OTA_DISCOVERY_ATTEMPTS;
@@ -178,7 +188,7 @@ svc_ota_esp32_result_t svc_ota_esp32_discover_server(
     {
         if (sendto(socket_fd,
                    request,
-                   sizeof(request) - 1u,
+                   request_length,
                    0,
                    (const struct sockaddr *)&destination,
                    sizeof(destination)) < 0)
@@ -186,7 +196,7 @@ svc_ota_esp32_result_t svc_ota_esp32_discover_server(
             break;
         }
 
-        char response[32];
+        char response[SVC_OTA_DISCOVERY_MESSAGE_CAPACITY];
         struct sockaddr_in source;
         socklen_t source_length = sizeof(source);
         const int received = recvfrom(socket_fd,
@@ -198,7 +208,7 @@ svc_ota_esp32_result_t svc_ota_esp32_discover_server(
 
         if ((received == (int)expected_length) &&
             (memcmp(response,
-                    SVC_OTA_DISCOVERY_RESPONSE,
+                    expected_response,
                     expected_length) == 0) &&
             (inet_ntop(AF_INET,
                        &source.sin_addr,

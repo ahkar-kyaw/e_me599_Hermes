@@ -1,6 +1,7 @@
 #include "task_ota.h"
 
 #include "config_ota.h"
+#include "config_rc.h"
 #include "svc_ota_esp32.h"
 #include "task_operator.h"
 #include "task_rc.h"
@@ -113,7 +114,7 @@ static void task_ota_entry(void *argument)
         const uint16_t trigger = rc_snapshot.channel[
             APP_OTA_TRIGGER_CHANNEL - 1u];
 
-        if (trigger <= APP_OTA_TRIGGER_OFF_THRESHOLD)
+        if (trigger <= APP_RC_SWITCH_OFF_THRESHOLD)
         {
             trigger_armed = controls.link_usable;
 
@@ -124,7 +125,7 @@ static void task_ota_entry(void *argument)
                                  APP_OTA_ERROR_NONE);
             }
         }
-        else if ((trigger >= APP_OTA_TRIGGER_ON_THRESHOLD) &&
+        else if ((trigger >= APP_RC_SWITCH_ON_THRESHOLD) &&
                  trigger_armed)
         {
             trigger_armed = false;
@@ -203,6 +204,8 @@ static void task_ota_run_update(void)
         result = svc_ota_esp32_discover_server(
             APP_OTA_DISCOVERY_PORT,
             APP_OTA_DISCOVERY_TIMEOUT_MS,
+            APP_OTA_DISCOVERY_REQUEST,
+            APP_OTA_DISCOVERY_RESPONSE,
             server_address,
             sizeof(server_address));
     }

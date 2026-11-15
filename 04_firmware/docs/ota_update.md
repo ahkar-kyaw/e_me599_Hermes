@@ -1,50 +1,32 @@
-# Local OTA update
+# OTA update
 
-## Design
+The Mac and ESP32 join the same phone hotspot. Wi-Fi remains off during normal
+robot operation. SC low arms the trigger; an accepted low-to-high transition
+connects Wi-Fi, discovers the Mac, downloads the image, validates it, and
+reboots.
 
-```text
-Phone hotspot     provides the local Wi-Fi network
-serve_ota.py      serves the image and answers UDP discovery
-task_ota          owns the SC trigger, state, progress, and rollback check
-svc_ota_esp32     owns Wi-Fi, server discovery, HTTP, and installation
-partitions.csv    provides two 960 KiB application slots
-```
+## Configuration
 
-Wi-Fi remains off during normal operation. With SC initially low, a low-to-high
-transition while the robot is disarmed enters UPDATE. The ESP32 connects to the
-phone hotspot, discovers the Mac automatically, downloads the image, validates
-it, and reboots.
-
-## One-time setup
-
-Configure the phone hotspot as:
+Use `idf.py menuconfig` under `Application OTA update`. The generated
+`sdkconfig.h` symbols are:
 
 ```text
-SSID       Phone
-Band       2.4 GHz
-Security   WPA2 or WPA2/WPA3 compatibility mode
+CONFIG_APP_OTA_ENABLE
+CONFIG_APP_OTA_WIFI_SSID
+CONFIG_APP_OTA_WIFI_PASSWORD
+CONFIG_APP_OTA_TRIGGER_CHANNEL
 ```
 
-Connect the Mac to that hotspot. Configure the same SSID and password in:
+Do not copy their values into documentation or source. Protocol ports, image
+path, and timeouts are defined in `main/config/config_ota.h`. The local
+`sdkconfig` containing credentials is ignored by Git.
 
-```bash
-cd 04_firmware/platforms/esp32
-source ~/esp/esp-idf-v5.5/export.sh
-idf.py menuconfig
-```
+The phone hotspot must use a 2.4 GHz-compatible mode. Connect the Mac to the
+same hotspot.
 
-Under `Application OTA update`, enable OTA, enter the hotspot credentials, and
-leave the trigger channel at 10 for SC. Install the OTA partition table over
-USB once:
+## Update
 
-```bash
-idf.py build
-idf.py -p /dev/cu.usbserial-XXXX flash
-```
-
-## Update workflow
-
-Connect the Mac to `Hermes_OTA`, then build:
+Build:
 
 ```bash
 cd 04_firmware/platforms/esp32
@@ -52,47 +34,35 @@ source ~/esp/esp-idf-v5.5/export.sh
 idf.py build
 ```
 
-Start the combined discovery and HTTP server from `04_firmware`:
+Run the repository OTA server from `04_firmware`:
 
 ```bash
 cd ../..
 python3 tools/serve_ota.py
 ```
 
-Allow incoming Python connections if the macOS firewall asks. The tool serves
-`platforms/esp32/build/app_esp32.bin` on TCP port 8000 and answers discovery on
-UDP port 3232.
+Allow incoming Python connections through the macOS firewall. With SA and SD
+off, move SC from low to high. The display progresses through Wi-Fi connection,
+Mac discovery, download, validation, and reboot. The server prints the ESP32
+address and HTTP request.
 
-With SA and SD off, move SC from low to high. Expected display sequence:
-
-```text
-CONNECTING TO WIFI
-FINDING MAC SERVER
-DOWNLOADING n%
-UPDATE COMPLETE
-```
-
-The tool prints the ESP32 address when discovery succeeds and logs the HTTP
-request. Keep it running until the robot reboots; stop it with `Ctrl-C`.
-
-## Failure codes
+## Failure states
 
 ```text
--1  OTA initialization failed
--2  phone hotspot connection failed
--3  Mac server was not discovered
--4  firmware download failed
--5  firmware image validation failed
+APP_OTA_ERROR_INIT        initialization
+APP_OTA_ERROR_WIFI        Wi-Fi connection
+APP_OTA_ERROR_DISCOVERY   Mac discovery
+APP_OTA_ERROR_DOWNLOAD    HTTP download
+APP_OTA_ERROR_IMAGE       image validation
 ```
 
-For `-2`, verify the hotspot name, password, and 2.4 GHz compatibility. For
-`-3`, confirm the Mac is on the same hotspot, `serve_ota.py` is running, and the
-firewall permits Python. Some phone hotspots isolate clients; OTA cannot work
-through a hotspot that prevents the ESP32 and Mac from communicating.
+`common/include/app/app_ota_types.h` is authoritative for these values.
 
-Move SC low to clear a failed update and arm the next attempt.
+For discovery failure, confirm that the Mac is on the same hotspot, the server
+tool is running, and the firewall permits Python. OTA cannot cross a hotspot
+that isolates clients. Move SC low before another attempt.
 
-## Disabling OTA
+## Disable
 
-Clear `Enable RC-triggered local OTA` in `idf.py menuconfig`, build, and install
-that image through OTA. Re-enabling OTA then requires a USB flash.
+Clear `CONFIG_APP_OTA_ENABLE` through `idf.py menuconfig`, build, and install
+that image through OTA. Re-enabling OTA then requires USB flashing.

@@ -60,10 +60,5 @@ idf_component_register(
 target_link_libraries(${COMPONENT_LIB} PRIVATE m)
 
 target_compile_definitions(${COMPONENT_LIB} PRIVATE
-    APP_PLATFORM_ESP32=1
     BOARD_ESP32_NODEMCU_V1=1
-    APP_ENABLE_ACTUATORS=1
-    APP_ENABLE_CONTROL_STATE=1
-    APP_ENABLE_RC_RECEIVER=1
-    APP_ENABLE_UI=1
 )

@@ -67,23 +67,11 @@ static void task_ui_entry(void *argument)
 
     bsp_display_spi_esp32_t display_io;
     drv_st7789_config_t display_config = drv_st7789_default_config();
-    safety_rc_config_t rc_safety_config = safety_rc_default_config();
-    safety_imu_config_t imu_safety_config = safety_imu_default_config();
+    const safety_rc_config_t rc_safety_config = config_rc_safety();
+    const safety_imu_config_t imu_safety_config = config_imu_safety();
     ui_canvas_t canvas;
 
     display_config.orientation = APP_DISPLAY_ORIENTATION;
-    rc_safety_config.max_age_us = APP_RC_MAX_AGE_US;
-    rc_safety_config.channel_min = APP_RC_CHANNEL_MIN;
-    rc_safety_config.channel_max = APP_RC_CHANNEL_MAX;
-    rc_safety_config.channel_count = APP_RC_ACTIVE_CHANNEL_COUNT;
-    imu_safety_config.max_age_us = APP_IMU_MAX_AGE_US;
-    imu_safety_config.max_abs_roll_rad = APP_IMU_MAX_ABS_ROLL_RAD;
-    imu_safety_config.max_abs_pitch_rad = APP_IMU_MAX_ABS_PITCH_RAD;
-    imu_safety_config.min_accel_norm_mps2 =
-        APP_IMU_MIN_ACCEL_NORM_MPS2;
-    imu_safety_config.max_accel_norm_mps2 =
-        APP_IMU_MAX_ACCEL_NORM_MPS2;
-
     while (bsp_display_spi_esp32_init(&display_io) !=
            IF_DISPLAY_IO_OK)
     {

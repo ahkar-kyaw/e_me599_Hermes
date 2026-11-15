@@ -1,81 +1,89 @@
 # Firmware architecture
 
+## Layers
+
+```text
+common/
+    Portable types, protocols, device drivers, estimation, control, safety,
+    and UI drawing. No ESP-IDF, FreeRTOS, board pins, or MCU headers.
+
+platforms/esp32/main/bsp/
+    ESP32 peripheral backends.
+
+platforms/esp32/main/services/
+    Platform services that are not periodic RTOS behavior.
+
+platforms/esp32/main/tasks/
+    FreeRTOS scheduling, peripheral ownership, and subsystem integration.
+
+platforms/esp32/main/config/
+    Application-selected values and timing.
+
+platforms/esp32/include/
+    Board pin and bus mapping.
+
+tests/
+    Host tests for portable production logic.
+```
+
+Generated ESP-IDF files and local credentials remain outside portable code.
+See [configuration.md](configuration.md) for authoritative configuration
+locations.
+
 ## Ownership
 
-```text
-task_imu
-    owns IMU SPI, boot gyro calibration, mounting correction, and attitude
+| Module | Responsibility |
+|---|---|
+| `task_rc` | CRSF UART and latest receiver snapshot |
+| `task_operator` | RC mapping and fresh operator intent |
+| `task_imu` | IMU SPI, calibration, mounting, and attitude |
+| `task_control` | State estimation and desired motor currents |
+| `task_supervisor` | Whole-system mode |
+| `task_safety` | Permission to move and approved currents |
+| `task_motor` | CAN ownership, feedback, and approved transmission |
+| `task_ui` | ST7789 and read-only dashboard rendering |
+| `task_ota` | SC trigger, OTA state, and rollback confirmation |
+| `svc_ota_esp32` | On-demand Wi-Fi, server discovery, and installation |
 
-task_rc
-    owns CRSF UART and publishes the latest receiver snapshot
+Supervisor owns mode. Safety owns motion permission. Control never transmits a
+motor command directly. UI and OTA consume snapshots and cannot bypass safety.
 
-task_operator
-    maps SA, SD, and SE and publishes fresh operator intent
-
-task_ota
-    owns OTA trigger policy and update progress
-
-task_motor
-    owns CAN, actuator feedback, freshness, and frame transmission
-
-task_ui
-    owns the display and renders read-only snapshots
-
-task_supervisor
-    owns whole-system mode: SAFE_IDLE, BALANCE_CONTROL, or UPDATE
-
-task_control
-    owns the 200 Hz state estimator and desired current calculation
-
-task_safety
-    owns permission to move and the only approved motor command snapshot
-```
-
-## Balance command path
+## Command path
 
 ```text
-SA + SD
-  -> task_operator request
-  -> task_supervisor mode
-  -> task_control desired currents
-  -> safety_balance_control
-  -> task_safety approved currents
-  -> task_motor
-  -> CubeMars servo-current CAN frames
+RC -> task_operator -> task_supervisor -> task_control
+                                      -> task_safety -> task_motor -> CAN
+IMU ---------------------> task_control -----^
+CAN feedback ------------> task_control -----^
 ```
 
-Every boundary uses a timestamped snapshot. Control state is invalidated by
-stale IMU data, stale actuator feedback, CAN degradation, estimator failure, or
-control-loop timing failure.
+Subsystem state crosses task boundaries as timestamped snapshots. Inputs used
+by control or safety carry validity and freshness checks. A deliberate stop
+sends zero current for the configured stop interval. A running fault also
+latches `LOCKOUT`, requiring SA or SD to be lowered before rearming.
 
-A deliberate SA/SD shutdown sends zero current during the stop window and
-returns to `READY`. A fault while running sends the same zero-current sequence
-but enters `LOCKOUT`. The operator must turn SD or SA off before another arm;
-this prevents torque from returning automatically after an intermittent fault.
+Display transfers cannot delay operator requests because `task_operator` is
+independent of `task_ui`. Wi-Fi is inactive until an accepted SC low-to-high
+OTA request places the supervisor in UPDATE.
 
-## Lean zero path
+## Naming
 
 ```text
-READY + SA on + SD off + SE press
-  -> incremented zero_lean_request_count
-  -> supervisor snapshot
-  -> task_control validates stationary state
-  -> active lean trim updated
-  -> published lean becomes raw lean minus trim
+task_    long-running RTOS task
+board_   board mapping or wrapper
+bsp_     MCU peripheral backend
+drv_     device driver
+proto_   wire protocol
+svc_     service
+app_     application glue and shared types
+ctrl_    control
+est_     estimation
+safety_  safety logic
+config_  application configuration file
+ui_      user interface
 ```
 
-The trim is runtime-only. A reboot returns to
-`APP_BALANCE_INITIAL_LEAN_TRIM_RAD`.
-
-## Platform boundary
-
-Portable modules contain no ESP-IDF, FreeRTOS, MCU SDK, or pin dependencies.
-ESP32 tasks and BSPs provide scheduling and peripheral access.
-
-`task_operator` is intentionally separate from `task_ui`. Full-frame ST7789
-transfers are blocking, but display latency cannot delay the operator request
-or force the supervisor back to `SAFE_IDLE`.
-
-OTA networking is ESP32-only. `task_ota` owns policy; `svc_ota_esp32` owns
-on-demand Wi-Fi, local server discovery, and HTTP transport. Portable control
-code has no networking dependency.
+Public functions use the owning module prefix. Macros use uppercase module
+prefixes. Types use lowercase module prefixes with `_t`. Keep each module
+focused on one responsibility and keep generated code separate from user-owned
+code.

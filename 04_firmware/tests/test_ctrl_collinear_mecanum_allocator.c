@@ -51,7 +51,7 @@ int main(void)
 {
     const ctrl_collinear_mecanum_allocator_config_t config =
     {
-        .wheel_offset_m = {0.095f, 0.033f, -0.033f, -0.095f},
+        .wheel_offset_m = {-0.095f, -0.033f, 0.033f, 0.095f},
         .roller_angle_rad =
         {
              0.7853982f,

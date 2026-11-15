@@ -73,8 +73,8 @@ static void task_safety_entry(void *argument)
     (void)argument;
 
     safety_balance_control_t balance_safety;
-    safety_rc_config_t rc_safety_config = safety_rc_default_config();
-    safety_imu_config_t imu_safety_config = safety_imu_default_config();
+    const safety_rc_config_t rc_safety_config = config_rc_safety();
+    const safety_imu_config_t imu_safety_config = config_imu_safety();
     const safety_balance_control_config_t balance_safety_config =
     {
         .request_max_age_us = APP_BALANCE_REQUEST_MAX_AGE_US,
@@ -87,18 +87,6 @@ static void task_safety_entry(void *argument)
             APP_BALANCE_ARM_LEAN_RATE_LIMIT_RPS,
         .fall_lean_limit_rad = APP_BALANCE_FALL_LEAN_LIMIT_RAD,
     };
-
-    rc_safety_config.max_age_us = APP_RC_MAX_AGE_US;
-    rc_safety_config.channel_min = APP_RC_CHANNEL_MIN;
-    rc_safety_config.channel_max = APP_RC_CHANNEL_MAX;
-    rc_safety_config.channel_count = APP_RC_ACTIVE_CHANNEL_COUNT;
-    imu_safety_config.max_age_us = APP_IMU_MAX_AGE_US;
-    imu_safety_config.max_abs_roll_rad = APP_IMU_MAX_ABS_ROLL_RAD;
-    imu_safety_config.max_abs_pitch_rad = APP_IMU_MAX_ABS_PITCH_RAD;
-    imu_safety_config.min_accel_norm_mps2 =
-        APP_IMU_MIN_ACCEL_NORM_MPS2;
-    imu_safety_config.max_accel_norm_mps2 =
-        APP_IMU_MAX_ACCEL_NORM_MPS2;
 
     if (!safety_balance_control_init(&balance_safety,
                                      &balance_safety_config))

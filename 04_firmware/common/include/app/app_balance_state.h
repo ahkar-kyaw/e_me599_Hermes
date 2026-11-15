@@ -17,6 +17,7 @@ bool app_balance_state_get_lean(
     const imu_snapshot_t *imu,
     const safety_imu_status_t *imu_status,
     ctrl_balance_lean_axis_t lean_axis,
+    float lean_sign,
     float *lean_rad,
     float *lean_rate_rps);
 
@@ -25,6 +26,7 @@ bool app_balance_state_compose(
     const safety_imu_status_t *imu_status,
     const est_collinear_mecanum_output_t *odometry,
     ctrl_balance_lean_axis_t lean_axis,
+    float lean_sign,
     uint64_t timestamp_us,
     balance_state_t *balance_state);
 

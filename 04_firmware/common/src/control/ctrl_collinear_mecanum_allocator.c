@@ -31,14 +31,13 @@ bool ctrl_collinear_mecanum_allocator_init(
          wheel < CTRL_COLLINEAR_MECANUM_WHEEL_COUNT;
          wheel++)
     {
-        const float angle = config->roller_angle_rad[wheel];
-        const float paper_x_coefficient =
-            -cosf(angle) / sinf(angle);
+        const float roller_angle_rad = config->roller_angle_rad[wheel];
+        const float roller_cotangent =
+            cosf(roller_angle_rad) / sinf(roller_angle_rad);
 
-        /* Eq. (8) */
         wheel_map[wheel][CTRL_COLLINEAR_MECANUM_FORWARD] = 1.0f;
         wheel_map[wheel][CTRL_COLLINEAR_MECANUM_LEFT] =
-            -paper_x_coefficient;
+            roller_cotangent;
         wheel_map[wheel][CTRL_COLLINEAR_MECANUM_YAW] =
             config->wheel_offset_m[wheel] / config->yaw_scale_m;
 

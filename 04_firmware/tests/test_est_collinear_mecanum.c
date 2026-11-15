@@ -68,8 +68,8 @@ static est_collinear_mecanum_t make_estimator(void)
     return estimator;
 }
 
-static void make_wheel_velocity(float body_right_mps,
-                                float body_forward_mps,
+static void make_wheel_velocity(float body_x_mps,
+                                float body_y_mps,
                                 float yaw_rate_rps,
                                 float wheel_velocity_radps[4])
 {
@@ -77,10 +77,9 @@ static void make_wheel_velocity(float body_right_mps,
     {
         const float alpha = TEST_ROLLER_ANGLE_RAD[wheel];
 
-        /* Eq. (8) */
         wheel_velocity_radps[wheel] =
-            (-(cosf(alpha) / sinf(alpha)) * body_right_mps +
-             body_forward_mps +
+            (-(cosf(alpha) / sinf(alpha)) * body_x_mps +
+             body_y_mps +
              (TEST_WHEEL_OFFSET_M[wheel] * yaw_rate_rps)) /
             TEST_WHEEL_RADIUS_M;
     }

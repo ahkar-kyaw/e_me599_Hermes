@@ -105,15 +105,14 @@ bool ctrl_balance_controller_update(
 
     const float cosine_yaw = cosf(state->yaw_rad);
     const float sine_yaw = sinf(state->yaw_rad);
-    const float body_right_reference_mps =
+    const float body_x_reference_mps =
         -controller->lateral_velocity_reference_mps;
 
-    /* Eq. (4) */
     controller->reference_position_x_m +=
-        ((cosine_yaw * body_right_reference_mps) -
+        ((cosine_yaw * body_x_reference_mps) -
          (sine_yaw * controller->forward_velocity_reference_mps)) * dt_s;
     controller->reference_position_y_m +=
-        ((sine_yaw * body_right_reference_mps) +
+        ((sine_yaw * body_x_reference_mps) +
          (cosine_yaw * controller->forward_velocity_reference_mps)) * dt_s;
     controller->reference_yaw_rad = ctrl_balance_wrap_pi(
         controller->reference_yaw_rad +
@@ -124,15 +123,14 @@ bool ctrl_balance_controller_update(
     const float world_error_y_m = state->position_y_m -
         controller->reference_position_y_m;
 
-    /* Eq. (4) */
-    const float body_right_error_unlimited_m =
+    const float body_x_error_unlimited_m =
         (cosine_yaw * world_error_x_m) +
         (sine_yaw * world_error_y_m);
     const float forward_error_unlimited_m =
         (-sine_yaw * world_error_x_m) +
         (cosine_yaw * world_error_y_m);
     const float lateral_error_unlimited_m =
-        -body_right_error_unlimited_m;
+        -body_x_error_unlimited_m;
     const float yaw_error_unlimited_rad = ctrl_balance_wrap_pi(
         state->yaw_rad - controller->reference_yaw_rad);
     const float forward_error_m = ctrl_balance_clamp(
@@ -148,12 +146,12 @@ bool ctrl_balance_controller_update(
     if ((forward_error_m != forward_error_unlimited_m) ||
         (lateral_error_m != lateral_error_unlimited_m))
     {
-        const float limited_body_right_error_m = -lateral_error_m;
+        const float limited_body_x_error_m = -lateral_error_m;
         const float limited_world_x_m =
-            (cosine_yaw * limited_body_right_error_m) -
+            (cosine_yaw * limited_body_x_error_m) -
             (sine_yaw * forward_error_m);
         const float limited_world_y_m =
-            (sine_yaw * limited_body_right_error_m) +
+            (sine_yaw * limited_body_x_error_m) +
             (cosine_yaw * forward_error_m);
 
         controller->reference_position_x_m =
@@ -168,22 +166,21 @@ bool ctrl_balance_controller_update(
             state->yaw_rad - yaw_error_rad);
     }
 
-    /* Eq. (4) */
-    const float body_right_mps =
+    const float body_x_mps =
         (cosine_yaw * state->velocity_x_mps) +
         (sine_yaw * state->velocity_y_mps);
-    const float body_forward_mps =
+    const float body_y_mps =
         (-sine_yaw * state->velocity_x_mps) +
         (cosine_yaw * state->velocity_y_mps);
     const float body_left_mps =
-        -body_right_mps;
+        -body_x_mps;
     const float forward_current_without_integral_a =
         config->forward_output_sign *
         ((config->lean_gain_a_per_rad * state->lean_rad) +
          (config->lean_rate_gain_a_per_rps * state->lean_rate_rps) -
          (config->forward_position_gain_a_per_m * forward_error_m) -
          (config->forward_velocity_gain_a_per_mps *
-          (body_forward_mps -
+          (body_y_mps -
            controller->forward_velocity_reference_mps)));
     const float lateral_current_without_integral_a =
         config->lateral_output_sign *

@@ -108,7 +108,7 @@ static void ui_dashboard_render_ready(
 
     (void)snprintf(line,
                    sizeof(line),
-                   "TRIM %+.2f deg",
+                   "TRIM %+.2f",
                    (double)(control->lean_trim_rad * UI_RAD_TO_DEG));
     ui_canvas_draw_text(canvas, 4u, 42u, line, UI_COLOR_WHITE, 1u);
 
@@ -261,7 +261,7 @@ static void ui_dashboard_render_update(
     else if (snapshot->state == APP_OTA_STATE_DOWNLOADING)
     {
         (void)snprintf(line, sizeof(line),
-                       "DOWNLOADING %u%%",
+                       "DOWNLOADING %u",
                        (unsigned int)snapshot->progress_percent);
         ui_canvas_draw_text(canvas, 4u, 36u, line,
                             UI_COLOR_WHITE, 1u);

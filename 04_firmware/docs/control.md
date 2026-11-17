@@ -11,6 +11,10 @@ rate references. References are slew-limited. When a stick returns to center,
 the corresponding bounded position or yaw reference stops moving, allowing the
 controller to resist small external displacement.
 
+Forward and lateral velocity feedback comes from the mecanum wheel estimator.
+Yaw-rate feedback comes from the mounted IMU gyro. Wheel odometry retains yaw
+angle and planar position for bounded position hold.
+
 Lean presented to control is:
 
 ```text
@@ -30,7 +34,7 @@ current = output_sign * (
       Klean * lean
     + Krate * lean_rate
     - Kpos  * position_error
-    - Kvel  * velocity
+    - Kvel  * (velocity - velocity_reference)
     - Ki    * integral(position_error))
 ```
 
@@ -89,7 +93,7 @@ All authoritative values are in `config_control.h`.
 2. Tune lean gain, then lean-rate damping.
 3. Tune forward velocity, then forward position.
 4. Tune lateral velocity, then lateral position.
-5. Tune yaw rate, then yaw position.
+5. Tune yaw rate from the IMU, then yaw position.
 6. Set motion speed and acceleration limits.
 7. Set position-error leashes and add integral action only if a measured steady
    bias remains.

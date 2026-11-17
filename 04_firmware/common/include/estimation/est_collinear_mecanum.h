@@ -26,8 +26,6 @@ typedef struct
     float position_y_m;
     float yaw_rad;
 
-    float velocity_x_mps;
-    float velocity_y_mps;
     float yaw_rate_rps;
 
     float body_forward_mps;

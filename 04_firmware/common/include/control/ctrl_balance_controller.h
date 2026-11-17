@@ -76,12 +76,10 @@ typedef struct
     float forward_integral_m_s;
     float lateral_integral_m_s;
     float yaw_integral_rad_s;
-    float lean_error_rad;
     float forward_current_a;
     float lateral_current_a;
     float yaw_current_a;
     bool saturated;
-    bool valid;
 } ctrl_balance_controller_output_t;
 
 bool ctrl_balance_controller_init(

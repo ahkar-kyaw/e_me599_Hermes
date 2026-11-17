@@ -7,6 +7,7 @@ source instead of copying values that can become stale.
 |---|---|
 | Board pins and buses | `platforms/esp32/include/board_esp32_nodemcu_v1.h` |
 | Actuator IDs, directions, and CAN timing | `platforms/esp32/main/config/config_actuator.h` |
+| Actuator diagnostic current and timing | `platforms/esp32/main/config/config_actuator_test.h` |
 | IMU mounting, sampling, and limits | `platforms/esp32/main/config/config_imu.h` |
 | Geometry, motion, balance, and safety limits | `platforms/esp32/main/config/config_control.h` |
 | RC channels, polarity, endpoints, and deadband | `platforms/esp32/main/config/config_rc.h` |

@@ -193,7 +193,6 @@ static void ui_dashboard_render_active(
     const ui_dashboard_model_t *model)
 {
     const control_snapshot_t *control = model->control_snapshot;
-    const actuator_snapshot_t *actuator = model->actuator_snapshot;
     const app_balance_safety_snapshot_t *balance =
         model->balance_snapshot;
     char line[40];
@@ -219,48 +218,45 @@ static void ui_dashboard_render_active(
 
     (void)snprintf(line,
                    sizeof(line),
-                   "REQ%+.2f %+.2f %+.2f %+.2f",
-                   (double)balance->requested_current_a[0],
-                   (double)balance->requested_current_a[1],
-                   (double)balance->requested_current_a[2],
-                   (double)balance->requested_current_a[3]);
+                   "REF F%+.2f L%+.2f Y%+.2f",
+                   (double)control->forward_velocity_reference_mps,
+                   (double)control->lateral_velocity_reference_mps,
+                   (double)control->yaw_rate_reference_rps);
     ui_canvas_draw_text(canvas, 4u, 57u, line, UI_COLOR_WHITE, 1u);
 
     (void)snprintf(line,
                    sizeof(line),
-                   "TX %+.2f %+.2f %+.2f %+.2f",
-                   (double)actuator->command_tx[0].current_a,
-                   (double)actuator->command_tx[1].current_a,
-                   (double)actuator->command_tx[2].current_a,
-                   (double)actuator->command_tx[3].current_a);
+                   "EST F%+.2f L%+.2f Y%+.2f",
+                   (double)control->state.body_forward_mps,
+                   (double)control->state.body_left_mps,
+                   (double)control->state.yaw_rate_rps);
     ui_canvas_draw_text(canvas,
                         4u,
                         72u,
-                        line,
-                        UI_COLOR_GREEN,
-                        1u);
-
-    (void)snprintf(line,
-                   sizeof(line),
-                   "CUR%+.2f %+.2f %+.2f %+.2f",
-                   (double)actuator->actuator[0].current_a,
-                   (double)actuator->actuator[1].current_a,
-                   (double)actuator->actuator[2].current_a,
-                   (double)actuator->actuator[3].current_a);
-    ui_canvas_draw_text(canvas,
-                        4u,
-                        87u,
                         line,
                         UI_COLOR_CYAN,
                         1u);
 
     (void)snprintf(line,
                    sizeof(line),
-                   "VEL%+.1f %+.1f %+.1f %+.1f",
-                   (double)(actuator->actuator[0].velocity_erpm * 0.001f),
-                   (double)(actuator->actuator[1].velocity_erpm * 0.001f),
-                   (double)(actuator->actuator[2].velocity_erpm * 0.001f),
-                   (double)(actuator->actuator[3].velocity_erpm * 0.001f));
+                   "OUT F%+.2f L%+.2f Y%+.2f",
+                   (double)control->forward_current_a,
+                   (double)control->lateral_current_a,
+                   (double)control->yaw_current_a);
+    ui_canvas_draw_text(canvas,
+                        4u,
+                        87u,
+                        line,
+                        UI_COLOR_GREEN,
+                        1u);
+
+    (void)snprintf(line,
+                   sizeof(line),
+                   "REQ%+.2f %+.2f %+.2f %+.2f",
+                   (double)balance->requested_current_a[0],
+                   (double)balance->requested_current_a[1],
+                   (double)balance->requested_current_a[2],
+                   (double)balance->requested_current_a[3]);
     ui_canvas_draw_text(canvas,
                         4u,
                         102u,

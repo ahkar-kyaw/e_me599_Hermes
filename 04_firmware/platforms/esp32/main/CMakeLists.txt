@@ -61,6 +61,12 @@ idf_component_register(
 
 target_link_libraries(${COMPONENT_LIB} PRIVATE m)
 
+target_compile_options(${COMPONENT_LIB} PRIVATE
+    -Wall
+    -Wextra
+    -Werror
+)
+
 target_compile_definitions(${COMPONENT_LIB} PRIVATE
     BOARD_ESP32_NODEMCU_V1=1
 )

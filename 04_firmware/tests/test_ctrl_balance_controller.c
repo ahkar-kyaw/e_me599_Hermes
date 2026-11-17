@@ -75,7 +75,6 @@ int main(void)
 
     ctrl_balance_controller_reset(&controller, &state);
     state.position_y_m = 1.1f;
-    state.velocity_y_mps = 0.2f;
     state.body_forward_mps = 0.2f;
     state.lean_rad = 0.2f;
     state.lean_rate_rps = 0.1f;
@@ -135,6 +134,19 @@ int main(void)
     {
         fail("positive motion reference produced wrong current sign");
     }
+
+    memset(&state, 0, sizeof(state));
+    state.valid = true;
+    ctrl_balance_controller_reset(&controller, &state);
+    state.body_left_mps = 0.2f;
+    state.yaw_rate_rps = 0.3f;
+    (void)ctrl_balance_controller_update(&controller,
+                                         &state,
+                                         &stopped_reference,
+                                         0.1f,
+                                         &output);
+    expect_near(output.lateral_current_a, -0.03f);
+    expect_near(output.yaw_current_a, -0.03f);
 
     memset(&state, 0, sizeof(state));
     state.valid = true;

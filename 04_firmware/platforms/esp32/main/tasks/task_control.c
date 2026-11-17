@@ -241,7 +241,6 @@ static void task_control_entry(void *argument)
     TickType_t last_wake = xTaskGetTickCount();
     uint64_t last_loop_us = 0u;
     uint32_t handled_zero_lean_count = 0u;
-    uint32_t applied_zero_lean_count = 0u;
     uint32_t rejected_zero_lean_count = 0u;
     float lean_trim_rad = APP_BALANCE_INITIAL_LEAN_TRIM_RAD;
     bool balance_reference_captured = false;
@@ -263,7 +262,6 @@ static void task_control_entry(void *argument)
 
         last_loop_us = loop_start_us;
         snapshot.timestamp_us = loop_start_us;
-        snapshot.loop_count++;
         snapshot.input_fault_flags = CTRL_STATE_FAULT_NONE;
         memset(&snapshot.state, 0, sizeof(snapshot.state));
         memset(snapshot.desired_current_a,
@@ -277,11 +275,9 @@ static void task_control_entry(void *argument)
         snapshot.forward_position_error_m = 0.0f;
         snapshot.lateral_position_error_m = 0.0f;
         snapshot.yaw_error_rad = 0.0f;
-        snapshot.balance_lean_error_rad = 0.0f;
         snapshot.forward_current_a = 0.0f;
         snapshot.lateral_current_a = 0.0f;
         snapshot.yaw_current_a = 0.0f;
-        snapshot.zero_lean_applied_count = applied_zero_lean_count;
         snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
         snapshot.balance_command_valid = false;
         snapshot.balance_output_saturated = false;
@@ -326,7 +322,6 @@ static void task_control_entry(void *argument)
                  APP_BALANCE_ZERO_MAX_LEAN_RATE_RPS))
             {
                 lean_trim_rad = raw_lean_rad;
-                applied_zero_lean_count = handled_zero_lean_count;
                 rejected_zero_lean_count = 0u;
                 balance_reference_captured = false;
             }
@@ -341,7 +336,6 @@ static void task_control_entry(void *argument)
             snapshot.state.lean_rad = raw_lean_rad - lean_trim_rad;
             snapshot.state.lean_rate_rps = raw_lean_rate_rps;
             snapshot.lean_trim_rad = lean_trim_rad;
-            snapshot.zero_lean_applied_count = applied_zero_lean_count;
             snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
         }
 
@@ -405,7 +399,6 @@ static void task_control_entry(void *argument)
         {
             snapshot.state.lean_rad -= lean_trim_rad;
             snapshot.lean_trim_rad = lean_trim_rad;
-            snapshot.zero_lean_applied_count = applied_zero_lean_count;
             snapshot.zero_lean_rejected_count = rejected_zero_lean_count;
         }
 
@@ -479,8 +472,6 @@ static void task_control_entry(void *argument)
                 snapshot.lateral_position_error_m =
                     balance_output.lateral_position_error_m;
                 snapshot.yaw_error_rad = balance_output.yaw_error_rad;
-                snapshot.balance_lean_error_rad =
-                    balance_output.lean_error_rad;
                 snapshot.forward_current_a =
                     balance_output.forward_current_a;
                 snapshot.lateral_current_a =
@@ -506,26 +497,13 @@ static void task_control_entry(void *argument)
 
         const uint64_t loop_end_us = (uint64_t)esp_timer_get_time();
         const uint64_t execution_time_us = loop_end_us - loop_start_us;
-        snapshot.execution_time_us = (execution_time_us > UINT32_MAX) ?
-            UINT32_MAX : (uint32_t)execution_time_us;
-
-        if (snapshot.execution_time_us > snapshot.max_execution_time_us)
-        {
-            snapshot.max_execution_time_us = snapshot.execution_time_us;
-        }
 
         if (execution_time_us >=
             ((uint64_t)APP_CONTROL_TASK_PERIOD_MS * 1000u))
         {
-            snapshot.overrun_count++;
             snapshot.input_fault_flags |= CTRL_STATE_FAULT_TIMING;
             snapshot.state.valid = false;
             snapshot.balance_command_valid = false;
-        }
-
-        if (!snapshot.state.valid)
-        {
-            snapshot.invalid_input_count++;
         }
 
         task_control_publish_snapshot(&snapshot);

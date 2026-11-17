@@ -166,27 +166,20 @@ bool ctrl_balance_controller_update(
             state->yaw_rad - yaw_error_rad);
     }
 
-    const float body_x_mps =
-        (cosine_yaw * state->velocity_x_mps) +
-        (sine_yaw * state->velocity_y_mps);
-    const float body_y_mps =
-        (-sine_yaw * state->velocity_x_mps) +
-        (cosine_yaw * state->velocity_y_mps);
-    const float body_left_mps =
-        -body_x_mps;
     const float forward_current_without_integral_a =
         config->forward_output_sign *
         ((config->lean_gain_a_per_rad * state->lean_rad) +
          (config->lean_rate_gain_a_per_rps * state->lean_rate_rps) -
          (config->forward_position_gain_a_per_m * forward_error_m) -
          (config->forward_velocity_gain_a_per_mps *
-          (body_y_mps -
+          (state->body_forward_mps -
            controller->forward_velocity_reference_mps)));
     const float lateral_current_without_integral_a =
         config->lateral_output_sign *
         (-(config->lateral_position_gain_a_per_m * lateral_error_m) -
          (config->lateral_velocity_gain_a_per_mps *
-          (body_left_mps - controller->lateral_velocity_reference_mps)));
+          (state->body_left_mps -
+           controller->lateral_velocity_reference_mps)));
     const float yaw_current_without_integral_a =
         config->yaw_output_sign *
         (-(config->yaw_position_gain_a_per_rad * yaw_error_rad) -
@@ -241,10 +234,8 @@ bool ctrl_balance_controller_update(
     output->forward_integral_m_s = controller->forward_integral_m_s;
     output->lateral_integral_m_s = controller->lateral_integral_m_s;
     output->yaw_integral_rad_s = controller->yaw_integral_rad_s;
-    output->lean_error_rad = state->lean_rad;
     output->saturated = forward_saturated || lateral_saturated ||
         yaw_saturated;
-    output->valid = true;
     return true;
 }
 
@@ -402,8 +393,8 @@ static bool ctrl_balance_state_valid(const balance_state_t *state)
            isfinite(state->position_y_m) &&
            isfinite(state->yaw_rad) &&
            isfinite(state->lean_rad) &&
-           isfinite(state->velocity_x_mps) &&
-           isfinite(state->velocity_y_mps) &&
+           isfinite(state->body_forward_mps) &&
+           isfinite(state->body_left_mps) &&
            isfinite(state->yaw_rate_rps) &&
            isfinite(state->lean_rate_rps);
 }

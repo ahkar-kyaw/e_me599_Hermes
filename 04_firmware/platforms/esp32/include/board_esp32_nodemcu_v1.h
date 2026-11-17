@@ -5,10 +5,6 @@
 #include "driver/spi_master.h"
 #include "driver/uart.h"
 
-#define BOARD_NAME          "ESP32 NodeMCU"
-#define BOARD_MCU_NAME      "ESP32"
-#define BOARD_PLATFORM_NAME "esp32"
-
 /* ISM330DHCX IMU SPI bus. */
 #define BOARD_IMU_SPI_HOST               SPI2_HOST
 #define BOARD_IMU_SPI_SCLK_GPIO          GPIO_NUM_18

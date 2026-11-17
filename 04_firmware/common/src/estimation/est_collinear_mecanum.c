@@ -164,8 +164,6 @@ bool est_collinear_mecanum_update(
     output->position_x_m = estimator->position_x_m;
     output->position_y_m = estimator->position_y_m;
     output->yaw_rad = estimator->yaw_rad;
-    output->velocity_x_mps = velocity_x_mps;
-    output->velocity_y_mps = velocity_y_mps;
     output->yaw_rate_rps =
         body_velocity[EST_COLLINEAR_BODY_YAW];
     output->body_forward_mps = body_y_mps;

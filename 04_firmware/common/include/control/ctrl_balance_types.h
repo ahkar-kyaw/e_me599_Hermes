@@ -35,8 +35,6 @@ typedef struct
     float yaw_rad;
     float lean_rad;
 
-    float velocity_x_mps;
-    float velocity_y_mps;
     float body_forward_mps;
     float body_left_mps;
     float yaw_rate_rps;
@@ -55,18 +53,11 @@ typedef struct
     float forward_position_error_m;
     float lateral_position_error_m;
     float yaw_error_rad;
-    float balance_lean_error_rad;
     float forward_current_a;
     float lateral_current_a;
     float yaw_current_a;
 
     uint64_t timestamp_us;
-    uint32_t loop_count;
-    uint32_t invalid_input_count;
-    uint32_t overrun_count;
-    uint32_t execution_time_us;
-    uint32_t max_execution_time_us;
-    uint32_t zero_lean_applied_count;
     uint32_t zero_lean_rejected_count;
     uint32_t input_fault_flags;
     bool balance_command_valid;
